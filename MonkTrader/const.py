@@ -23,6 +23,7 @@
 #
 
 Bitmex_base_url = "https://www.bitmex.com/api/v1/"
+Bitmex_websocket_url = "wss://testnet.bitmex.com/realtime"
 
 MAX_HISTORY = 750
 

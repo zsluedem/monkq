@@ -1,5 +1,5 @@
 click==0.7
-requests==2.19.1
+requests==2.20.0
 dateutils==0.6.6
 logbook==1.4.0
 pymongo==3.7.1

@@ -29,3 +29,7 @@ from logbook.more import ColorizedStderrHandler
 download_log = logbook.Logger("downloadLogger")
 
 download_log.handlers.append(ColorizedStderrHandler(bubble=True))
+
+trade_log = logbook.Logger("Trader_log")
+
+trade_log.handlers.append(ColorizedStderrHandler(bubble=True))

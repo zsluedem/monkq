@@ -26,9 +26,9 @@ import logbook
 from logbook.more import ColorizedStderrHandler
 
 
-download_log = logbook.Logger("downloadLogger")
+console_log = logbook.Logger("downloadLogger")
 
-download_log.handlers.append(ColorizedStderrHandler(bubble=True))
+console_log.handlers.append(ColorizedStderrHandler(bubble=True))
 
 trade_log = logbook.Logger("Trader_log")
 

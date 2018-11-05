@@ -23,20 +23,50 @@
 #
 
 from traitlets.config import Configurable
-from traitlets import Unicode, observe
+from traitlets import Unicode, observe, Bool
+import os
+import sys
+import importlib
 import pymongo
+from MonkTrader import _settings
+
+def import_path(fullpath):
+    """
+    Import a file with full path specification. Allows one to
+    import from anywhere, something __import__ does not do.
+    """
+    path, filename = os.path.split(fullpath)
+    filename, ext = os.path.splitext(filename)
+    sys.path.insert(0, path)
+    module = importlib.import_module(filename, path)
+    importlib.reload(module)  # Might be out of date
+    del sys.path[0]
+    return module
+
+# for k, attr in base_settings.keys
+base_settings = {}
+for k,attr in vars(_settings).items():
+    if k.startswith("__"):
+        continue
+    base_settings.update({k:attr})
+
 
 class Config(Configurable):
 
-    database_uri =Unicode(config=True, default_value="mongodb://127.0.0.1:27017")
+    DATABASE_URI =Unicode(config=True, default_value="mongodb://127.0.0.1:27017")
+
+    IS_TEST = Bool(config=True)
+
+    API_KEY = Unicode(config=True)
+    API_SECRET = Unicode(config=True)
 
 
     def __init__(self, *args, **kwargs):
         super(Config, self).__init__(*args, **kwargs)
 
-        self._db_handle = pymongo.MongoClient(self.database_uri)
+        self._db_handle = pymongo.MongoClient(self.DATABASE_URI)
 
-    @observe('database_uri')
+    @observe('DATABASE_URI')
     def _observe_database_uri(self, change):
         new = change.get('new')
         self._db_handle = pymongo.MongoClient(new)
@@ -46,4 +76,4 @@ class Config(Configurable):
         return self._db_handle
 
 
-config = Config()
+config = Config(**base_settings)

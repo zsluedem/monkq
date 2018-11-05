@@ -22,8 +22,10 @@
 # SOFTWARE.
 #
 
+import shutil
 import click
-import pymongo
+import os
+from MonkTrader.logger import console_log
 from MonkTrader.config import config
 from MonkTrader.data import save_kline, save_symbols
 
@@ -54,8 +56,24 @@ def download(mongodb_uri, active, frequency):
 def run():
     pass
 
+@click.command()
+@click.help_option()
+@click.option("--target_dir", default=".", help="The target dir where would generate a default setting file")
+def generate_settings(target_dir):
+    package_base = os.path.dirname(__file__)
+
+    target_dir = os.path.realpath(target_dir)
+    if not os.path.isdir(target_dir):
+        console_log.error("Please provide a valid target dir!!!")
+        return
+
+    shutil.copy(os.path.join(package_base, "_settings.py"), os.path.join(target_dir, "setting.py"))
+
+    console_log.info("Successfully generated the setting file, please edit your setting.")
+
 cli.add_command(download)
 cli.add_command(run)
+cli.add_command(generate_settings)
 
 def cmdEntry():
     cli()

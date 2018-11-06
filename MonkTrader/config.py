@@ -28,13 +28,16 @@ import os
 import sys
 import importlib
 import pymongo
+from MonkTrader.logger import console_log
 from MonkTrader import _settings
+from MonkTrader.const import Bitmex_api_url, Bitmex_testnet_api_url, Bitmex_testnet_websocket_url, Bitmex_websocket_url
 
 def import_path(fullpath):
     """
     Import a file with full path specification. Allows one to
     import from anywhere, something __import__ does not do.
     """
+    fullpath = os.path.realpath(fullpath)
     path, filename = os.path.split(fullpath)
     filename, ext = os.path.splitext(filename)
     sys.path.insert(0, path)
@@ -43,15 +46,17 @@ def import_path(fullpath):
     del sys.path[0]
     return module
 
-# for k, attr in base_settings.keys
-base_settings = {}
-for k,attr in vars(_settings).items():
-    if k.startswith("__"):
-        continue
-    base_settings.update({k:attr})
+def get_attrs_from_module(module):
+    attrs_dict = {}
+    for k,attr in vars(module).items():
+        if k.startswith("__"):
+            continue
+        attrs_dict.update({k:attr})
+    return attrs_dict
 
+base_settings = get_attrs_from_module(_settings)
 
-class Config(Configurable):
+class Conf(Configurable):
 
     DATABASE_URI =Unicode(config=True, default_value="mongodb://127.0.0.1:27017")
 
@@ -60,11 +65,26 @@ class Config(Configurable):
     API_KEY = Unicode(config=True)
     API_SECRET = Unicode(config=True)
 
+    Bitmex_base_url = Unicode(config=False)
+    Bitmex_ws_url = Unicode(config=False)
+
+    allow_set = base_settings.keys()
 
     def __init__(self, *args, **kwargs):
-        super(Config, self).__init__(*args, **kwargs)
+        super(Conf, self).__init__(*args, **kwargs)
 
         self._db_handle = pymongo.MongoClient(self.DATABASE_URI)
+
+    @observe("IS_TEST")
+    def _observe_is_test(self, change):
+        is_test = change.get('new')
+        if is_test:
+            self.Bitmex_base_url = Bitmex_testnet_api_url
+            self.Bitmex_ws_url = Bitmex_testnet_websocket_url
+        else:
+            self.Bitmex_base_url = Bitmex_api_url
+            self.Bitmex_ws_url = Bitmex_websocket_url
+
 
     @observe('DATABASE_URI')
     def _observe_database_uri(self, change):
@@ -75,5 +95,14 @@ class Config(Configurable):
     def db(self):
         return self._db_handle
 
+    def update_from_py(self, path):
+        module = import_path(path)
+        settings = get_attrs_from_module(module)
+        for key, attr in settings.items():
+            if key not in self.allow_set:
+                console_log.warning(f"{key} is not a valid setting!")
+                continue
+            setattr(self, key, attr)
 
-config = Config(**base_settings)
+
+config = Conf(**base_settings)

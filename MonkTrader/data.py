@@ -41,7 +41,7 @@ from urllib.parse import urljoin
 from MonkTrader.const import Bitmex_api_url, CHINA_WARNING, CHINA_CONNECT_TIMEOUT, MAX_HISTORY
 
 from MonkTrader.logger import console_log
-from MonkTrader.config import config
+from MonkTrader.config import CONF
 
 
 def fetch_bitmex_symbols(active=False):
@@ -102,7 +102,7 @@ def fetch_tick(symbol, start_time, end_time, frequency):
 def save_kline(frequency, active=True):
     symbol_list = fetch_bitmex_symbols(active=active)
     symbol_list = symbol_list
-    col = config.db.bitmex[frequency]
+    col = CONF.db.bitmex[frequency]
     col.create_index(
         [("symbol", pymongo.ASCENDING), ("timestamp", pymongo.ASCENDING)], unique=True)
 
@@ -139,12 +139,12 @@ def save_kline(frequency, active=True):
 
 def save_symbols(active):
     symbols = fetch_bitmex_symbols(active)
-    col = config.db.bitmex.symbols
+    col = CONF.db.bitmex.symbols
     if col.find().count() == len(symbols):
         console_log.info("SYMBOLS are already existed and no more to update")
     else:
         console_log.info("Delete the original symbols collections")
-        config.db.bitmex.drop_collection("symbols")
+        CONF.db.bitmex.drop_collection("symbols")
         console_log.info("Downloading the new symbols")
         col.insert_many(symbols)
         console_log.info("Symbols download is done! Thank you man!")

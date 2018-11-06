@@ -28,9 +28,10 @@ import decimal
 from decimal import Decimal
 import asyncio
 
-from MonkTrader.bitmex.auth import generate_signature,generate_expires
+from MonkTrader.bitmex.auth import gen_header_dict
 from MonkTrader.const import Bitmex_websocket_url
 from MonkTrader.logger import trade_log
+from MonkTrader.config import CONF
 
 def findItemByKeys(keys:list, table:list, matchData:dict):
     for item in table:
@@ -64,17 +65,6 @@ class BitmexWebsocket():
     def setup(self):
         self._loop.create_task(self.run())
 
-    def _auth(self)-> dict:
-        expire = generate_expires()
-
-        sign = generate_signature(API_SECRET, "GET", "/realtime", expire, "")
-
-        return {
-            "API-expires":str(expire),
-            "api-signature":sign,
-            "api-key":API_KEY
-        }
-
     def open_orders(self, clOrdIDPrefix):
         orders = self.data['order']
         # Filter to only open orders (leavesQty > 0) and those that we actually placed
@@ -82,7 +72,7 @@ class BitmexWebsocket():
 
 
     async def run(self):
-        headers = self._auth()
+        headers = gen_header_dict('GET', "/realtime", '')
         async with websockets.connect(Bitmex_websocket_url, extra_headers=headers) as ws:
             self.ws = ws
             while not self.exited:

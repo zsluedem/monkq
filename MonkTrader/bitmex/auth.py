@@ -24,6 +24,7 @@
 import time
 import hashlib
 import hmac
+from MonkTrader.config import CONF
 from urllib.parse import urlparse
 
 def generate_expires(expire:int=3600):
@@ -45,3 +46,15 @@ def generate_signature(secret, verb, url, nonce, data):
 
     signature = hmac.new(bytes(secret, 'utf8'), bytes(message, 'utf8'), digestmod=hashlib.sha256).hexdigest()
     return signature
+
+
+def gen_header_dict(verb, url, data, nonce=3600):
+    expire = generate_expires(nonce)
+
+    sign = generate_signature(CONF.API_SECRET, verb, url, expire, data)
+
+    return {
+        "API-expires": str(expire),
+        "api-signature": sign,
+        "api-key": CONF.API_KEY
+    }

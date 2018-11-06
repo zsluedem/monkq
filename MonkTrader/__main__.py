@@ -26,7 +26,7 @@ import shutil
 import click
 import os
 from MonkTrader.logger import console_log
-from MonkTrader.config import config
+from MonkTrader.config import CONF
 from MonkTrader.data import save_kline, save_symbols
 
 @click.group()
@@ -40,7 +40,7 @@ def cli():
 @click.option('--active', default=True, type=click.BOOL ,help="download active or all symbols")
 @click.option('--frequency', default="all", type=click.Choice(['all', '1m', '5m', '1h', '1d']))
 def download(mongodb_uri, active, frequency):
-    config.database_uri = mongodb_uri
+    CONF.database_uri = mongodb_uri
     save_symbols(active)
 
     if frequency == "all":

@@ -213,8 +213,5 @@ class BitmexController():
         if max_retries is None:
             max_retries = 0 if verb in ['POST', 'PUT'] else 3
 
-        auth_headers = auth()
-
-        # try:
-        #     tra
+        auth_headers = self.auth()
 

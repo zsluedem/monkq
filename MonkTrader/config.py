@@ -105,4 +105,4 @@ class Conf(Configurable):
             setattr(self, key, attr)
 
 
-config = Conf(**base_settings)
+CONF = Conf(**base_settings)

@@ -146,21 +146,18 @@ class BitmexController():
         }
         return await self._curl_bitmex(path=endpoint, postdict=postdict, verb="POST")
 
-    # TODO test
     @authentication_required
     def amend_bulk_orders(self, orders):
         """Amend multiple orders."""
         # Note rethrow; if this fails, we want to catch it and re-tick
         return self._curl_bitmex(path='order/bulk', postdict={'orders': orders}, verb='PUT', rethrow_errors=True)
 
-    # TODO test
     @authentication_required
-    def create_bulk_orders(self, orders):
+    def create_bulk_orders(self, orders, post_only=False):
         """Create multiple orders."""
         for order in orders:
             order['clOrdID'] = self.orderIDPrefix + base64.b64encode(uuid.uuid4().bytes).decode('utf8').rstrip('=\n')
-            order['symbol'] = self.symbol
-            if self.postOnly:
+            if post_only:
                 order['execInst'] = 'ParticipateDoNotInitiate'
         return self._curl_bitmex(path='order/bulk', postdict={'orders': orders}, verb='POST')
 
@@ -185,7 +182,6 @@ class BitmexController():
         # Only return orders that start with our clOrdID prefix.
         return [o for o in orders if str(o['clOrdID']).startswith(self.orderIDPrefix)]
 
-    # TODO test
     @authentication_required
     def cancel(self, orderID):
         """Cancel an existing order."""
@@ -195,7 +191,7 @@ class BitmexController():
         }
         return self._curl_bitmex(path=path, postdict=postdict, verb="DELETE")
 
-    # TODO test
+    # TODO 403 in testnet
     @authentication_required
     def withdraw(self, amount, fee, address):
         path = "user/requestWithdrawal"
@@ -252,6 +248,8 @@ class BitmexController():
         if postdict:
             data = json.dumps(postdict)
             headers.update({'content-type':"application/json"})
+        else:
+            data = ''
 
         headers.update(gen_header_dict(verb, str(url), data, 5))
 

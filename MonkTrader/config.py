@@ -70,6 +70,8 @@ class Conf(Configurable):
 
     allow_set = base_settings.keys()
 
+    HTTP_PROXY = Unicode(config=True)
+
     def __init__(self, *args, **kwargs):
         super(Conf, self).__init__(*args, **kwargs)
 

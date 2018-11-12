@@ -59,6 +59,3 @@ def gen_header_dict(verb, url, data, nonce=3600):
         "api-key": CONF.API_KEY
     }
 
-if __name__ == '__main__':
-    a = generate_signature("udseyDMLWzUC0X621SO6LpkTaL5c436g7RfD18zbQQd-OVcO", "GET", "https://testnet.bitmex.com/api/v1/order?filter=%7B%22ordStatus.isTerminated%22%3A+false%2C+%22symbol%22%3A+%22XBTUSD%22%7D&count=500", "1541905767", '')
-    print(a)

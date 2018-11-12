@@ -57,8 +57,11 @@ class BitmexController():
     def setup(self):
         self._trace_config = aiohttp.TraceConfig()
         # self._trace_config.on_request_end.append(self._end_request)
-        self._ssl = ssl.create_default_context()
-        self._ssl.load_verify_locations("/Users/willqiu/work/pull/MonkTrader/local/charles-ssl-proxying-certificate.pem")
+
+        # used only for testing
+        if CONF.SSL_PATH:
+            self._ssl = ssl.create_default_context()
+            self._ssl.load_verify_locations(CONF.SSL_PATH)
         self.session = aiohttp.ClientSession(trace_configs=[self._trace_config])
         # self.ws.setup()
 

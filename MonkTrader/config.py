@@ -72,6 +72,9 @@ class Conf(Configurable):
 
     HTTP_PROXY = Unicode(config=True)
 
+    # used only for testing
+    SSL_PATH = Unicode(config=True)
+
     def __init__(self, *args, **kwargs):
         super(Conf, self).__init__(*args, **kwargs)
 

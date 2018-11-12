@@ -10,3 +10,6 @@ API_SECRET = ""
 
 # HTTP Proxy
 HTTP_PROXY = ""
+
+# used only for testing
+SSL_PATH = ''

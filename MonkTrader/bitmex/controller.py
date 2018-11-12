@@ -212,13 +212,6 @@ class BitmexController():
         resp = await self._curl_bitmex(path, verb="GET")
         return json.loads(await resp.text())
 
-    async def _end_request(self, session, trace_config_ctx, params):
-        print('!!!!!!')
-        print(session)
-        print(trace_config_ctx)
-        print(params)
-        print('!!!!!')
-
     async def _curl_bitmex(self, path, query=None, postdict=None, timeout=None, verb=None, rethrow_errors=False,
                      max_retries=None):
         url = self.base_url + path

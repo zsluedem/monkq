@@ -41,6 +41,8 @@ now = datetime.datetime.now() + relativedelta(days=-1)
 trade_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}.csv.gz"
 quote_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
 
+TARFILETYPE = '.csv.gz'
+
 class CsvFileDefaultDict(defaultdict):
     def __init__(self, dir, fieldnames, *args, **kwargs):
         super(CsvFileDefaultDict, self).__init__(*args, **kwargs)
@@ -78,7 +80,7 @@ class TarStreamRequest(StreamRequest):
             os.mkdir(dst_dir)
         self.dst_dir = dst_dir
 
-        self.dst_file = os.path.join(self.dst_dir, self.date.strftime("%Y%m%d")+".csv.gz")
+        self.dst_file = os.path.join(self.dst_dir, self.date.strftime("%Y%m%d")+TARFILETYPE)
 
     def process(self):
         try:
@@ -308,6 +310,13 @@ def save_history(kind, mode, dst_dir):
         if dones:
             current= max(dones)
             start = datetime.datetime.strptime(current, "%Y%m%d") + relativedelta(days=+1)
+        else:
+            start = START_DATE
+    elif mode == 'tar':
+        dones = os.listdir(dst_dir.exists)
+        if dones:
+            current= max(dones)
+            start = datetime.datetime.strptime(current, "%Y%m%d"+TARFILETYPE) + relativedelta(days=+1)
         else:
             start = START_DATE
     for date in rrule(freq=DAILY, dtstart=start, until=now):

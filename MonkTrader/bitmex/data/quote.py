@@ -88,8 +88,8 @@ class TarStreamRequest(StreamRequest):
                 for chunk in self._stream_requests(self.url):
                     f.write(chunk)
         except Exception as e:
-            console_log.exception(f"Exception #{e}# happened when process f{self.date} data")
             self.rollback()
+            console_log.exception(f"Exception #{e}# happened when process f{self.date} data")
             os._exit(1)
 
     def rollback(self):
@@ -139,8 +139,8 @@ class CsvStreamRequest(StreamRequest):
             if self.cache:
                 self.process_chunk()
         except Exception as e:
-            console_log.exception(f"Exception {e} happened when process f{self.date} data")
             self.rollback()
+            console_log.exception(f"Exception {e} happened when process f{self.date} data")
             os._exit(-1)
         self.cleanup()
 

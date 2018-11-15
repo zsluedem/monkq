@@ -1,5 +1,7 @@
 .idea
 local/*
+local_data/*
+local_quote/*
 settings.py
 
 # Byte-compiled / optimized / DLL files

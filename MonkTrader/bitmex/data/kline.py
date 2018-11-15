@@ -88,17 +88,6 @@ def fetch_bitmex_kline(symbol, start_time, end_time, frequency):
     frame['timestamp'] = pd.to_datetime(frame['timestamp'])
     return json.loads(frame.to_json(orient='records'))
 
-def fetch_tick(symbol, start_time, end_time, frequency):
-    # TODO tick数据暂时被禁止，无法取用
-    url = urljoin(Bitmex_api_url, "quote/bucketed")
-
-    req = requests.get(url, params={"symbol": symbol, "binSize": frequency,
-                                            "startTime": start_time.isoformat(),
-                                            "endTime": end_time.isoformat(),
-                                            "count":MAX_HISTORY}, timeout=CHINA_CONNECT_TIMEOUT)
-
-
-
 def save_kline(frequency, active=True):
     symbol_list = fetch_bitmex_symbols(active=active)
     symbol_list = symbol_list

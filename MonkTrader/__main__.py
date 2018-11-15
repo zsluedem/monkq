@@ -27,7 +27,7 @@ import click
 import os
 from MonkTrader.logger import console_log
 from MonkTrader.config import CONF
-from MonkTrader.data import save_kline, save_symbols
+from MonkTrader.bitmex.data import save_kline, save_symbols, save_history
 
 @click.group()
 def cli():
@@ -36,20 +36,32 @@ def cli():
 
 @click.command()
 @click.help_option()
+@click.option('--kind', default="all", type=click.Choice(['all', 'quote', 'trade', 'kline', 'symbols']))
 @click.option('--mongodb_uri', default='mongodb://127.0.0.1:27017', help="mongodb uri you want to download to")
 @click.option('--active', default=True, type=click.BOOL ,help="download active or all symbols")
-@click.option('--frequency', default="all", type=click.Choice(['all', '1m', '5m', '1h', '1d']))
-def download(mongodb_uri, active, frequency):
-    CONF.database_uri = mongodb_uri
-    save_symbols(active)
+@click.option('--mode', default="mongo", type=click.Choice(['mongo', 'csv', 'tar']), help="Define the download mode")
+@click.option('--dst_dir', default=os.path.realpath('.'), type=click.Path)
+def download(kind, mongodb_uri, active, mode, dst_dir):
 
-    if frequency == "all":
+    CONF.database_uri = mongodb_uri
+    def save_all_klines():
         save_kline('1m', active)
         save_kline('5m', active)
         save_kline('1h', active)
         save_kline('1d', active)
-    else:
-        save_kline(frequency, active)
+    if kind == 'all':
+        save_history('trade', mode, dst_dir)
+        save_history('quote', mode, dst_dir)
+        save_all_klines()
+        save_symbols(active)
+    elif kind == 'quote':
+        save_history('quote', mode, dst_dir)
+    elif kind == 'trade':
+        save_history('trade', mode, dst_dir)
+    elif kind == 'kline':
+        save_all_klines()
+    elif kind == 'symbol':
+        save_symbols(active)
 
 
 @click.command()

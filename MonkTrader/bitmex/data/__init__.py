@@ -22,14 +22,5 @@
 # SOFTWARE.
 #
 
-import logbook
-from logbook.more import ColorizedStderrHandler
-
-
-console_log = logbook.Logger("console")
-
-console_log.handlers.append(ColorizedStderrHandler(bubble=True))
-
-trade_log = logbook.Logger("Trader_log")
-
-trade_log.handlers.append(ColorizedStderrHandler(bubble=True))
+from .kline import save_kline, save_symbols
+from .quote import save_history

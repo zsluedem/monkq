@@ -51,10 +51,7 @@ class BitmexController():
         self._loop = loop
         self.base_url = base_url
         self.orderIDPrefix = orderIDPrefix
-        self.ws = BitmexWebsocket(loop)
 
-
-    def setup(self):
         self._trace_config = aiohttp.TraceConfig()
         # self._trace_config.on_request_end.append(self._end_request)
 
@@ -62,8 +59,24 @@ class BitmexController():
         if CONF.SSL_PATH:
             self._ssl = ssl.create_default_context()
             self._ssl.load_verify_locations(CONF.SSL_PATH)
-        self.session = aiohttp.ClientSession(trace_configs=[self._trace_config])
-        # self.ws.setup()
+        else:
+            self._ssl = None
+        self.session = aiohttp.ClientSession(trace_configs=[self._trace_config], loop=self._loop)
+
+        self.ws = BitmexWebsocket(loop, self.session, ssl=self._ssl)
+
+
+    async def setup(self):
+        await self.ws.setup()
+
+    async def subscribe(self, topic:str, symbol:str=''):
+        await self.ws.subscribe(topic, symbol)
+
+    async def unsubscribe(self, topic:str, symbol:str=''):
+        await self.ws.unsubscribe(topic, symbol)
+
+    def funds(self):
+        return self.ws.funds()
 
     def ticker_data(self, symbol=None):
         """Get ticker data."""
@@ -80,17 +93,7 @@ class BitmexController():
         return self._curl_bitmex(path='instrument', query=query, verb='GET')
 
     def recent_trades(self):
-        """Get recent trades.
-
-        Returns
-        -------
-        A list of dicts:
-              {u'amount': 60,
-               u'date': 1306775375,
-               u'price': 8.7401099999999996,
-               u'tid': u'93842'},
-
-        """
+        """Get recent trades."""
         return self.ws.recent_trades()
 
     # TODO test

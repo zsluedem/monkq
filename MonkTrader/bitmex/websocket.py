@@ -21,13 +21,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import websockets
 import json
 import traceback
 import decimal
 from decimal import Decimal
 import asyncio
+import ssl
+from collections import defaultdict
 
+from aiohttp import ClientSession
 from MonkTrader.bitmex.auth import gen_header_dict
 from MonkTrader.const import Bitmex_websocket_url
 from MonkTrader.logger import trade_log
@@ -55,14 +57,24 @@ class BitmexWebsocket():
 
     MAX_TABLE_LEN = 200
 
-    def __init__(self, loop:asyncio.AbstractEventLoop):
+    def __init__(self, loop:asyncio.AbstractEventLoop, session:ClientSession, ssl:ssl.SSLContext= None):
         self._loop = loop
         self._data = dict()
         self._keys = dict()
         self._ws = None
-        self.exited = False
+        self._ssl = ssl
+        self.session:ClientSession = session
+        self.inited = False
 
-    def setup(self):
+
+    async def setup(self):
+        headers = gen_header_dict('GET', "/realtime", '')
+        if CONF.HTTP_PROXY:
+            proxy = CONF.HTTP_PROXY
+        else:
+            proxy = None
+
+        self.ws = await self.session.ws_connect(CONF.Bitmex_ws_url, headers=headers, proxy=proxy, ssl=self._ssl)
         self._loop.create_task(self.run())
 
     def open_orders(self, clOrdIDPrefix):
@@ -72,13 +84,16 @@ class BitmexWebsocket():
 
 
     async def run(self):
-        headers = gen_header_dict('GET', "/realtime", '')
-        async with websockets.connect(Bitmex_websocket_url, extra_headers=headers) as ws:
-            self.ws = ws
-            while not self.exited:
-                message = await self.ws.recv()
-                trade_log.debug(f"Receive message from bitmex:{message}")
-                self._on_message(message)
+        async for message in self.ws:
+            trade_log.debug(f"Receive message from bitmex:{message.data}")
+            self._on_message(message.data)
+
+    async def subscribe(self, topic, symbol=''):
+        await self.ws.send_json({'op': 'subscribe', "args":[':'.join((topic, symbol))]})
+
+    async def unsubscribe(self, topic, symbol=''):
+        args = ":".join((topic, symbol))
+        await self.ws.send_json({'op': 'unsubscribe', "args":[args]})
 
     def recent_trades(self):
         return self._data['trade']
@@ -86,7 +101,9 @@ class BitmexWebsocket():
     def funds(self):
         return self._data['margin']
 
-    def position(self, symbol):
+    def position(self, symbol:str=None):
+        if symbol is None:
+            return self._data['position']
         positions = self._data['position']
         pos = [p for p in positions if p['symbol'] == symbol]
         if len(pos) == 0:
@@ -97,7 +114,9 @@ class BitmexWebsocket():
     def error(self, error):
         pass
 
-    def get_instrument(self, symbol:str):
+    def get_instrument(self, symbol:str=None):
+        if symbol is None:
+            return self._data['instrument']
         instruments = self._data['instrument']
         matchingInstruments = [i for i in instruments if i['symbol'] == symbol]
         if len(matchingInstruments) == 0:
@@ -129,7 +148,7 @@ class BitmexWebsocket():
             }
 
         # The instrument has a tickSize. Use it to round values.
-        return {k: toNearest(float(v or 0), instrument['tickSize']) for k, v in iteritems(ticker)}
+        return {k: toNearest(float(v or 0), instrument['tickSize']) for k, v in ticker.items()}
 
 
     def _on_message(self, message:str or bytes or bytearray):
@@ -139,11 +158,18 @@ class BitmexWebsocket():
         table = message['table'] if 'table' in message else None
         action = message['action'] if 'action' in message else None
         try:
+            print(message)
             if 'subscribe' in message:
                 if message['success']:
                     trade_log.debug("Subscribed to %s." % message['subscribe'])
                 else:
                     self.error("Unable to subscribe to %s. Error: \"%s\" Please check and restart." %
+                               (message['request']['args'][0], message['error']))
+            elif 'unsubscribe' in message:
+                if message['success']:
+                    trade_log.debug("Unsubscribed to %s." % message['unsubscribe'])
+                else:
+                    self.error("Unable to unsubscribe to %s. Error: \"%s\" Please check and restart." %
                                (message['request']['args'][0], message['error']))
             elif 'status' in message:
                 if message['status'] == 400:

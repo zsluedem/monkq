@@ -93,7 +93,7 @@ class TarStreamRequest(StreamRequest):
             os._exit(1)
 
     def rollback(self):
-        shutil.rmtree(self.dst_file, ignore_errors=True)
+        os.remove(self.dst_file)
 
 class CsvStreamRequest(StreamRequest):
     def __init__(self, date:datetime.datetime, url:str, cache_num:int=100, chunk_process:bool=False, csv_reader=csv.DictReader, decompress=False):
@@ -224,7 +224,7 @@ class FileStream(CsvStreamRequest):
         return row
 
     def rollback(self):
-        shutil.rmtree(self.dst_dir, ignore_errors=True)
+        shutil.rmtree(self.dst_dir)
 
     def cleanup(self):
         self.csv_file_writers.close()

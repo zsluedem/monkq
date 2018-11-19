@@ -124,7 +124,6 @@ def save_kline(frequency, active=True):
             continue
         col.insert_many(data)
 
-    console_log.info()
 
 def save_symbols(active):
     symbols = fetch_bitmex_symbols(active)

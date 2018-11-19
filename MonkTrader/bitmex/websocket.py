@@ -27,13 +27,16 @@ import decimal
 from decimal import Decimal
 import asyncio
 import ssl
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 from aiohttp import ClientSession
 from MonkTrader.bitmex.auth import gen_header_dict
-from MonkTrader.const import Bitmex_websocket_url
 from MonkTrader.logger import trade_log
 from MonkTrader.config import CONF
+
+from typing import Dict
+
+OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
 
 def findItemByKeys(keys:list, table:list, matchData:dict):
     for item in table:
@@ -65,6 +68,9 @@ class BitmexWebsocket():
         self._ssl = ssl
         self.session:ClientSession = session
         self.inited = False
+
+        self.quote_data = defaultdict(dict)
+        self.order_book:Dict[str, OrderBook[Dict, Dict]] = defaultdict(lambda :OrderBook(Buy=dict(), Sell=dict()))
 
 
     async def setup(self):
@@ -150,6 +156,12 @@ class BitmexWebsocket():
         # The instrument has a tickSize. Use it to round values.
         return {k: toNearest(float(v or 0), instrument['tickSize']) for k, v in ticker.items()}
 
+    def get_quote(self, symbol:str):
+        return self.quote_data[symbol]
+
+    def get_order_book(self, symbol:str):
+        return self.order_book[symbol]
+
 
     def _on_message(self, message:str or bytes or bytearray):
         '''Handler for parsing WS messages.'''
@@ -191,52 +203,79 @@ class BitmexWebsocket():
                 # 'delete'  - delete row
                 if action == 'partial':
                     trade_log.debug("%s: partial" % table)
-                    self._data[table] += message['data']
-                    # Keys are communicated on partials to let you know how to uniquely identify
-                    # an item. We use it for updates.
-                    self._keys[table] = message['keys']
+                    if message['table'] == "quote":
+                        for data in message['data']:
+                            self.quote_data[data['symbol']] = data
+                    elif message['table'] == 'orderBookL2':
+                        for data in message['data']:
+                            side_book = getattr(self.order_book[data['symbol']], data['side'])
+                            side_book[data['id']] = data
+                    else:
+                        self._data[table] += message['data']
+                        # Keys are communicated on partials to let you know how to uniquely identify
+                        # an item. We use it for updates.
+                        self._keys[table] = message['keys']
                 elif action == 'insert':
                     trade_log.debug('%s: inserting %s' % (table, message['data']))
-                    self._data[table] += message['data']
-
-                    # Limit the max length of the table to avoid excessive memory usage.
-                    # Don't trim orders because we'll lose valuable state if we do.
-                    if table not in ['order', 'orderBookL2'] and len(
-                            self._data[table]) > BitmexWebsocket.MAX_TABLE_LEN:
-                        self._data[table] = self._data[table][(BitmexWebsocket.MAX_TABLE_LEN // 2):]
+                    if message['table'] == 'quote':
+                        for data in message['data']:
+                            self.quote_data[data['symbol']] = data
+                    elif message['table'] == 'orderBookL2':
+                        for data in message['data']:
+                            side_book = getattr(self.order_book[data['symbol']], data['side'])
+                            side_book[data['id']] = data
+                    else:
+                        self._data[table] += message['data']
+                        # Limit the max length of the table to avoid excessive memory usage.
+                        # Don't trim orders because we'll lose valuable state if we do.
+                        if table not in ['order', 'orderBookL2'] and len(
+                                self._data[table]) > BitmexWebsocket.MAX_TABLE_LEN:
+                            self._data[table] = self._data[table][(BitmexWebsocket.MAX_TABLE_LEN // 2):]
 
                 elif action == 'update':
                     trade_log.debug('%s: updating %s' % (table, message['data']))
                     # Locate the item in the collection and update it.
-                    for updateData in message['data']:
-                        item = findItemByKeys(self._keys[table], self._data[table], updateData)
-                        if not item:
-                            continue  # No item found to update. Could happen before push
+                    if message['table'] == "orderBookL2":
+                        for data in message['data']:
+                            side_book = getattr(self.order_book[data['symbol']], data['side'])
+                            bar = side_book[data['id']]
+                            bar.update(data)
+                    else:
+                        for updateData in message['data']:
+                            item = findItemByKeys(self._keys[table], self._data[table], updateData)
+                            if not item:
+                                continue  # No item found to update. Could happen before push
 
-                        # Log executions
-                        if table == 'order':
-                            is_canceled = 'ordStatus' in updateData and updateData['ordStatus'] == 'Canceled'
-                            if 'cumQty' in updateData and not is_canceled:
-                                contExecuted = updateData['cumQty'] - item['cumQty']
-                                if contExecuted > 0:
-                                    instrument = self.get_instrument(item['symbol'])
-                                    trade_log.info("Execution: %s %d Contracts of %s at %.*f" %
-                                                     (item['side'], contExecuted, item['symbol'],
-                                                      instrument['tickLog'], item['price']))
+                            # Log executions
+                            if table == 'order':
+                                is_canceled = 'ordStatus' in updateData and updateData['ordStatus'] == 'Canceled'
+                                if 'cumQty' in updateData and not is_canceled:
+                                    contExecuted = updateData['cumQty'] - item['cumQty']
+                                    if contExecuted > 0:
+                                        instrument = self.get_instrument(item['symbol'])
+                                        trade_log.info("Execution: %s %d Contracts of %s at %.*f" %
+                                                         (item['side'], contExecuted, item['symbol'],
+                                                          instrument['tickLog'], item['price']))
 
-                        # Update this item.
-                        item.update(updateData)
+                            # Update this item.
+                            item.update(updateData)
 
-                        # Remove canceled / filled orders
-                        if table == 'order' and item['leavesQty'] <= 0:
-                            self._data[table].remove(item)
+                            # Remove canceled / filled orders
+                            if table == 'order' and item['leavesQty'] <= 0:
+                                self._data[table].remove(item)
 
                 elif action == 'delete':
                     trade_log.debug('%s: deleting %s' % (table, message['data']))
                     # Locate the item in the collection and remove it.
-                    for deleteData in message['data']:
-                        item = findItemByKeys(self._keys[table], self._data[table], deleteData)
-                        self._data[table].remove(item)
+
+                    if message['table'] == "orderBookL2":
+                        for data in message['data']:
+                            side_book = getattr(self.order_book[data['symbol']], data['side'])
+                            side_book.pop(data['id'])
+                    else:
+                        for deleteData in message['data']:
+                            item = findItemByKeys(self._keys[table], self._data[table], deleteData)
+                            self._data[table].remove(item)
                 else:
                     raise Exception("Unknown action: %s" % action)
         except:

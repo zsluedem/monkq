@@ -170,7 +170,6 @@ class BitmexWebsocket():
         table = message['table'] if 'table' in message else None
         action = message['action'] if 'action' in message else None
         try:
-            print(message)
             if 'subscribe' in message:
                 if message['success']:
                     trade_log.debug("Subscribed to %s." % message['subscribe'])

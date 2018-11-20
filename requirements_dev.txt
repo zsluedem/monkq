@@ -1,2 +1,6 @@
 ipython
 ipdb
+pandas
+numpy
+matplotlib
+jupyter

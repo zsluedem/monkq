@@ -36,7 +36,7 @@ def cli():
 
 @click.command()
 @click.help_option()
-@click.option('--kind', default="all", type=click.Choice(['all', 'quote', 'trade', 'kline', 'symbols']))
+@click.option('--kind', default="all", type=click.Choice(['all', 'quote', 'trade', 'kline', 'symbol']))
 @click.option('--mongodb_uri', default='mongodb://127.0.0.1:27017', help="mongodb uri you want to download to")
 @click.option('--active', default=True, type=click.BOOL ,help="download active or all symbols")
 @click.option('--mode', default="mongo", type=click.Choice(['mongo', 'csv', 'tar']), help="Define the download mode")
@@ -62,6 +62,8 @@ def download(kind, mongodb_uri, active, mode, dst_dir):
         save_all_klines()
     elif kind == 'symbol':
         save_symbols(active)
+    else:
+        raise NotImplementedError
 
 
 @click.command()

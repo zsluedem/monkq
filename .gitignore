@@ -2,6 +2,7 @@
 local/*
 local_data/*
 local_quote/*
+analysis/*
 settings.py
 
 # Byte-compiled / optimized / DLL files
@@ -115,3 +116,4 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+/analysis/20181017.csv

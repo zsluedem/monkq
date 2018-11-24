@@ -28,7 +28,8 @@ import os
 import sys
 import importlib
 import pymongo
-from MonkTrader.logger import console_log
+import logbook
+from MonkTrader.logger import console_log, trade_log
 from MonkTrader import _settings
 from MonkTrader.const import Bitmex_api_url, Bitmex_testnet_api_url, Bitmex_testnet_websocket_url, Bitmex_websocket_url
 
@@ -75,6 +76,8 @@ class Conf(Configurable):
     # used only for testing
     SSL_PATH = Unicode(config=True)
 
+    LOG_LEVEL = Unicode(config=True)
+
     def __init__(self, *args, **kwargs):
         super(Conf, self).__init__(*args, **kwargs)
 
@@ -95,6 +98,14 @@ class Conf(Configurable):
     def _observe_database_uri(self, change):
         new = change.get('new')
         self._db_handle = pymongo.MongoClient(new)
+
+
+    @observe("LOG_LEVEL")
+    def _observe_log_level(self, change):
+        new = change.get('new')
+        console_log.level = getattr(logbook, new)
+        trade_log.level = getattr(logbook, new)
+
 
     @property
     def db(self):

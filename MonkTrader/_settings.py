@@ -1,3 +1,5 @@
+import logging
+import logbook
 # If IS_TEST is True, the program run through the testnet.bitmex.com.
 IS_TEST = True
 
@@ -13,3 +15,5 @@ HTTP_PROXY = ""
 
 # used only for testing
 SSL_PATH = ''
+
+LOG_LEVEL = 'INFO' # DEBUG, INFO, NOTICE, WARNING, ERROR

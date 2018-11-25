@@ -37,6 +37,7 @@ from MonkTrader.config import CONF
 from typing import Dict
 
 OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
+CURRENCY = 'XBt'
 
 def findItemByKeys(keys:list, table:list, matchData:dict):
     for item in table:
@@ -71,6 +72,7 @@ class BitmexWebsocket():
 
         self.quote_data = defaultdict(dict)
         self.order_book:Dict[str, OrderBook[Dict, Dict]] = defaultdict(lambda :OrderBook(Buy=dict(), Sell=dict()))
+        self.positions:Dict[str, Dict] = defaultdict(dict)
 
 
     async def setup(self):
@@ -107,15 +109,10 @@ class BitmexWebsocket():
     def funds(self):
         return self._data['margin']
 
-    def position(self, symbol:str=None):
+    def get_position(self, symbol:str=None):
         if symbol is None:
-            return self._data['position']
-        positions = self._data['position']
-        pos = [p for p in positions if p['symbol'] == symbol]
-        if len(pos) == 0:
-            # No position found; stub it
-            return {'avgCostPrice': 0, 'avgEntryPrice': 0, 'currentQty': 0, 'symbol': symbol}
-        return pos[0]
+            return self.positions
+        return self.positions[symbol]
 
     def error(self, error):
         pass
@@ -209,6 +206,10 @@ class BitmexWebsocket():
                         for data in message['data']:
                             side_book = getattr(self.order_book[data['symbol']], data['side'])
                             side_book[data['id']] = data
+                    elif message['table'] == 'position':
+                        for data in message['data']:
+                            assert data['currency'] == CURRENCY
+                            self.positions[data['symbol']] = data
                     else:
                         self._data[table] += message['data']
                         # Keys are communicated on partials to let you know how to uniquely identify
@@ -223,6 +224,10 @@ class BitmexWebsocket():
                         for data in message['data']:
                             side_book = getattr(self.order_book[data['symbol']], data['side'])
                             side_book[data['id']] = data
+                    elif message['table'] == 'position':
+                        for data in message['data']:
+                            assert data['currency'] == CURRENCY
+                            self.positions[data['symbol']] = data
                     else:
                         self._data[table] += message['data']
                         # Limit the max length of the table to avoid excessive memory usage.
@@ -239,6 +244,10 @@ class BitmexWebsocket():
                             side_book = getattr(self.order_book[data['symbol']], data['side'])
                             bar = side_book[data['id']]
                             bar.update(data)
+                    if message['table'] == 'position':
+                        for data in message['data']:
+                            assert data['currency'] == CURRENCY
+                            self.positions[data['symbol']].update(data)
                     else:
                         for updateData in message['data']:
                             item = findItemByKeys(self._keys[table], self._data[table], updateData)

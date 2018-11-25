@@ -26,7 +26,9 @@ import traceback
 import decimal
 from decimal import Decimal
 import asyncio
+import time
 import ssl
+from functools import wraps
 from collections import defaultdict, namedtuple
 
 from aiohttp import ClientSession
@@ -38,6 +40,7 @@ from typing import Dict
 
 OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
 CURRENCY = 'XBt'
+INTERVAL_FACTOR = 20
 
 def findItemByKeys(keys:list, table:list, matchData:dict):
     for item in table:
@@ -56,6 +59,14 @@ def toNearest(num:float, tickSize:float):
     tickDec = Decimal(str(tickSize))
     return float((Decimal(round(num / tickSize, 0)) * tickDec))
 
+def timestamp_update(func):
+    @wraps(func)
+    def wrapped(self, *args, **kwargs):
+        self._last_comm_time = time.time()
+        print(self._last_comm_time)
+        ret = func(self, *args, **kwargs)
+        return ret
+    return wrapped
 
 class BitmexWebsocket():
 
@@ -69,6 +80,7 @@ class BitmexWebsocket():
         self._ssl = ssl
         self.session:ClientSession = session
         self.inited = False
+        self._last_comm_time = 0
 
         self.quote_data = defaultdict(dict)
         self.order_book:Dict[str, OrderBook[Dict, Dict]] = defaultdict(lambda :OrderBook(Buy=dict(), Sell=dict()))
@@ -83,22 +95,34 @@ class BitmexWebsocket():
             proxy = None
 
         self._ws = await self.session.ws_connect(CONF.Bitmex_ws_url, headers=headers, proxy=proxy, ssl=self._ssl)
+        self._last_comm_time = time.time()
         self._loop.create_task(self.run())
+        self._loop.create_task(self._ping())
+
 
     def open_orders(self, clOrdIDPrefix):
         orders = self.data['order']
         # Filter to only open orders (leavesQty > 0) and those that we actually placed
         return [o for o in orders if str(o['clOrdID']).startswith(clOrdIDPrefix) and o['leavesQty'] > 0]
 
+    async def _ping(self):
+        while 1:
+            if time.time() - self._last_comm_time > INTERVAL_FACTOR:
+                trade_log.debug(f'No communication during {INTERVAL_FACTOR} seconds. Send ping signal to keep connection open')
+                await self._ws.ping()
+                self._last_comm_time = time.time()
+            await asyncio.sleep(INTERVAL_FACTOR)
 
     async def run(self):
         async for message in self._ws:
             trade_log.debug(f"Receive message from bitmex:{message.data}")
             self._on_message(message.data)
 
+    @timestamp_update
     async def subscribe(self, topic, symbol=''):
         await self._ws.send_json({'op': 'subscribe', "args":[':'.join((topic, symbol))]})
 
+    @timestamp_update
     async def unsubscribe(self, topic, symbol=''):
         args = ":".join((topic, symbol))
         await self._ws.send_json({'op': 'unsubscribe', "args":[args]})
@@ -159,7 +183,7 @@ class BitmexWebsocket():
     def get_order_book(self, symbol:str):
         return self.order_book[symbol]
 
-
+    @timestamp_update
     def _on_message(self, message:str or bytes or bytearray):
         '''Handler for parsing WS messages.'''
         message = json.loads(message)

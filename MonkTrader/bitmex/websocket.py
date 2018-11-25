@@ -63,7 +63,6 @@ def timestamp_update(func):
     @wraps(func)
     def wrapped(self, *args, **kwargs):
         self._last_comm_time = time.time()
-        print(self._last_comm_time)
         ret = func(self, *args, **kwargs)
         return ret
     return wrapped

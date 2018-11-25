@@ -96,6 +96,16 @@ class BitmexController():
         """Get recent trades."""
         return self.ws.recent_trades()
 
+    def recent_klines(self, symbol:str, frequency:str, count:int):
+        path = 'trade/bucketed'
+        query = {
+            "symbol": symbol,
+            "binSize": frequency,
+            "count": count,
+            "reverse": "true"
+        }
+        return  self._curl_bitmex(path=path, query=query)
+
     # TODO test
     @authentication_required
     def funds(self):

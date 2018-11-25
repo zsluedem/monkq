@@ -82,7 +82,7 @@ class BitmexWebsocket():
         else:
             proxy = None
 
-        self.ws = await self.session.ws_connect(CONF.Bitmex_ws_url, headers=headers, proxy=proxy, ssl=self._ssl)
+        self._ws = await self.session.ws_connect(CONF.Bitmex_ws_url, headers=headers, proxy=proxy, ssl=self._ssl)
         self._loop.create_task(self.run())
 
     def open_orders(self, clOrdIDPrefix):
@@ -92,16 +92,16 @@ class BitmexWebsocket():
 
 
     async def run(self):
-        async for message in self.ws:
+        async for message in self._ws:
             trade_log.debug(f"Receive message from bitmex:{message.data}")
             self._on_message(message.data)
 
     async def subscribe(self, topic, symbol=''):
-        await self.ws.send_json({'op': 'subscribe', "args":[':'.join((topic, symbol))]})
+        await self._ws.send_json({'op': 'subscribe', "args":[':'.join((topic, symbol))]})
 
     async def unsubscribe(self, topic, symbol=''):
         args = ":".join((topic, symbol))
-        await self.ws.send_json({'op': 'unsubscribe', "args":[args]})
+        await self._ws.send_json({'op': 'unsubscribe', "args":[args]})
 
     def recent_trades(self):
         return self._data['trade']

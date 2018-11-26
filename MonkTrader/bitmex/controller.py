@@ -112,15 +112,13 @@ class BitmexController():
         """Get your current balance."""
         return self.ws.funds()
 
-    # TODO test
     @authentication_required
     def position(self, symbol):
         """Get your open position."""
         return self.ws.position(symbol)
 
-    # TODO test
     @authentication_required
-    def isolate_margin(self, symbol, leverage, rethrow_errors=False):
+    def leverage_position(self, symbol, leverage, rethrow_errors=False):
         """Set the leverage on an isolated margin position"""
         path = "position/leverage"
         postdict = {
@@ -128,6 +126,16 @@ class BitmexController():
             'leverage': leverage
         }
         return self._curl_bitmex(path=path, postdict=postdict, verb="POST", rethrow_errors=rethrow_errors)
+
+    @authentication_required
+    def isolate_position(self, symbol:str, is_not:bool):
+        path = "position/isolate"
+        postdict = {
+            'symbol': symbol,
+            'enabled': 'true' if is_not else  'false'
+        }
+        return self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+
 
     @authentication_required
     async def buy(self, symbol, quantity, price):

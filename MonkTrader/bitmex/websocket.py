@@ -35,6 +35,7 @@ from aiohttp import ClientSession
 from MonkTrader.bitmex.auth import gen_header_dict
 from MonkTrader.logger import trade_log
 from MonkTrader.config import CONF
+from MonkTrader.interface import Strategy, NoActionStrtegy
 
 from typing import Dict
 
@@ -71,12 +72,13 @@ class BitmexWebsocket():
 
     MAX_TABLE_LEN = 200
 
-    def __init__(self, loop:asyncio.AbstractEventLoop, session:ClientSession, ssl:ssl.SSLContext= None):
+    def __init__(self, loop:asyncio.AbstractEventLoop, session:ClientSession, ssl:ssl.SSLContext= None, caller:Strategy=NoActionStrtegy()):
         self._loop = loop
         self._data = dict()
         self._keys = dict()
         self._ws = None
         self._ssl = ssl
+        self.caller = caller
         self.session:ClientSession = session
         self.inited = False
         self._last_comm_time = 0
@@ -116,6 +118,11 @@ class BitmexWebsocket():
         async for message in self._ws:
             trade_log.debug(f"Receive message from bitmex:{message.data}")
             self._on_message(message.data)
+
+            # call strategy method
+            start = time.time()
+            await self.caller.tick(message.data)
+            trade_log.debug(f'User tick process time: {round(time.time()- start, 7)}')
 
     @timestamp_update
     async def subscribe(self, topic, symbol=''):
@@ -185,6 +192,7 @@ class BitmexWebsocket():
     @timestamp_update
     def _on_message(self, message:str or bytes or bytearray):
         '''Handler for parsing WS messages.'''
+        start = time.time()
         message = json.loads(message)
 
         table = message['table'] if 'table' in message else None
@@ -309,6 +317,7 @@ class BitmexWebsocket():
                             self._data[table].remove(item)
                 else:
                     raise Exception("Unknown action: %s" % action)
+            trade_log.debug(f"Tick data process time: {round(time.time()- start, 7)}")
         except:
             trade_log.error(traceback.format_exc())
 

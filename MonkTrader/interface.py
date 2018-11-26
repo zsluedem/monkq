@@ -26,5 +26,10 @@ import abc
 
 class Strategy(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def tick(self, *args, **kwargs):
+    async def tick(self, *args, **kwargs):
+        raise NotImplementedError
+
+
+class NoActionStrtegy(Strategy):
+    async def tick(self, *args, **kwargs):
         pass

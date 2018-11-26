@@ -32,6 +32,7 @@ from MonkTrader.config import CONF
 import ssl
 from MonkTrader.bitmex.websocket import BitmexWebsocket
 from MonkTrader.bitmex.auth import gen_header_dict
+from MonkTrader.interface import Strategy, NoActionStrtegy
 
 def authentication_required(fn):
     """Annotation for methods that require auth."""
@@ -47,7 +48,7 @@ def authentication_required(fn):
 
 
 class BitmexController():
-    def __init__(self, base_url: str, loop: asyncio.AbstractEventLoop, orderIDPrefix: str):
+    def __init__(self, base_url: str, loop: asyncio.AbstractEventLoop, orderIDPrefix: str, caller:Strategy=NoActionStrtegy()):
         self._loop = loop
         self.base_url = base_url
         self.orderIDPrefix = orderIDPrefix
@@ -62,8 +63,8 @@ class BitmexController():
         else:
             self._ssl = None
         self.session = aiohttp.ClientSession(trace_configs=[self._trace_config], loop=self._loop)
-
-        self.ws = BitmexWebsocket(loop, self.session, ssl=self._ssl)
+        self.caller = caller
+        self.ws = BitmexWebsocket(loop, self.session, ssl=self._ssl, caller=caller)
 
 
     async def setup(self):

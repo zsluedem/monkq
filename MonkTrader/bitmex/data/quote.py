@@ -93,6 +93,7 @@ class TarStreamRequest(StreamRequest):
             os._exit(1)
 
     def rollback(self):
+        console_log.info(f"Remove the not complete file {self.dst_file}")
         os.remove(self.dst_file)
 
 class CsvStreamRequest(StreamRequest):
@@ -224,6 +225,7 @@ class FileStream(CsvStreamRequest):
         return row
 
     def rollback(self):
+        console_log.info(f"Rollback : Remove the not complete dir {self.dst_dir}")
         shutil.rmtree(self.dst_dir)
 
     def cleanup(self):

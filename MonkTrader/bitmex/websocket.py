@@ -35,7 +35,7 @@ from aiohttp import ClientSession
 from MonkTrader.bitmex.auth import gen_header_dict
 from MonkTrader.logger import trade_log
 from MonkTrader.config import CONF
-from MonkTrader.interface import Strategy, NoActionStrtegy
+from MonkTrader.interface import BaseStrategy, NoActionStrategy
 
 from typing import Dict
 
@@ -43,7 +43,8 @@ OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
 CURRENCY = 'XBt'
 INTERVAL_FACTOR = 20
 
-def findItemByKeys(keys:list, table:list, matchData:dict):
+
+def findItemByKeys(keys: list, table: list, matchData: dict):
     for item in table:
         matched = True
         for key in keys:
@@ -52,7 +53,8 @@ def findItemByKeys(keys:list, table:list, matchData:dict):
         if matched:
             return item
 
-def toNearest(num:float, tickSize:float):
+
+def toNearest(num: float, tickSize: float):
     """Given a number, round it to the nearest tick. Very useful for sussing float error
        out of numbers: e.g. toNearest(401.46, 0.01) -> 401.46, whereas processing is
        normally with floats would give you 401.46000000000004.
@@ -60,33 +62,35 @@ def toNearest(num:float, tickSize:float):
     tickDec = Decimal(str(tickSize))
     return float((Decimal(round(num / tickSize, 0)) * tickDec))
 
+
 def timestamp_update(func):
     @wraps(func)
     def wrapped(self, *args, **kwargs):
         self._last_comm_time = time.time()
         ret = func(self, *args, **kwargs)
         return ret
+
     return wrapped
 
-class BitmexWebsocket():
 
+class BitmexWebsocket():
     MAX_TABLE_LEN = 200
 
-    def __init__(self, loop:asyncio.AbstractEventLoop, session:ClientSession, ssl:ssl.SSLContext= None, caller:Strategy=NoActionStrtegy()):
+    def __init__(self, caller: BaseStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession,
+                 ssl: ssl.SSLContext = None):
         self._loop = loop
         self._data = dict()
         self._keys = dict()
         self._ws = None
         self._ssl = ssl
         self.caller = caller
-        self.session:ClientSession = session
+        self.session: ClientSession = session
         self.inited = False
         self._last_comm_time = 0
 
         self.quote_data = defaultdict(dict)
-        self.order_book:Dict[str, OrderBook[Dict, Dict]] = defaultdict(lambda :OrderBook(Buy=dict(), Sell=dict()))
-        self.positions:Dict[str, Dict] = defaultdict(dict)
-
+        self.order_book: Dict[str, OrderBook[Dict, Dict]] = defaultdict(lambda: OrderBook(Buy=dict(), Sell=dict()))
+        self.positions: Dict[str, Dict] = defaultdict(dict)
 
     async def setup(self):
         headers = gen_header_dict('GET', "/realtime", '')
@@ -100,7 +104,6 @@ class BitmexWebsocket():
         self._loop.create_task(self.run())
         self._loop.create_task(self._ping())
 
-
     def open_orders(self, clOrdIDPrefix):
         orders = self.data['order']
         # Filter to only open orders (leavesQty > 0) and those that we actually placed
@@ -109,7 +112,8 @@ class BitmexWebsocket():
     async def _ping(self):
         while 1:
             if time.time() - self._last_comm_time > INTERVAL_FACTOR:
-                trade_log.debug(f'No communication during {INTERVAL_FACTOR} seconds. Send ping signal to keep connection open')
+                trade_log.debug(
+                    f'No communication during {INTERVAL_FACTOR} seconds. Send ping signal to keep connection open')
                 await self._ws.ping()
                 self._last_comm_time = time.time()
             await asyncio.sleep(INTERVAL_FACTOR)
@@ -126,12 +130,12 @@ class BitmexWebsocket():
 
     @timestamp_update
     async def subscribe(self, topic, symbol=''):
-        await self._ws.send_json({'op': 'subscribe', "args":[':'.join((topic, symbol))]})
+        await self._ws.send_json({'op': 'subscribe', "args": [':'.join((topic, symbol))]})
 
     @timestamp_update
     async def unsubscribe(self, topic, symbol=''):
         args = ":".join((topic, symbol))
-        await self._ws.send_json({'op': 'unsubscribe', "args":[args]})
+        await self._ws.send_json({'op': 'unsubscribe', "args": [args]})
 
     def recent_trades(self):
         return self._data['trade']
@@ -139,7 +143,7 @@ class BitmexWebsocket():
     def funds(self):
         return self._data['margin']
 
-    def get_position(self, symbol:str=None):
+    def get_position(self, symbol: str = None):
         if symbol is None:
             return self.positions
         return self.positions[symbol]
@@ -147,7 +151,7 @@ class BitmexWebsocket():
     def error(self, error):
         pass
 
-    def get_instrument(self, symbol:str=None):
+    def get_instrument(self, symbol: str = None):
         if symbol is None:
             return self._data['instrument']
         instruments = self._data['instrument']
@@ -160,7 +164,7 @@ class BitmexWebsocket():
         instrument['tickLog'] = decimal.Decimal(str(instrument['tickSize'])).as_tuple().exponent * -1
         return instrument
 
-    def get_ticker(self, symbol:str):
+    def get_ticker(self, symbol: str):
         '''Return a ticker object. Generated from instrument.'''
 
         instrument = self.get_instrument(symbol)
@@ -183,14 +187,14 @@ class BitmexWebsocket():
         # The instrument has a tickSize. Use it to round values.
         return {k: toNearest(float(v or 0), instrument['tickSize']) for k, v in ticker.items()}
 
-    def get_quote(self, symbol:str):
+    def get_quote(self, symbol: str):
         return self.quote_data[symbol]
 
-    def get_order_book(self, symbol:str):
+    def get_order_book(self, symbol: str):
         return self.order_book[symbol]
 
     @timestamp_update
-    def _on_message(self, message:str or bytes or bytearray):
+    def _on_message(self, message: str or bytes or bytearray):
         '''Handler for parsing WS messages.'''
         start = time.time()
         message = json.loads(message)
@@ -293,8 +297,8 @@ class BitmexWebsocket():
                                     if contExecuted > 0:
                                         instrument = self.get_instrument(item['symbol'])
                                         trade_log.info("Execution: %s %d Contracts of %s at %.*f" %
-                                                         (item['side'], contExecuted, item['symbol'],
-                                                          instrument['tickLog'], item['price']))
+                                                       (item['side'], contExecuted, item['symbol'],
+                                                        instrument['tickLog'], item['price']))
 
                             # Update this item.
                             item.update(updateData)
@@ -320,4 +324,3 @@ class BitmexWebsocket():
             trade_log.debug(f"Tick data process time: {round(time.time()- start, 7)}")
         except:
             trade_log.error(traceback.format_exc())
-

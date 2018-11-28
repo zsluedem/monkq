@@ -22,14 +22,19 @@
 # SOFTWARE.
 #
 
-import abc
+import typing
 
-class Strategy(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
+if typing.TYPE_CHECKING:
+    from MonkTrader.bitmex.controller import BitmexController
+
+class BaseStrategy():
+    def __init__(self, controller:"BitmexController"):
+        self.controller = controller
+
     async def tick(self, *args, **kwargs):
         raise NotImplementedError
 
 
-class NoActionStrtegy(Strategy):
+class NoActionStrategy(BaseStrategy):
     async def tick(self, *args, **kwargs):
         pass

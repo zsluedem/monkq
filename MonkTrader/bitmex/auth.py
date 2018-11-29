@@ -49,6 +49,8 @@ def generate_signature(secret, verb, url, nonce, data):
 
 
 def gen_header_dict(verb, url, data, nonce=3600):
+    if not CONF.API_KEY or not CONF.API_SECRET:
+        return {}
     expire = generate_expires(nonce)
 
     sign = generate_signature(CONF.API_SECRET, verb, url, expire, data)

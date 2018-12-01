@@ -124,9 +124,11 @@ class BitmexWebsocket():
             self._on_message(message.data)
 
             # call strategy method
-            start = time.time()
-            await self.caller.tick(message.data)
-            trade_log.debug(f'User tick process time: {round(time.time()- start, 7)}')
+            # websocket first package is not a normal package , so we use 'limit' to skip it
+            if 'limit' not in message.data:
+                start = time.time()
+                await self.caller.tick(message.data)
+                trade_log.debug(f'User tick process time: {round(time.time()- start, 7)}')
 
     @timestamp_update
     async def subscribe(self, topic, symbol=''):

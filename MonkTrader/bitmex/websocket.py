@@ -37,7 +37,7 @@ from MonkTrader.logger import trade_log
 from MonkTrader.config import CONF
 from MonkTrader.interface import BaseStrategy, NoActionStrategy
 
-from typing import Dict
+from typing import Dict, Union
 
 OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
 CURRENCY = 'XBt'
@@ -121,13 +121,14 @@ class BitmexWebsocket():
     async def run(self):
         async for message in self._ws:
             trade_log.debug(f"Receive message from bitmex:{message.data}")
-            self._on_message(message.data)
+            decode_message = json.loads(message.data)
+            self._on_message(decode_message)
 
             # call strategy method
             # websocket first package is not a normal package , so we use 'limit' to skip it
-            if 'limit' not in message.data:
+            if 'limit' not in decode_message:
                 start = time.time()
-                await self.caller.tick(message.data)
+                await self.caller.tick(decode_message)
                 trade_log.debug(f'User tick process time: {round(time.time()- start, 7)}')
 
     @timestamp_update
@@ -196,10 +197,9 @@ class BitmexWebsocket():
         return self.order_book[symbol]
 
     @timestamp_update
-    def _on_message(self, message: str or bytes or bytearray):
+    def _on_message(self, message: Union[dict, list]):
         '''Handler for parsing WS messages.'''
         start = time.time()
-        message = json.loads(message)
 
         table = message['table'] if 'table' in message else None
         action = message['action'] if 'action' in message else None

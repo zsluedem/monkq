@@ -31,10 +31,16 @@ class BaseStrategy():
     def __init__(self, controller:"BitmexController"):
         self.controller = controller
 
-    async def tick(self, *args, **kwargs):
+    async def on_trade(self, message, *args, **kwargs):
+        raise NotImplementedError
+
+    async def tick(self, message, *args, **kwargs):
         raise NotImplementedError
 
 
 class NoActionStrategy(BaseStrategy):
-    async def tick(self, *args, **kwargs):
+    async def tick(self, message, *args, **kwargs):
+        pass
+
+    async def on_trade(self, message, *args, **kwargs):
         pass

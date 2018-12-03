@@ -32,7 +32,9 @@ from MonkTrader.config import CONF
 import ssl
 from MonkTrader.bitmex.websocket import BitmexWebsocket
 from MonkTrader.bitmex.auth import gen_header_dict
+from MonkTrader.bitmex.order import Order
 from MonkTrader.interface import BaseStrategy, NoActionStrategy
+from typing import List
 
 def authentication_required(fn):
     """Annotation for methods that require auth."""
@@ -119,14 +121,14 @@ class BitmexController():
         return self.ws.position(symbol)
 
     @authentication_required
-    def leverage_position(self, symbol, leverage, rethrow_errors=False):
+    def leverage_position(self, symbol, leverage):
         """Set the leverage on an isolated margin position"""
         path = "position/leverage"
         postdict = {
             'symbol': symbol,
             'leverage': leverage
         }
-        return self._curl_bitmex(path=path, postdict=postdict, verb="POST", rethrow_errors=rethrow_errors)
+        return self._curl_bitmex(path=path, postdict=postdict, verb="POST")
 
     @authentication_required
     def isolate_position(self, symbol:str, is_not:bool):
@@ -137,54 +139,21 @@ class BitmexController():
         }
         return self._curl_bitmex(path=path, postdict=postdict, verb="POST")
 
-
     @authentication_required
-    async def buy(self, symbol, quantity, price):
-        """Place a buy order.
-
-        Returns order object. ID: orderID
-        """
-        return await self.place_order(symbol, quantity, price)
-
-    @authentication_required
-    async def sell(self, symbol, quantity, price):
-        """Place a sell order.
-
-        Returns order object. ID: orderID
-        """
-        return await self.place_order(symbol, -quantity, price)
-
-    @authentication_required
-    async def place_order(self,symbol,  quantity, price):
+    async def place_order(self,order:Order):
         """Place an order."""
-        if price < 0:
-            raise Exception("Price must be positive.")
-
-        endpoint = "order"
-        # Generate a unique clOrdID with our prefix so we can identify it.
-        clOrdID = self.orderIDPrefix + base64.b64encode(uuid.uuid4().bytes).decode('utf8').rstrip('=\n')
-        postdict = {
-            'symbol': symbol,
-            'orderQty': quantity,
-            'price': price,
-            'clOrdID': clOrdID
-        }
-        return await self._curl_bitmex(path=endpoint, postdict=postdict, verb="POST")
+        return await self._curl_bitmex(path="order", postdict=order.to_postdict(), verb="POST")
 
     @authentication_required
-    def amend_bulk_orders(self, orders):
+    def amend_bulk_orders(self, orders:List[Order]):
         """Amend multiple orders."""
         # Note rethrow; if this fails, we want to catch it and re-tick
-        return self._curl_bitmex(path='order/bulk', postdict={'orders': orders}, verb='PUT', rethrow_errors=True)
+        return self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='PUT')
 
     @authentication_required
-    def create_bulk_orders(self, orders, post_only=False):
+    def create_bulk_orders(self, orders:List[Order]):
         """Create multiple orders."""
-        for order in orders:
-            order['clOrdID'] = self.orderIDPrefix + base64.b64encode(uuid.uuid4().bytes).decode('utf8').rstrip('=\n')
-            if post_only:
-                order['execInst'] = 'ParticipateDoNotInitiate'
-        return self._curl_bitmex(path='order/bulk', postdict={'orders': orders}, verb='POST')
+        return self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='PUT')
 
     @authentication_required
     def open_orders(self):
@@ -234,7 +203,7 @@ class BitmexController():
         resp = await self._curl_bitmex(path, verb="GET")
         return json.loads(await resp.text())
 
-    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=None, verb=None, rethrow_errors=False,
+    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=None, verb=None,
                      max_retries=None):
         url = self.base_url + path
 

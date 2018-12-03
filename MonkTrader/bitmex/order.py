@@ -28,7 +28,7 @@ import json
 class Order():
     def __init__(self, symbol: str, quantity: int, price: Optional[float] = None, side: Optional[str] = None,
                  order_type: Optional[str] = None, displayQty: Optional[int] = None, stopPx: Optional[float] = None,
-                 clOrdId: Optional[str] = None, pegOffsetValue: Optional[float] = None,
+                 clOrdID: Optional[str] = None, pegOffsetValue: Optional[float] = None,
                  pegPriceType: Optional[str] = None, timeInForce: Optional[str] = None, execInst: Optional[str] = None,
                  text: Optional[str] = None):
         self.symbol = symbol
@@ -38,7 +38,7 @@ class Order():
         self.price = price
         self.displayQty = displayQty
         self.stopPx = stopPx
-        self.clOrdId = clOrdId
+        self.clOrdID = clOrdID
         self.pegOffsetValue = pegOffsetValue
         self.pegPriceType = pegPriceType
         self.timeInForce = timeInForce
@@ -58,7 +58,7 @@ class Order():
             'price': self.price,
             'displayQty': self.displayQty,
             'stopPx': self.stopPx,
-            'clOrdId': self.clOrdId,
+            'clOrdID': self.clOrdID,
             'pegOffsetValue': self.pegOffsetValue,
             'pegPriceType': self.pegPriceType,
             'timeInForce': self.timeInForce,
@@ -75,7 +75,7 @@ class Order():
             'price': self.price,
             'displayQty': self.displayQty,
             'stopPx': self.stopPx,
-            'clOrdId': self.clOrdId,
+            'clOrdID': self.clOrdID,
             'pegOffsetValue': self.pegOffsetValue,
             'pegPriceType': self.pegPriceType,
             'timeInForce': self.timeInForce,

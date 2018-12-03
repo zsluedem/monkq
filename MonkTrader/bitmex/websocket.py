@@ -104,10 +104,11 @@ class BitmexWebsocket():
         self._loop.create_task(self.run())
         self._loop.create_task(self._ping())
 
-    def open_orders(self, clOrdIDPrefix):
-        orders = self.data['order']
+    def open_orders(self):
+        orders = self._data['order']
         # Filter to only open orders (leavesQty > 0) and those that we actually placed
-        return [o for o in orders if str(o['clOrdID']).startswith(clOrdIDPrefix) and o['leavesQty'] > 0]
+        return orders
+        # return [o for o in orders if str(o['clOrdID']).startswith(clOrdIDPrefix) and o['leavesQty'] > 0]
 
     async def _ping(self):
         while 1:
@@ -127,9 +128,14 @@ class BitmexWebsocket():
             # call strategy method
             # websocket first package is not a normal package , so we use 'limit' to skip it
             if 'limit' not in decode_message:
-                start = time.time()
-                await self.caller.tick(decode_message)
-                trade_log.debug(f'User tick process time: {round(time.time()- start, 7)}')
+                if decode_message.get('table') == 'execution':
+                    start = time.time()
+                    await self.caller.on_trade(decode_message)
+                    trade_log.debug(f'User on_trade process time: {round(time.time()- start, 7)}')
+                else:
+                    start = time.time()
+                    await self.caller.tick(decode_message)
+                    trade_log.debug(f'User tick process time: {round(time.time()- start, 7)}')
 
     @timestamp_update
     async def subscribe(self, topic, symbol=''):

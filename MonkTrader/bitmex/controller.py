@@ -22,8 +22,6 @@
 # SOFTWARE.
 #
 import asyncio
-import base64
-import uuid
 import json
 import aiohttp
 
@@ -99,7 +97,7 @@ class BitmexController():
         """Get recent trades."""
         return self.ws.recent_trades()
 
-    def recent_klines(self, symbol:str, frequency:str, count:int):
+    async def recent_klines(self, symbol:str, frequency:str, count:int):
         path = 'trade/bucketed'
         query = {
             "symbol": symbol,
@@ -107,7 +105,7 @@ class BitmexController():
             "count": count,
             "reverse": "true"
         }
-        return  self._curl_bitmex(path=path, query=query)
+        return  await self._curl_bitmex(path=path, query=query)
 
     # TODO test
     @authentication_required
@@ -153,12 +151,12 @@ class BitmexController():
     @authentication_required
     def create_bulk_orders(self, orders:List[Order]):
         """Create multiple orders."""
-        return self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='PUT')
+        return self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='POST')
 
     @authentication_required
     def open_orders(self):
         """Get open orders."""
-        return self.ws.open_orders(self.orderIDPrefix)
+        return self.ws.open_orders()
 
     @authentication_required
     async def http_open_orders(self, symbol):
@@ -195,7 +193,7 @@ class BitmexController():
             'currency': 'XBt',
             'address': address
         }
-        return self._curl_bitmex(path=path, postdict=postdict, verb="POST", max_retries=0)
+        return self._curl_bitmex(path=path, postdict=postdict, verb="POST")
 
     @authentication_required
     async def user(self):
@@ -203,8 +201,7 @@ class BitmexController():
         resp = await self._curl_bitmex(path, verb="GET")
         return json.loads(await resp.text())
 
-    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=None, verb=None,
-                     max_retries=None):
+    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=None, verb=None):
         url = self.base_url + path
 
         url = URL(url)
@@ -219,8 +216,6 @@ class BitmexController():
         # In the future we could allow retrying PUT, so long as 'leavesQty' is not used (not idempotent),
         # or you could change the clOrdID (set {"clOrdID": "new", "origClOrdID": "old"}) so that an amend
         # can't erroneously be applied twice.
-        if max_retries is None:
-            max_retries = 0 if verb in ['POST', 'PUT'] else 3
 
         if query:
             url = url.with_query(query)

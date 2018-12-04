@@ -91,6 +91,7 @@ class BitmexWebsocket():
         self.quote_data = defaultdict(dict)
         self.order_book: Dict[str, OrderBook[Dict, Dict]] = defaultdict(lambda: OrderBook(Buy=dict(), Sell=dict()))
         self.positions: Dict[str, Dict] = defaultdict(dict)
+        self.margin: Dict = dict()
 
     async def setup(self):
         headers = gen_header_dict('GET', "/realtime", '')
@@ -127,7 +128,7 @@ class BitmexWebsocket():
 
             # call strategy method
             # websocket first package is not a normal package , so we use 'limit' to skip it
-            if 'limit' not in decode_message:
+            if decode_message.get('action'):
                 if decode_message.get('table') == 'execution':
                     start = time.time()
                     await self.caller.on_trade(decode_message)
@@ -140,6 +141,10 @@ class BitmexWebsocket():
     @timestamp_update
     async def subscribe(self, topic, symbol=''):
         await self._ws.send_json({'op': 'subscribe', "args": [':'.join((topic, symbol))]})
+
+    @timestamp_update
+    async def subscribe_multiple(self, topics:list):
+        await self._ws.send_json({'op': 'subscribe', "args": topics})
 
     @timestamp_update
     async def unsubscribe(self, topic, symbol=''):
@@ -253,6 +258,10 @@ class BitmexWebsocket():
                         for data in message['data']:
                             assert data['currency'] == CURRENCY
                             self.positions[data['symbol']] = data
+                    elif message['table'] == 'margin':
+                        for data in message['data']:
+                            assert data['currency'] == CURRENCY
+                            self.margin = data
                     else:
                         self._data[table] += message['data']
                         # Keys are communicated on partials to let you know how to uniquely identify
@@ -271,6 +280,8 @@ class BitmexWebsocket():
                         for data in message['data']:
                             assert data['currency'] == CURRENCY
                             self.positions[data['symbol']] = data
+                    elif message['table'] == 'margin':
+                        raise NotImplementedError
                     else:
                         self._data[table] += message['data']
                         # Limit the max length of the table to avoid excessive memory usage.
@@ -287,10 +298,14 @@ class BitmexWebsocket():
                             side_book = getattr(self.order_book[data['symbol']], data['side'])
                             bar = side_book[data['id']]
                             bar.update(data)
-                    if message['table'] == 'position':
+                    elif message['table'] == 'position':
                         for data in message['data']:
                             assert data['currency'] == CURRENCY
                             self.positions[data['symbol']].update(data)
+                    elif message['table'] == 'margin':
+                        for data in message['data']:
+                            assert data['currency'] == CURRENCY
+                            self.margin.update(data)
                     else:
                         for updateData in message['data']:
                             item = findItemByKeys(self._keys[table], self._data[table], updateData)

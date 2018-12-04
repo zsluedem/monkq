@@ -21,28 +21,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import requests
-import json
-from MonkTrader.config import CONF
 
-def cal_liq_price(open_price:float, current_position:int, leverage:float, buy_amount:int, long:bool):
-    pass
+class AccountMargin():
+    def __init__(self, maintMargin, unrealisedPnl, walletBalance, marginBalance, marginLeverage, marginUsedPcnt, initMargin, availableMargin, grossComm, grossLastValue):
+        self.walletBalance = walletBalance # 钱包余额
+        self.unrealisedPnl = unrealisedPnl # 未实现盈亏
+        self.marginBalance = marginBalance # 保证金余额
+        self.maintMargin = maintMargin # 仓位保证金
+        self.initMargin = initMargin # 委托保证金
+        self.availableMargin = availableMargin # 可用保证金
+        self.marginLeverage = marginLeverage # 杠杆
+        self.marginUsedPcnt = marginUsedPcnt # 保证金使用百分比
 
-
-def cal_liq_price_isolate():
-    pass
-
-def get_recent_klines(symbol:str, frequency:str, count:int):
-    query = {
-            "symbol": symbol,
-            "binSize": frequency,
-            "count": count,
-            "reverse": "true"
-        }
-    resp = requests.get("https://www.bitmex.com/api/v1/" + "trade/bucketed", params=query, proxies={"https":'http://127.0.0.1:1087'})
-    content = resp.content
-    return json.loads(content)
-
-
-if __name__ == '__main__':
-    print(get_recent_klines('XBTUSD', '1m', 500))
+        self.grossComm = grossComm # 8 小时内的合计委托费用
+        self.grossLastValue =  grossLastValue # 总持仓市值

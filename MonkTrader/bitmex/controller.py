@@ -73,6 +73,9 @@ class BitmexController():
     async def subscribe(self, topic:str, symbol:str=''):
         await self.ws.subscribe(topic, symbol)
 
+    async def subscribe_multiple(self, topics:list):
+        await self.ws.subscribe_multiple(topics)
+
     async def unsubscribe(self, topic:str, symbol:str=''):
         await self.ws.unsubscribe(topic, symbol)
 

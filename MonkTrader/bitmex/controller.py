@@ -24,6 +24,8 @@
 import asyncio
 import json
 import aiohttp
+import time
+import datetime
 
 from yarl import URL
 from MonkTrader.config import CONF
@@ -31,7 +33,7 @@ import ssl
 from MonkTrader.bitmex.websocket import BitmexWebsocket
 from MonkTrader.bitmex.auth import gen_header_dict
 from MonkTrader.bitmex.order import Order
-from MonkTrader.interface import BaseStrategy, NoActionStrategy
+from MonkTrader.logger import trade_log
 from typing import List
 
 def authentication_required(fn):
@@ -90,15 +92,19 @@ class BitmexController():
         """Get an instrument's details."""
         return self.ws.get_instrument(symbol)
 
-    def instruments(self, filter=None):
-        query = {}
-        if filter is not None:
-            query['filter'] = json.dumps(filter)
-        return self._curl_bitmex(path='instrument', query=query, verb='GET')
-
     def recent_trades(self):
         """Get recent trades."""
         return self.ws.recent_trades()
+
+    @authentication_required
+    def position(self, symbol):
+        """Get your open position."""
+        return self.ws.positions.get(symbol)
+
+    @authentication_required
+    def open_orders(self):
+        """Get open orders."""
+        return self.ws.open_orders()
 
     async def recent_klines(self, symbol:str, frequency:str, count:int):
         path = 'trade/bucketed'
@@ -110,35 +116,33 @@ class BitmexController():
         }
         return  await self._curl_bitmex(path=path, query=query)
 
-    # TODO test
-    @authentication_required
-    def funds(self):
-        """Get your current balance."""
-        return self.ws.funds()
+    async def instruments(self, filter=None):
+        query = {}
+        if filter is not None:
+            query['filter'] = json.dumps(filter)
+        resp = self._curl_bitmex(path='instrument', query=query, verb='GET')
+        return await resp.json()
 
     @authentication_required
-    def position(self, symbol):
-        """Get your open position."""
-        return self.ws.position(symbol)
-
-    @authentication_required
-    def leverage_position(self, symbol, leverage):
+    async def leverage_position(self, symbol, leverage):
         """Set the leverage on an isolated margin position"""
         path = "position/leverage"
         postdict = {
             'symbol': symbol,
             'leverage': leverage
         }
-        return self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+        resp = await self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+        return await resp.json()
 
     @authentication_required
-    def isolate_position(self, symbol:str, is_not:bool):
+    async def isolate_position(self, symbol:str, is_not:bool):
         path = "position/isolate"
         postdict = {
             'symbol': symbol,
             'enabled': 'true' if is_not else  'false'
         }
-        return self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+        resp = self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+        return await resp.json()
 
     @authentication_required
     async def place_order(self,order:Order):
@@ -146,24 +150,19 @@ class BitmexController():
         return await self._curl_bitmex(path="order", postdict=order.to_postdict(), verb="POST")
 
     @authentication_required
-    def amend_bulk_orders(self, orders:List[Order]):
+    async def amend_bulk_orders(self, orders:List[Order]):
         """Amend multiple orders."""
         # Note rethrow; if this fails, we want to catch it and re-tick
-        return self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='PUT')
+        return await self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='PUT')
 
     @authentication_required
-    def create_bulk_orders(self, orders:List[Order]):
+    async def create_bulk_orders(self, orders:List[Order]):
         """Create multiple orders."""
-        return self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='POST')
+        return await self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='POST')
 
     @authentication_required
     async def quick_create_bulk_orders(self, orders:List[dict]):
         return await self._curl_bitmex(path='order/bulk', postdict={'orders': orders}, verb='POST')
-
-    @authentication_required
-    def open_orders(self):
-        """Get open orders."""
-        return self.ws.open_orders()
 
     @authentication_required
     async def http_open_orders(self, symbol):
@@ -182,17 +181,18 @@ class BitmexController():
         return [o for o in orders if str(o['clOrdID']).startswith(self.orderIDPrefix)]
 
     @authentication_required
-    def cancel(self, orderID):
+    async def cancel(self, orderID):
         """Cancel an existing order."""
         path = "order"
         postdict = {
             'orderID': orderID,
         }
-        return self._curl_bitmex(path=path, postdict=postdict, verb="DELETE")
+        resp = await self._curl_bitmex(path=path, postdict=postdict, verb="DELETE")
+        return await resp.json()
 
     # TODO 403 in testnet
     @authentication_required
-    def withdraw(self, amount, fee, address):
+    async def withdraw(self, amount, fee, address):
         path = "user/requestWithdrawal"
         postdict = {
             'amount': amount,
@@ -200,15 +200,16 @@ class BitmexController():
             'currency': 'XBt',
             'address': address
         }
-        return self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+        resp = await self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+        return await resp.json()
 
     @authentication_required
     async def user(self):
         path = 'user'
         resp = await self._curl_bitmex(path, verb="GET")
-        return json.loads(await resp.text())
+        return await resp.json()
 
-    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=None, verb=None):
+    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=aiohttp.sentinel, verb=None, rethrow_errors=False) -> aiohttp.ClientResponse:
         url = self.base_url + path
 
         url = URL(url)
@@ -233,7 +234,11 @@ class BitmexController():
             proxy = None
 
         headers = {}
-
+        def exit_or_throw(e):
+            if rethrow_errors:
+                raise e
+            else:
+                exit(1)
         if postdict:
             data = json.dumps(postdict)
             headers.update({'content-type':"application/json"})
@@ -242,6 +247,51 @@ class BitmexController():
 
         headers.update(gen_header_dict(verb, str(url), data, 5))
 
-        resp = await self.session.request(method=verb, url=str(url), proxy=proxy, headers=headers, data=data, ssl=self._ssl)
+        if timeout is not aiohttp.sentinel:
+            timeout = aiohttp.ClientTimeout(total=timeout)
+
+        try:
+            resp = await self.session.request(method=verb, url=str(url), proxy=proxy, headers=headers, data=data, ssl=self._ssl, timeout=timeout)
+
+            if resp.status == 401:
+                trade_log.error("API Key or Secret incorrect, please check and restart.")
+                trade_log.error("Error: " + await resp.text())
+                if postdict:
+                    trade_log.error(postdict)
+                exit(1)
+            elif resp.status == 404:
+                if verb == 'DELETE':
+                    trade_log.error(f"Order not found: {postdict['orderID']}")
+                    return resp
+                trade_log.error("Unable to contact the BitMEX API (404). " +
+                                  f"Request: {url} \n {postdict}" )
+                # exit_or_throw()
+            elif resp.status == 429:
+                trade_log.error("Ratelimited on current request. Sleeping, then trying again. Try fewer " +
+                                  "order pairs or contact support@bitmex.com to raise your limits. " +
+                                  f"Request: {url} \n {postdict}")
+
+                # Figure out how long we need to wait.
+                ratelimit_reset = resp.headers['X-RateLimit-Reset']
+                to_sleep = int(ratelimit_reset) - int(time.time())
+                reset_str = datetime.datetime.fromtimestamp(int(ratelimit_reset)).strftime('%X')
+
+                trade_log.error(f"Your ratelimit will reset at {reset_str}. Sleeping for {to_sleep} seconds.")
+
+            # 503 - BitMEX temporary downtime, likely due to a deploy. Try again
+            elif resp.status == 503:
+                trade_log.warning("Unable to contact the BitMEX API (503), retrying. " +
+                                    f"Request: {url} \n {postdict}")
+            elif resp.status == 400:
+                content = await resp.json()
+                error = content['error']
+                message = error['message'].lower() if error else ''
+
+                trade_log.error(f"An error occured, and return {content} \n Request: {url}, {postdict}")
+                if 'insufficient available balance' in message:
+                    trade_log.error(f'Account out of funds. The message: {error["message"]}' )
+        except asyncio.TimeoutError:
+            # Timeout, re-run this request
+            trade_log.warning(f"Timed out on request: {path} ({postdict}), retrying..." )
 
         return resp

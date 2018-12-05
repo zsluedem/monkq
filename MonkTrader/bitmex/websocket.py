@@ -131,11 +131,11 @@ class BitmexWebsocket():
             if decode_message.get('action'):
                 if decode_message.get('table') == 'execution':
                     start = time.time()
-                    await self.caller.on_trade(decode_message)
+                    await self.caller.on_trade(message=decode_message)
                     trade_log.debug(f'User on_trade process time: {round(time.time()- start, 7)}')
                 else:
                     start = time.time()
-                    await self.caller.tick(decode_message)
+                    await self.caller.tick(message=decode_message)
                     trade_log.debug(f'User tick process time: {round(time.time()- start, 7)}')
 
     @timestamp_update

@@ -28,19 +28,16 @@ if typing.TYPE_CHECKING:
     from MonkTrader.bitmex.controller import BitmexController
 
 class BaseStrategy():
-    def __init__(self, controller:"BitmexController"):
-        self.controller = controller
-
-    async def on_trade(self, message, *args, **kwargs):
+    async def on_trade(self, message):
         raise NotImplementedError
 
-    async def tick(self, message, *args, **kwargs):
+    async def tick(self, message):
         raise NotImplementedError
 
 
 class NoActionStrategy(BaseStrategy):
-    async def tick(self, message, *args, **kwargs):
+    async def tick(self, message):
         pass
 
-    async def on_trade(self, message, *args, **kwargs):
+    async def on_trade(self, message):
         pass

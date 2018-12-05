@@ -48,7 +48,7 @@ def authentication_required(fn):
 
 
 class BitmexController():
-    def __init__(self, base_url: str, loop: asyncio.AbstractEventLoop, orderIDPrefix: str, caller_class=NoActionStrategy):
+    def __init__(self, base_url: str, loop: asyncio.AbstractEventLoop, orderIDPrefix: str, caller):
         self._loop = loop
         self.base_url = base_url
         self.orderIDPrefix = orderIDPrefix
@@ -63,7 +63,7 @@ class BitmexController():
         else:
             self._ssl = None
         self.session = aiohttp.ClientSession(trace_configs=[self._trace_config], loop=self._loop)
-        self.caller = caller_class(self)
+        self.caller = caller
         self.ws = BitmexWebsocket(loop=loop, session=self.session, ssl=self._ssl, caller=self.caller)
 
 
@@ -155,6 +155,10 @@ class BitmexController():
     def create_bulk_orders(self, orders:List[Order]):
         """Create multiple orders."""
         return self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='POST')
+
+    @authentication_required
+    async def quick_create_bulk_orders(self, orders:List[dict]):
+        return await self._curl_bitmex(path='order/bulk', postdict={'orders': orders}, verb='POST')
 
     @authentication_required
     def open_orders(self):

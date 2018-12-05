@@ -27,6 +27,8 @@ import aiohttp
 import time
 import datetime
 
+from aiohttp.helpers import sentinel
+
 from yarl import URL
 from MonkTrader.config import CONF
 import ssl
@@ -211,7 +213,7 @@ class BitmexController():
         resp = await self._curl_bitmex(path, verb="GET")
         return await resp.json()
 
-    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=aiohttp.sentinel, verb=None, max_retry=None) -> aiohttp.ClientResponse:
+    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=sentinel, verb=None, max_retry=None) -> aiohttp.ClientResponse:
         url = self.base_url + path
 
         url = URL(url)
@@ -251,7 +253,7 @@ class BitmexController():
 
         headers.update(gen_header_dict(verb, str(url), data, 5))
 
-        if timeout is not aiohttp.sentinel:
+        if timeout is not sentinel:
             timeout = aiohttp.ClientTimeout(total=timeout)
 
         try:

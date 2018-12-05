@@ -155,7 +155,7 @@ class BitmexController():
 
     @authentication_required
     async def place_quick_order(self, order:dict):
-        return await self._curl_bitmex(path="order", postdict=order, verb="POST")
+        return await self._curl_bitmex(path="order", postdict=order, verb="POST", max_retry=5)
 
     @authentication_required
     async def amend_bulk_orders(self, orders:List[Order]):
@@ -212,6 +212,10 @@ class BitmexController():
         path = 'user'
         resp = await self._curl_bitmex(path, verb="GET")
         return await resp.json()
+
+    @authentication_required
+    async def cancel_all_after_http(self, timeout):
+        return await self._curl_bitmex(path='order/cancelAllAfter', postdict={'timeout': timeout*1000}, verb="POST")
 
     async def _curl_bitmex(self, path, query=None, postdict=None, timeout=sentinel, verb=None, max_retry=None) -> aiohttp.ClientResponse:
         url = self.base_url + path

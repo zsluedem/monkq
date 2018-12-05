@@ -68,6 +68,8 @@ class BitmexController():
         self.caller = caller
         self.ws = BitmexWebsocket(loop=loop, session=self.session, ssl=self._ssl, caller=self.caller)
 
+        self.retry = 0
+
 
     async def setup(self):
         await self.ws.setup()
@@ -150,6 +152,10 @@ class BitmexController():
         return await self._curl_bitmex(path="order", postdict=order.to_postdict(), verb="POST")
 
     @authentication_required
+    async def place_quick_order(self, order:dict):
+        return await self._curl_bitmex(path="order", postdict=order, verb="POST")
+
+    @authentication_required
     async def amend_bulk_orders(self, orders:List[Order]):
         """Amend multiple orders."""
         # Note rethrow; if this fails, we want to catch it and re-tick
@@ -159,10 +165,6 @@ class BitmexController():
     async def create_bulk_orders(self, orders:List[Order]):
         """Create multiple orders."""
         return await self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='POST')
-
-    @authentication_required
-    async def quick_create_bulk_orders(self, orders:List[dict]):
-        return await self._curl_bitmex(path='order/bulk', postdict={'orders': orders}, verb='POST')
 
     @authentication_required
     async def http_open_orders(self, symbol):
@@ -209,7 +211,7 @@ class BitmexController():
         resp = await self._curl_bitmex(path, verb="GET")
         return await resp.json()
 
-    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=aiohttp.sentinel, verb=None, rethrow_errors=False) -> aiohttp.ClientResponse:
+    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=aiohttp.sentinel, verb=None, max_retry=None) -> aiohttp.ClientResponse:
         url = self.base_url + path
 
         url = URL(url)
@@ -234,11 +236,13 @@ class BitmexController():
             proxy = None
 
         headers = {}
-        def exit_or_throw(e):
-            if rethrow_errors:
-                raise e
-            else:
-                exit(1)
+
+        async def retry():
+            self.retry += 1
+            if self.retry > max_retry:
+                pass
+            return await self._curl_bitmex(path, query, postdict, timeout, verb, max_retry)
+
         if postdict:
             data = json.dumps(postdict)
             headers.update({'content-type':"application/json"})
@@ -282,6 +286,7 @@ class BitmexController():
             elif resp.status == 503:
                 trade_log.warning("Unable to contact the BitMEX API (503), retrying. " +
                                     f"Request: {url} \n {postdict}")
+                return await retry()
             elif resp.status == 400:
                 content = await resp.json()
                 error = content['error']
@@ -293,5 +298,7 @@ class BitmexController():
         except asyncio.TimeoutError:
             # Timeout, re-run this request
             trade_log.warning(f"Timed out on request: {path} ({postdict}), retrying..." )
+            return await retry()
 
+        self.retry = 0
         return resp

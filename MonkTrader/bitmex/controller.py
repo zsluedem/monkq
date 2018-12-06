@@ -36,7 +36,7 @@ from MonkTrader.bitmex.websocket import BitmexWebsocket
 from MonkTrader.bitmex.auth import gen_header_dict
 from MonkTrader.bitmex.order import Order
 from MonkTrader.logger import trade_log
-from MonkTrader.bitmex.exception import MaxRetryExeception
+from MonkTrader.bitmex.exception import MaxRetryException, RateLimitException
 from typing import List
 
 def authentication_required(fn):
@@ -250,7 +250,7 @@ class BitmexController():
             retry_time -= 1
             if retry_time < 0:
                 trade_log.error(f"Request with args {path}, {query}, {postdict}, {timeout}, {verb}, {max_retry} failed with retries")
-                raise MaxRetryExeception()
+                raise MaxRetryException()
             else:
                 return await self._curl_bitmex(path, query, postdict, timeout, verb, retry_time)
 
@@ -292,6 +292,7 @@ class BitmexController():
                 reset_str = datetime.datetime.fromtimestamp(int(ratelimit_reset)).strftime('%X')
 
                 trade_log.error(f"Your ratelimit will reset at {reset_str}. Sleeping for {to_sleep} seconds.")
+                raise RateLimitException()
 
             # 503 - BitMEX temporary downtime, likely due to a deploy. Try again
             elif resp.status == 503:

@@ -27,5 +27,8 @@ class BitMexException(Exception):
     pass
 
 
-class MaxRetryExeception(BitMexException):
+class MaxRetryException(BitMexException):
+    pass
+
+class RateLimitException(BitMexException):
     pass

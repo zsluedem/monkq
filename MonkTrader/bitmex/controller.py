@@ -36,6 +36,7 @@ from MonkTrader.bitmex.websocket import BitmexWebsocket
 from MonkTrader.bitmex.auth import gen_header_dict
 from MonkTrader.bitmex.order import Order
 from MonkTrader.logger import trade_log
+from MonkTrader.bitmex.exception import MaxRetryExeception
 from typing import List
 
 def authentication_required(fn):
@@ -69,8 +70,6 @@ class BitmexController():
         self.session = aiohttp.ClientSession(trace_configs=[self._trace_config], loop=self._loop)
         self.caller = caller
         self.ws = BitmexWebsocket(loop=loop, session=self.session, ssl=self._ssl, caller=self.caller)
-
-        self.retry = 0
 
 
     async def setup(self):
@@ -154,8 +153,8 @@ class BitmexController():
         return await self._curl_bitmex(path="order", postdict=order.to_postdict(), verb="POST")
 
     @authentication_required
-    async def place_quick_order(self, order:dict):
-        return await self._curl_bitmex(path="order", postdict=order, verb="POST", max_retry=5)
+    async def place_quick_order(self, order:dict, max_retry=5):
+        return await self._curl_bitmex(path="order", postdict=order, verb="POST", max_retry=max_retry)
 
     @authentication_required
     async def amend_bulk_orders(self, orders:List[Order]):
@@ -194,7 +193,6 @@ class BitmexController():
         resp = await self._curl_bitmex(path=path, postdict=postdict, verb="DELETE")
         return await resp.json()
 
-    # TODO 403 in testnet
     @authentication_required
     async def withdraw(self, amount, fee, address):
         path = "user/requestWithdrawal"
@@ -217,7 +215,11 @@ class BitmexController():
     async def cancel_all_after_http(self, timeout):
         return await self._curl_bitmex(path='order/cancelAllAfter', postdict={'timeout': timeout*1000}, verb="POST")
 
-    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=sentinel, verb=None, max_retry=None) -> aiohttp.ClientResponse:
+    @authentication_required
+    async def close_position(self, symbol, max_retry=5):
+        return await self._curl_bitmex(path='order', postdict={'execInst':"Close", "symbol":symbol}, verb="POST", max_retry=max_retry)
+
+    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=sentinel, verb=None, max_retry=5) -> aiohttp.ClientResponse:
         url = self.base_url + path
 
         url = URL(url)
@@ -243,11 +245,14 @@ class BitmexController():
 
         headers = {}
 
-        async def retry():
-            self.retry += 1
-            if self.retry > max_retry:
-                pass
-            return await self._curl_bitmex(path, query, postdict, timeout, verb, max_retry)
+        async def retry(retry_time):
+            trade_log.info(f"Retry on remain times {retry_time}")
+            retry_time -= 1
+            if retry_time < 0:
+                trade_log.error(f"Request with args {path}, {query}, {postdict}, {timeout}, {verb}, {max_retry} failed with retries")
+                raise MaxRetryExeception()
+            else:
+                return await self._curl_bitmex(path, query, postdict, timeout, verb, retry_time)
 
         if postdict:
             data = json.dumps(postdict)
@@ -292,7 +297,7 @@ class BitmexController():
             elif resp.status == 503:
                 trade_log.warning("Unable to contact the BitMEX API (503), retrying. " +
                                     f"Request: {url} \n {postdict}")
-                return await retry()
+                return await retry(max_retry)
             elif resp.status == 400:
                 content = await resp.json()
                 error = content['error']
@@ -304,7 +309,6 @@ class BitmexController():
         except asyncio.TimeoutError:
             # Timeout, re-run this request
             trade_log.warning(f"Timed out on request: {path} ({postdict}), retrying..." )
-            return await retry()
+            return await retry(max_retry)
 
-        self.retry = 0
         return resp

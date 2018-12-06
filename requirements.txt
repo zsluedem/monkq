@@ -9,3 +9,4 @@ aiohttp==3.4.4
 aiodns==1.1.1
 cchardet==2.1.4
 async-timeout==3.0.1
+uvloop==0.11.3

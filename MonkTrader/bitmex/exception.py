@@ -31,4 +31,5 @@ class MaxRetryException(BitMexException):
     pass
 
 class RateLimitException(BitMexException):
-    pass
+    def __init__(self, ratelimit_reset):
+        self.ratelimit_reset = ratelimit_reset

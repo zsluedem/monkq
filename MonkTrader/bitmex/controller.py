@@ -293,7 +293,7 @@ class BitmexController():
                 reset_str = datetime.datetime.fromtimestamp(int(ratelimit_reset)).strftime('%X')
 
                 trade_log.error(f"Your ratelimit will reset at {reset_str}. Sleeping for {to_sleep} seconds.")
-                raise RateLimitException()
+                raise RateLimitException(ratelimit_reset)
 
             # 503 - BitMEX temporary downtime, likely due to a deploy. Try again
             elif resp.status == 503:

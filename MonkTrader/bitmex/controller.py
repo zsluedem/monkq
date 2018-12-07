@@ -67,7 +67,8 @@ class BitmexController():
             self._ssl.load_verify_locations(CONF.SSL_PATH)
         else:
             self._ssl = None
-        self.session = aiohttp.ClientSession(trace_configs=[self._trace_config], loop=self._loop)
+        self._connector = aiohttp.TCPConnector(keepalive_timeout=90)
+        self.session = aiohttp.ClientSession(trace_configs=[self._trace_config], loop=self._loop, connector=self._connector)
         self.caller = caller
         self.ws = BitmexWebsocket(loop=loop, session=self.session, ssl=self._ssl, caller=self.caller)
 

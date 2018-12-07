@@ -213,8 +213,8 @@ class BitmexController():
         return await resp.json()
 
     @authentication_required
-    async def cancel_all_after_http(self, timeout):
-        return await self._curl_bitmex(path='order/cancelAllAfter', postdict={'timeout': timeout*1000}, verb="POST")
+    async def cancel_all_after_http(self, timeout, max_retry=5):
+        return await self._curl_bitmex(path='order/cancelAllAfter', postdict={'timeout': timeout*1000}, verb="POST", max_retry=max_retry)
 
     @authentication_required
     async def close_position(self, symbol, max_retry=5):

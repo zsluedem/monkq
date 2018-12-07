@@ -299,6 +299,7 @@ class BitmexController():
             elif resp.status == 503:
                 trade_log.warning("Unable to contact the BitMEX API (503), retrying. " +
                                     f"Request: {url} \n {postdict}")
+                await asyncio.sleep(0.3)
                 return await retry(max_retry)
             elif resp.status == 400:
                 content = await resp.json()

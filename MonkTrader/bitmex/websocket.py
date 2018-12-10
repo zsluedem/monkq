@@ -35,7 +35,7 @@ from aiohttp import ClientSession
 from MonkTrader.bitmex.auth import gen_header_dict
 from MonkTrader.logger import trade_log
 from MonkTrader.config import CONF
-from MonkTrader.interface import BaseStrategy, NoActionStrategy
+from MonkTrader.strategy import BaseStrategy, NoActionStrategy
 
 from typing import Dict, Union
 

@@ -24,8 +24,6 @@
 
 import typing
 
-if typing.TYPE_CHECKING:
-    from MonkTrader.bitmex.controller import BitmexController
 
 class BaseStrategy():
     async def on_trade(self, message):

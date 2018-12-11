@@ -4,3 +4,4 @@ pandas
 numpy
 matplotlib
 jupyter
+mpl_finance

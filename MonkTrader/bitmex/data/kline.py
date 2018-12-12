@@ -80,6 +80,9 @@ def fetch_bitmex_kline(symbol, start_time, end_time, frequency):
         start_time = parse(klines[-1].get("timestamp")) + relativedelta(second=+1)
     if len(datas) == 0:
         return None
+    return datas
+
+def to_json(datas):
     frame = pd.DataFrame(datas)
     frame['timestamp'] = pd.to_datetime(frame['timestamp'])
     return json.loads(frame.to_json(orient='records'))
@@ -118,6 +121,7 @@ def save_kline(frequency, active=True):
             console_log.info('SYMBOL {} from {} to {} has no data'.format(
                 symbol_info['symbol'], start_time, end))
             continue
+        data = to_json(data)
         col.insert_many(data)
 
 

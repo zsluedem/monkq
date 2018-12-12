@@ -71,7 +71,7 @@ def fetch_bitmex_kline(symbol, start_time, end_time, frequency):
             ratelimit_reset = req.headers['X-RateLimit-Reset']
             retry_after = float(req.headers['Retry-After'])
             warnings.warn(f"Your rate is too fast and remaining is {remaining}, retry after {retry_after}s, rate reset at {ratelimit_reset}")
-            time.sleep(retry_after)
+            time.sleep(retry_after + 3) # just sleep 3 more seconds to make safe
             continue
         elif req.status_code == 403:
             warnings.warn(f"Your frequency is so fast that they won't let you access.Just rest for a while")

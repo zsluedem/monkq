@@ -73,6 +73,9 @@ def fetch_bitmex_kline(symbol, start_time, end_time, frequency):
             warnings.warn(f"Your rate is too fast and remaining is {remaining}, retry after {retry_after}s, rate reset at {ratelimit_reset}")
             time.sleep(retry_after)
             continue
+        elif req.status_code == 403:
+            warnings.warn(f"Your frequency is so fast that they won't let you access.Just rest for a while")
+            exit(1)
 
         klines = json.loads(req.content)
         if len(klines) == 0:

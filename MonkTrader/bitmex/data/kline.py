@@ -21,13 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
-import time
 import pymongo
 import pandas as pd
 from dateutil.tz import tzutc
-from dateutil.parser import parse
-from dateutil.relativedelta import relativedelta
 
 import requests
 import json

@@ -29,6 +29,7 @@ import requests
 import json
 import datetime
 import time
+import warnings
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from requests.exceptions import ConnectTimeout
@@ -65,13 +66,12 @@ def fetch_bitmex_kline(symbol, start_time, end_time, frequency):
         except ConnectTimeout:
             raise ConnectTimeout(CHINA_WARNING)
         # 防止频率过快被断连
-        remaining = int(req.headers['x-ratelimit-remaining'])
-        if remaining <20:
-            time.sleep(0.5)
-        elif remaining <10:
-            time.sleep(5)
-        elif remaining <3:
-            time.sleep(30)
+        if req.status_code == 429:
+            remaining = int(req.headers['x-ratelimit-remaining'])
+            ratelimit_reset = req.headers['X-RateLimit-Reset']
+            retry_after = float(req.headers['Retry-After'])
+            warnings.warn(f"Your rate is too fast and remaining is {remaining}, retry after {retry_after}s, rate reset at {ratelimit_reset}")
+            time.sleep(retry_after)
 
         klines = json.loads(req.content)
         if len(klines) == 0:

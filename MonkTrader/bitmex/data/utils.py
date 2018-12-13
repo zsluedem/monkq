@@ -27,7 +27,8 @@ import pandas
 def _date_parse(one):
     return pandas.to_datetime(one, format="%Y-%m-%dD%H:%M:%S.%f")
 
-def tar_to_kline(path, frequency):
+
+def _read_trade_tar(path):
     t_frame = pandas.read_csv(path, compression='gzip',
                               parse_dates=[0],
                               infer_datetime_format=True,
@@ -35,13 +36,20 @@ def tar_to_kline(path, frequency):
                                                                "trdMatchID", "grossValue", "homeNotional", "foreignNotional"],
                               engine='c', low_memory=True, date_parser=_date_parse)
     t_frame.set_index('timestamp', inplace=True)
+    return t_frame
+
+def _trade_to_kline(frame, frequency):
+    kline = frame['price'].resample(frequency).ohlc()
+    kline['value'] = frame['grossValue'].resample(frequency).sum()
+    return kline
+
+def tar_to_kline(path, frequency):
+    t_frame = _read_trade_tar(path)
     symbols = t_frame['symbol'].unique()
     klines = {}
     for symbol in symbols:
         obj = t_frame.loc[t_frame['symbol'] == symbol]
-        kline = obj['price'].resample(frequency).ohlc()
-        kline['value'] = obj['grossValue'].resample(frequency).sum()
-        klines[symbol] = kline
+        klines[symbol] = _trade_to_kline(obj, frequency)
 
     return klines
 

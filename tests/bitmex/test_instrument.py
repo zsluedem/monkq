@@ -58,3 +58,6 @@ def test_perpetual_future_instrument():
 
 def test_future_instrument():
     pass
+
+def test_normal_instrument():
+    pass

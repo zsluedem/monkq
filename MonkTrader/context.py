@@ -21,21 +21,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-import typing
-
-
-class BaseStrategy():
-    async def on_trade(self, message):
-        raise NotImplementedError
-
-    async def tick(self, message):
-        raise NotImplementedError
-
-
-class NoActionStrategy(BaseStrategy):
-    async def tick(self, message):
-        pass
-
-    async def on_trade(self, message):
-        pass

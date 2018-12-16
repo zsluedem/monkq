@@ -22,21 +22,29 @@
 # SOFTWARE.
 #
 
-Bitmex_api_url = "https://www.bitmex.com/api/v1/"
-Bitmex_websocket_url = "wss://www.bitmex.com/realtime"
-
-Bitmex_testnet_api_url = "https://testnet.bitmex.com/api/v1/"
-Bitmex_testnet_websocket_url = "wss://testnet.bitmex.com/realtime"
-
-MAX_HISTORY = 750
-
-CHINA_WARNING =  "科学上网"
-CHINA_CONNECT_TIMEOUT = 5
+from enum import Enum
 
 
-XBtUnit = 100000000
+class CommissionType(Enum):
+    MAKER = 1
+    TAKER = 2
 
 
-BACKTEST = 'backtest'
-REALTIME = 'realtime'
+class PositionDirection(Enum):
+    LONG = 1
+    SHORT = 2
 
+
+class Side(Enum):
+    BUY = 1
+    SELL = 2
+
+
+class OrderType(Enum):
+    LIMIT = 1
+    MARKET = 2
+    # MarketWithLeftOverAsLimit = 3
+    # STOP = 4
+    # StopLimit = 5
+    # MarketIfTouched = 6
+    # LimitIfTouched = 7

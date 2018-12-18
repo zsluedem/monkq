@@ -46,11 +46,14 @@ def parse_requirements(filename):
 
 requirements = parse_requirements("requirements.txt")
 
+with open('description') as f:
+    description = f.read()
+
 
 setup(
     name='MonkTrader',
     version=VERSION,
-    description='Bitmex trading system',
+    description=description,
     packages=find_packages(exclude=[]),
     author=AUTHOR,
     package_data={'': ['*.*']},

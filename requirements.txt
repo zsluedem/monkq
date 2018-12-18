@@ -4,9 +4,9 @@ dateutils==0.6.6
 logbook==1.4.0
 pymongo==3.7.1
 pandas==0.23.4
-traitlets==4.3.2
 aiohttp==3.4.4
 aiodns==1.1.1
 cchardet==2.1.4
 async-timeout==3.0.1
 uvloop==0.11.3
+dataclasses==0.6

@@ -23,13 +23,20 @@
 #
 
 
-class BitMexException(Exception):
+class MonkException(Exception):
     pass
 
 
-class MaxRetryException(BitMexException):
+class MaxRetryException(MonkException):
     pass
 
-class RateLimitException(BitMexException):
+class RateLimitException(MonkException):
     def __init__(self, ratelimit_reset):
         self.ratelimit_reset = ratelimit_reset
+
+
+class BacktestTimeException(MonkException):
+    pass
+
+class StrategyNotFound(MonkException):
+    pass

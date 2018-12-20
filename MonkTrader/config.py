@@ -29,9 +29,12 @@ import sys
 import importlib
 import pymongo
 import logbook
+import dataclasses
+import datetime
 from MonkTrader.logger import console_log, trade_log
 from MonkTrader import _settings
 from MonkTrader.const import Bitmex_api_url, Bitmex_testnet_api_url, Bitmex_testnet_websocket_url, Bitmex_websocket_url
+
 
 def import_path(fullpath):
     """
@@ -47,19 +50,21 @@ def import_path(fullpath):
     del sys.path[0]
     return module
 
+
 def get_attrs_from_module(module):
     attrs_dict = {}
-    for k,attr in vars(module).items():
+    for k, attr in vars(module).items():
         if k.startswith("__"):
             continue
-        attrs_dict.update({k:attr})
+        attrs_dict.update({k: attr})
     return attrs_dict
+
 
 base_settings = get_attrs_from_module(_settings)
 
-class Conf(Configurable):
 
-    DATABASE_URI =Unicode(config=True, default_value="mongodb://127.0.0.1:27017")
+class Conf(Configurable):
+    DATABASE_URI = Unicode(config=True, default_value="mongodb://127.0.0.1:27017")
 
     IS_TEST = Bool(config=True)
 
@@ -78,7 +83,16 @@ class Conf(Configurable):
 
     LOG_LEVEL = Unicode(config=True)
 
+    # backtest config
     FREQUENCY = Unicode(config=True)
+
+    START_TIME = Unicode(config=True)
+
+    END_TIME = Unicode(config=True)
+
+    RUN_TYPE = Unicode(config=True)  #
+
+    TICK_TYPE = Unicode(config=True)  # tick ,bar
 
     def __init__(self, *args, **kwargs):
         super(Conf, self).__init__(*args, **kwargs)
@@ -95,19 +109,16 @@ class Conf(Configurable):
             self.Bitmex_base_url = Bitmex_api_url
             self.Bitmex_ws_url = Bitmex_websocket_url
 
-
     @observe('DATABASE_URI')
     def _observe_database_uri(self, change):
         new = change.get('new')
         self._db_handle = pymongo.MongoClient(new)
-
 
     @observe("LOG_LEVEL")
     def _observe_log_level(self, change):
         new = change.get('new')
         console_log.level = getattr(logbook, new)
         trade_log.level = getattr(logbook, new)
-
 
     @property
     def db(self):

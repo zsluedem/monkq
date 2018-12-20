@@ -19,3 +19,11 @@ SSL_PATH = ''
 FREQUENCY = 'tick'  # tick, 1m ,5m ,1h
 
 LOG_LEVEL = 'INFO' # DEBUG, INFO, NOTICE, WARNING, ERROR
+
+START_TIME = '2018-01-01T00:00:00Z'
+END_TIME = '2018-06-01T00:00:00Z'
+
+
+RUN_TYPE = 'backtest' # backtest , realtime
+
+TICK_TYPE = 'tick' # tick , bar

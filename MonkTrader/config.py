@@ -78,6 +78,8 @@ class Conf(Configurable):
 
     LOG_LEVEL = Unicode(config=True)
 
+    FREQUENCY = Unicode(config=True)
+
     def __init__(self, *args, **kwargs):
         super(Conf, self).__init__(*args, **kwargs)
 

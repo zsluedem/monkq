@@ -21,9 +21,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.interface import AbcContext
 
-class Context(AbcContext):
+import pytest
+from MonkTrader.bitmex.exchange_simulator import BitmexExchange
 
-    def get_exchange(self):
-        return 0
+
+@pytest.yield_fixture(scope="session")
+def bitmex_exchange():
+    yield BitmexExchange()

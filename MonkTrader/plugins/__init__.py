@@ -21,9 +21,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.interface import AbcContext
-
-class Context(AbcContext):
-
-    def get_exchange(self):
-        return 0

@@ -21,9 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.interface import AbcContext
+import random
+import string
 
-class Context(AbcContext):
+def random_string(length: int) -> str:
+    return ''.join(random.choice(string.ascii_letters) for _ in range(length))
 
-    def get_exchange(self):
-        return 0

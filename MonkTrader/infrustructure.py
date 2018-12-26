@@ -21,9 +21,51 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.interface import AbcContext
 
-class Context(AbcContext):
+from MonkTrader.interface import AbcRunner, AbcStrategy
+from MonkTrader.config import CONF
+from MonkTrader.ticker import FrequencyTicker
+from MonkTrader.const import BACKTEST, REALTIME
+from MonkTrader.context import Context
 
-    def get_exchange(self):
-        return 0
+
+class BacktestRunner(AbcRunner):
+    def __init__(self, strategy: AbcStrategy):
+        self.strategy: AbcStrategy = strategy
+
+    def run(self):
+        pass
+
+    def setup(self):
+        pass
+
+
+class RealtimeRunner(AbcRunner):
+    def __init__(self, strategy: AbcStrategy):
+        self.strategy: AbcStrategy = strategy
+
+    def run(self):
+        pass
+
+    def setup(self):
+        pass
+
+
+class Framework():
+    def __init__(self):
+
+
+        if CONF.RUN_TYPE == BACKTEST:
+            self.runner = BacktestRunner()
+        elif CONF.RUN_TYPE == REALTIME:
+            self.runner = RealtimeRunner()
+
+        self.tick_type = CONF.TICK_TYPE
+
+        self.strategy:AbcStrategy = None
+
+    def load_strategy(self):
+        pass
+
+    def run_loop(self):
+        pass

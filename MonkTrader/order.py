@@ -21,9 +21,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.interface import AbcContext
+from MonkTrader.bitmex.const import PositionDirection
 
-class Context(AbcContext):
+class Order():
+    def __init__(self,instrument, quantity, order_type):
+        self.instrument = instrument
+        assert quantity != 0
+        self.quantity = quantity
+        self.order_type = order_type
 
-    def get_exchange(self):
-        return 0
+    @property
+    def direction(self):
+        return PositionDirection.LONG if self.amount > 0 else PositionDirection.SHORT
+

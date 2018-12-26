@@ -21,9 +21,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.interface import AbcContext
 
-class Context(AbcContext):
+import argparse
 
-    def get_exchange(self):
-        return 0
+MonkParser = argparse.ArgumentParser(prog='monktrader', description="MonkTrader is a crypto trading tool")
+
+MonkParser.add_argument()
+

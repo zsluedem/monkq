@@ -21,9 +21,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.interface import AbcContext
 
-class Context(AbcContext):
+import os
+import sys
 
-    def get_exchange(self):
-        return 0
+from typing import Union, Type
+from MonkTrader.interface import AbcStrategy
+from MonkTrader.exception import StrategyNotFound
+class StrategyLoader():
+    def __init__(self):
+        pass
+
+    def load_strategy(self, obj:Union[str, Type[AbcStrategy]]):
+        if issubclass(obj, AbcStrategy):
+            return obj
+        # elif isinstance(obj, str):
+        #     if os.path.exists(obj):
+        #         directory =
+        #         sys.path.insert(0, obj)
+        else:
+            raise StrategyNotFound()

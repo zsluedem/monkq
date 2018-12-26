@@ -30,11 +30,12 @@ from MonkTrader.config import CONF
 from MonkTrader.bitmex.data import save_kline, save_symbols, save_history
 
 @click.group()
+@click.option('-c', '--config', type=click.Path(exists=True))
 def cli():
     pass
 
 
-@click.command()
+@cli.command()
 @click.help_option()
 @click.option('--kind', default="all", type=click.Choice(['all', 'quote', 'trade', 'kline', 'symbol']))
 @click.option('--mongodb_uri', default='mongodb://127.0.0.1:27017', help="mongodb uri you want to download to")
@@ -66,11 +67,11 @@ def download(kind, mongodb_uri, active, mode, dst_dir):
         raise NotImplementedError
 
 
-@click.command()
+@cli.command()
 def run():
     pass
 
-@click.command()
+@cli.command()
 @click.help_option()
 @click.option("--target_dir", default=".", help="The target dir where would generate a default setting file")
 def generate_settings(target_dir):

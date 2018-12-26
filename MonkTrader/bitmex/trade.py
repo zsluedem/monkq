@@ -21,9 +21,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.interface import AbcContext
+from dataclasses import dataclass
+import datetime
 
-class Context(AbcContext):
-
-    def get_exchange(self):
-        return 0
+@dataclass
+class Trade():
+    time: datetime
+    symbol: str
+    ExecType: str
+    side: str
+    exec_quantity: int
+    exec_price: float
+    value: int
+    fee_rate: float
+    fee_paid: int
+    order_type: str
+    order_qty: int
+    quantity_left: int
+    order_price: float
+    text: str
+    order_id: str

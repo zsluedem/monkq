@@ -35,7 +35,7 @@ from aiohttp import ClientSession
 from MonkTrader.bitmex.auth import gen_header_dict
 from MonkTrader.logger import trade_log
 from MonkTrader.config import CONF
-from MonkTrader.strategy import BaseStrategy, NoActionStrategy
+from MonkTrader.interface import AbcStrategy
 
 from typing import Dict, Union
 
@@ -76,7 +76,7 @@ def timestamp_update(func):
 class BitmexWebsocket():
     MAX_TABLE_LEN = 200
 
-    def __init__(self, caller: BaseStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession,
+    def __init__(self, caller: AbcStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession,
                  ssl: ssl.SSLContext = None):
         self._loop = loop
         self._data = dict()

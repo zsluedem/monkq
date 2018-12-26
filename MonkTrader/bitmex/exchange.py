@@ -52,7 +52,7 @@ def authentication_required(fn):
     return wrapped
 
 
-class BitmexController():
+class BitmexExchange():
     def __init__(self, base_url: str, loop: asyncio.AbstractEventLoop, orderIDPrefix: str, caller):
         self._loop = loop
         self.base_url = base_url

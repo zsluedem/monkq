@@ -56,9 +56,10 @@ class PositionReal():
         self.homeNotional = homeNotional
 
 class SimulatePosition():
-    def __init__(self, symbol: Instrument, account: SimulateAccount):
-        self.symbol = symbol
+    def __init__(self, instrument: Instrument, account: "SimulateAccount", exchange):
+        self.instrument = instrument
         self.account = account
+        self.exchange = exchange
         self.amount = 0
         self.entry_price = 0
         self.isolated = False # isolated or cross
@@ -81,43 +82,50 @@ class SimulatePosition():
         if self.isolated:
             if self.direction == PositionDirection.LONG:
                 funding_rate = self.funding_rate if self.funding_rate > 0 else 0
-                return self.entry_price / (1 + 1 / self.leverage - self.symbol.maintMargin - funding_rate)
+                return self.entry_price / (1 + 1 / self.leverage - self.instrument.maintMargin - funding_rate)
             else:
                 funding_rate = self.funding_rate if self.funding_rate < 0 else 0
-                return self.entry_price / (1 - 1 / self.leverage + self.symbol.maintMargin - funding_rate)
+                return self.entry_price / (1 - 1 / self.leverage + self.instrument.maintMargin - funding_rate)
         else:
             if self.direction == PositionDirection.LONG:
-                return 1/ (1/ self.entry_price * (1- self.symbol.maintMargin) + self.account.wallet_balance/XBtUnit / abs(self.amount))
+                funding_rate = self.funding_rate if self.funding_rate > 0 else 0
+                return 1/ (1 / self.entry_price * (1 - self.instrument.maintMargin - funding_rate) + self.account.wallet_balance / XBtUnit / abs(self.amount))
             else:
-                return 1/ (1/ self.entry_price * (1 + self.symbol.maintMargin) - self.account.wallet_balance/XBtUnit / abs(self.amount))
+                funding_rate = self.funding_rate if self.funding_rate < 0 else 0
+                return 1/ (1 / self.entry_price * (1 + self.instrument.maintMargin - funding_rate) - self.account.wallet_balance / XBtUnit / abs(self.amount))
 
     @property
     def mark_price(self) -> float:
-        return
+        return self.exchange.get_mark_price(self.instrument)
 
     @property
     def index_price(self):
-        return
+        return self.exchange.get_index_price(self.instrument)
 
     @property
     def last_price(self):
-        return
+        return self.exchange.get_last_price(self.instrument)
+
+    @property
+    def init_margin(self):
+        return 1 / self.entry_price * abs(self.amount) * XBtUnit / self.leverage + 1 / self.entry_price * abs(self.amount) * self.instrument.takerFee * 2 \
+            if self.isolated else 1 / self.entry_price * abs(self.amount) * XBtUnit * (self.instrument.initMargin + self.instrument.takerFee * 2)
 
     @property
     def position_margin(self):
-        return
+        return self.init_margin + self.unrealised_pnl
 
     @property
     def unrealised_pnl(self):
-        return
+        return (1/ self.entry_price -1/self.mark_price) * self.amount
 
 if __name__ == '__main__':
     from MonkTrader.bitmex.instrument import XBT_SYMBOL
     print(XBT_SYMBOL.takerFee, XBT_SYMBOL.maintMargin)
-    account = SimulateAccount(500000)
+    account = SimulateAccount(5000000)
     p = SimulatePosition(XBT_SYMBOL, account)
     p.isolated = True
-    p.amount = -100
-    p.entry_price = 3000
-    p.leverage = 10
+    p.amount = 300
+    p.entry_price = 2000
+    p.leverage = 3
     print(p.liq_price)

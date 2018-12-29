@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 
-from MonkTrader.bitmex.instrument import Instrument
+from MonkTrader.exchange.bitmex.instrument import Instrument
 import datetime
 import pytz
 

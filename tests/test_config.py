@@ -21,41 +21,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.exchange.bitmex.positionreal import SimulatePosition
-from MonkTrader.exchange.bitmex import PositionDirection
-from MonkTrader.const import XBtUnit
-import pytest
 
-class MockAccount():
-    def __init__(self, wallet_balance):
-        self.wallet_balance = wallet_balance
+from MonkTrader.config import Setting
+import os
+import sys
+import tempfile
 
-
-class MockInstrument():
-    def __init__(self):
-        self.maintMargin = 0.005
-        self.initMargin = 0.01
-        self.takerFee = 0.00075
+setting_content ="""
+A = 123
+B = 321
+"""
 
 
-account = MockAccount(1000000)
-instrument = MockInstrument()
+def test_settings():
+    with tempfile.TemporaryDirectory() as temp:
+        with open(os.path.join(temp, 'settings.py'), 'w') as f:
+            f.write(setting_content)
+        sys.path.insert(0, temp)
+        setting = Setting()
+        sys.path.pop(0)
+        assert setting.A == 123
+        assert setting.B == 321
 
 
-def test_isolated_perpetual_position():
-    position = SimulatePosition(instrument, account)
-    position.isolated = True
-    position.amount = 1000
-    position.entry_price = 3600
-    position.leverage = 3
-
-    assert position.direction == PositionDirection.LONG
-    assert position.value == 1000 / 3600 * XBtUnit
-    assert position.liq_price == pytest.approx(2710.5, 0.1)
-
-
-def test_cross_perpetual_position():
-    position = SimulatePosition(instrument, account)
-    position.isolated = False
-    position.amount = 1000
-    position.entry_price = 3600

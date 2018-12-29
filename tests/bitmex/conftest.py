@@ -23,7 +23,7 @@
 #
 
 import pytest
-from MonkTrader.bitmex.exchange_simulator import BitmexExchange
+from MonkTrader.exchange.bitmex import BitmexExchange
 
 
 @pytest.yield_fixture(scope="session")

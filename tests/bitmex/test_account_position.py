@@ -44,9 +44,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.bitmex.positionreal import SimulatePosition
-from MonkTrader.bitmex.margin import SimulateAccount
-from MonkTrader.bitmex.const import PositionDirection
+from MonkTrader.exchange.bitmex.positionreal import SimulatePosition
+from MonkTrader.exchange.bitmex import SimulateAccount
+from MonkTrader.exchange.bitmex import PositionDirection
 from MonkTrader.const import XBtUnit
 import pytest
 

@@ -3,7 +3,7 @@ local/*
 local_data/*
 local_quote/*
 analysis/*
-settings.py
+MonkTrader/config/project_template/settings.py-tpl
 
 log
 

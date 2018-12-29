@@ -21,72 +21,51 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import dataclasses
+import datetime
+from collections import defaultdict
+from typing import Any, Type, Optional
+import os
+import sys
+import warnings
 
-import argparse
-import configparser
+import lazy_object_proxy
 
-from typing import Optional, Type, Union, Tuple, List
+from MonkTrader.config import default_settings
+import operator
 
-class MonkArgumentParser(argparse.ArgumentParser):
-    def __init__(self,*args, **kwargs):
-        super(MonkArgumentParser, self).__init__(*args , **kwargs)
+# SETTINGS_ENV_VARIABLE = "SETTINGS_ENV_VARIABLE"
 
-    def add_plugin_parser(self, plugin_name:str, description:Optional[str]=None, help:Optional[str]=None):
-        return self.add_subparsers(title=plugin_name, description=description, dest=plugin_name, parser_class=MonkArgumentParser)
+SETTING_FILE = 'settings'
 
-    def get_plugin_parser(self, plugin_name:str):
-        pass
-
-
-class MonkConfigParser(configparser.ConfigParser):
-    pass
-
-class Parser():
+class Setting:
     def __init__(self):
-        self.root_parser = MonkArgumentParser(prog="MonkTrader", description="MonkTrader is a crypto trading tool")
+        for setting in dir(default_settings):
+            if setting.isupper():
+                setattr(self, setting, getattr(default_settings, setting))
 
-        self.sub_parsers = self.root_parser.add_subparsers(dest='subcommand')
+        # self.SETTING_MODULE = module
+        try:
+            mod = __import__(SETTING_FILE)
+        except ImportError:
+            warnings.warn("Can not find settings.py in the current path, we are going to use the default settings.")
+            return
+        self._explicit_settings = set()
 
-        self.root_parser.add_argument('-c', '--config', help="config file path")
+        for setting in dir(mod):
+            if setting.isupper():
+                setting_value = getattr(mod, setting)
 
-        self.result: Optional[argparse.Namespace] = None
+                setattr(self, setting, setting_value)
+                self._explicit_settings.add(setting)
 
+    def is_overridden(self, setting):
+        return setting in self._explicit_settings
 
-    # def add_command(self, title: str, description: Optional[str] = None,
-    #                 action: Optional[str, Type[argparse.Action]] = None, dest: str = None, require: bool = False,
-    #                 help: Optional[str] = None) ->argparse._SubParsersAction:
-    def add_command(self, name:str, help:Optional[str]):
-        return self.sub_parsers.add_parser(name=name, help=help, dest=name)
-
-    def add_plugin_parser(self, plugin_name:str, help:Optional[str]):
-        return self.sub_parsers.add_parser(name=plugin_name, help=help)
-
-    def parse(self, args: Union[List, Tuple, None] = None, namespace: Optional[argparse.Namespace] = None):
-        if not self.result:
-            self.result = self.root_parser.parse_args(args=args, namespace=namespace)
-        return self.result
-
-    def get_default_values(self, subcommand=None):
-        return
-
-
-MonkParser = Parser()
-
-
-if __name__ == '__main__':
-    s = MonkParser.add_plugin_command('test', 'a test help')
-    s.add_argument('--asdf', help='asdv')
-    s.add_argument('--dfbvrb', help='sdfb4erthb')
-
-
-    k = MonkParser.add_plugin_command('test2', 'a test2 help')
-    k.add_argument_group()
-    k.add_argument('--asdf', help='asdv')
-    k.add_argument('--rrr', help='sdfb4erthb')
-    # a = MonkParser.parse(['--config', '/Users/willqiu/work/pull/MonkTrader/MonkTrader/config.py'])
-    # print(a)
-
-    h = MonkParser.parse(['--config','r/MonkTrader/config.py','test2','--rrr', 'asdvrw',])
-    h = MonkParser.parse(['--help'])
-
-    print(h)
+def gen_settings():
+    base = os.getcwd()
+    sys.path.insert(0, base)
+    settings = Setting()
+    sys.path.pop(0)
+    return settings
+settings = lazy_object_proxy.Proxy(gen_settings)

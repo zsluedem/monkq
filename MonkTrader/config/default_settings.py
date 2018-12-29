@@ -1,14 +1,9 @@
 import logging
 import logbook
-# If IS_TEST is True, the program run through the testnet.bitmex.com.
-IS_TEST = True
 
 # Mongodb uri which is used to load data or download data in.
 DATABASE_URI = "mongodb://127.0.0.1"
 
-# The Bitmex API requires permanent API keys. Go to https://testnet.bitmex.com/app/apiKeys to fill these out.
-API_KEY = ""
-API_SECRET = ""
 
 # HTTP Proxy
 HTTP_PROXY = ""
@@ -27,3 +22,21 @@ END_TIME = '2018-06-01T00:00:00Z'
 RUN_TYPE = 'backtest' # backtest , realtime
 
 TICK_TYPE = 'tick' # tick , bar
+
+
+EXCHANGE = {
+    'bitmex':{
+        "IS_TEST":True,
+        "API_KEY": '',
+        "API_SECRET": ''
+    }
+}
+
+BUILTIN_PLUGINS = {
+
+}
+
+
+INSTALLED_PLUGINS = {
+
+}

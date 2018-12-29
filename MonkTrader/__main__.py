@@ -50,22 +50,6 @@ def gegnerate_settings(ctx, out):
 
 
 @cmd_main.command()
-@click.option('--mongodb_uri', default='mongodb://127.0.0.1:27017', help="mongodb uri you want to download to")
-@click.option('--active', default=True, type=click.BOOL ,help="download active or all symbols")
-@click.option('--frequency', default="all", type=click.Choice(['all', '1m', '5m', '1h', '1d']))
-def download(mongodb_uri, active, frequency):
-    cli = pymongo.MongoClient(mongodb_uri)
-    save_symbols(cli, active)
-
-    if frequency == "all":
-        save_kline(cli, '1m', active)
-        save_kline(cli, '5m', active)
-        save_kline(cli, '1h', active)
-        save_kline(cli, '1d', active)
-    else:
-        save_kline(cli, frequency, active)
-
-@cmd_main.command()
 @click.help_option()
 @click.option('--kind', default="all", type=click.Choice(['all', 'quote', 'trade', 'kline', 'symbol']))
 @click.option('--mongodb_uri', default='mongodb://127.0.0.1:27017', help="mongodb uri you want to download to")

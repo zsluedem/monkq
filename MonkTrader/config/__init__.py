@@ -63,9 +63,12 @@ class Setting:
         return setting in self._explicit_settings
 
 def gen_settings():
+    # get the current path to import settings
     base = os.getcwd()
     sys.path.insert(0, base)
     settings = Setting()
     sys.path.pop(0)
     return settings
+
+
 settings = lazy_object_proxy.Proxy(gen_settings)

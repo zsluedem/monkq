@@ -25,74 +25,46 @@
 import shutil
 import click
 import os
+import pymongo
 from MonkTrader.logger import console_log
-from MonkTrader.config import CONF
-from MonkTrader.bitmex.data import save_kline, save_symbols, save_history
+from MonkTrader.config import settings
+from MonkTrader.exchange.bitmex.data.kline import save_symbols, save_kline
+
+from typing import List, Union, TypeVar
+
 
 @click.group()
-@click.option('-c', '--config', type=click.Path(exists=True))
-def cli():
+@click.option('-c', '--config', type=str)
+@click.pass_context
+def cmd_main(ctx:click.Context, config):
+    print(settings.START_TIME)
     pass
 
 
-@cli.command()
-@click.help_option()
-@click.option('--kind', default="all", type=click.Choice(['all', 'quote', 'trade', 'kline', 'symbol']))
+@cmd_main.command()
+@click.option('-o', '--out', type=click.Path())
+@click.pass_context
+def gegnerate_settings(ctx, out):
+    pass
+
+
+@cmd_main.command()
 @click.option('--mongodb_uri', default='mongodb://127.0.0.1:27017', help="mongodb uri you want to download to")
 @click.option('--active', default=True, type=click.BOOL ,help="download active or all symbols")
-@click.option('--mode', default="mongo", type=click.Choice(['mongo', 'csv', 'tar']), help="Define the download mode")
-@click.option('--dst_dir', default=os.path.realpath('.'), type=click.Path)
-def download(kind, mongodb_uri, active, mode, dst_dir):
+@click.option('--frequency', default="all", type=click.Choice(['all', '1m', '5m', '1h', '1d']))
+def download(mongodb_uri, active, frequency):
+    cli = pymongo.MongoClient(mongodb_uri)
+    save_symbols(cli, active)
 
-    CONF.database_uri = mongodb_uri
-    def save_all_klines():
-        save_kline('1m', active)
-        save_kline('5m', active)
-        save_kline('1h', active)
-        save_kline('1d', active)
-    if kind == 'all':
-        save_history('trade', mode, dst_dir)
-        save_history('quote', mode, dst_dir)
-        save_all_klines()
-        save_symbols(active)
-    elif kind == 'quote':
-        save_history('quote', mode, dst_dir)
-    elif kind == 'trade':
-        save_history('trade', mode, dst_dir)
-    elif kind == 'kline':
-        save_all_klines()
-    elif kind == 'symbol':
-        save_symbols(active)
+    if frequency == "all":
+        save_kline(cli, '1m', active)
+        save_kline(cli, '5m', active)
+        save_kline(cli, '1h', active)
+        save_kline(cli, '1d', active)
     else:
-        raise NotImplementedError
+        save_kline(cli, frequency, active)
 
-
-@cli.command()
-def run():
-    pass
-
-@cli.command()
-@click.help_option()
-@click.option("--target_dir", default=".", help="The target dir where would generate a default setting file")
-def generate_settings(target_dir):
-    package_base = os.path.dirname(__file__)
-
-    target_dir = os.path.realpath(target_dir)
-    if not os.path.isdir(target_dir):
-        console_log.error("Please provide a valid target dir!!!")
-        return
-
-    shutil.copy(os.path.join(package_base, "_settings.py"), os.path.join(target_dir, "setting.py"))
-
-    console_log.info("Successfully generated the setting file, please edit your setting.")
-
-cli.add_command(download)
-cli.add_command(run)
-cli.add_command(generate_settings)
-
-def cmdEntry():
-    cli()
 
 
 if __name__ == '__main__':
-    cli()
+    cmd_main()

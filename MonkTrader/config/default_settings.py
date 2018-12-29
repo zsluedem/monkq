@@ -23,6 +23,8 @@ RUN_TYPE = 'backtest' # backtest , realtime
 
 TICK_TYPE = 'tick' # tick , bar
 
+STRATEGY = "strategy.MyStrategy"
+
 
 EXCHANGE = {
     'bitmex':{

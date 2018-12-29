@@ -38,23 +38,24 @@ from urllib.parse import urljoin
 from MonkTrader.const import Bitmex_api_url, CHINA_WARNING, CHINA_CONNECT_TIMEOUT, MAX_HISTORY
 
 from MonkTrader.logger import console_log
-from MonkTrader.config import CONF
+
+from typing import List
 
 
-def fetch_bitmex_symbols(active=False):
+def fetch_bitmex_symbols(active: bool = False):
     if active:
         url = urljoin(Bitmex_api_url, "instrument/active")
     else:
         url = urljoin(Bitmex_api_url, "instrument")
     try:
-        req = requests.get(url, params={"count":500}, timeout=CHINA_CONNECT_TIMEOUT)
+        req = requests.get(url, params={"count": 500}, timeout=CHINA_CONNECT_TIMEOUT)
     except ConnectTimeout:
         raise ConnectTimeout(CHINA_WARNING)
     body = json.loads(req.content)
     return body
 
 
-def fetch_bitmex_kline(symbol, start_time, end_time, frequency):
+def fetch_bitmex_kline(symbol: str, start_time: datetime.datetime, end_time: datetime.datetime, frequency: str):
     datas = list()
     while start_time < end_time:
         url = urljoin(Bitmex_api_url, "trade/bucketed")
@@ -62,7 +63,7 @@ def fetch_bitmex_kline(symbol, start_time, end_time, frequency):
             req = requests.get(url, params={"symbol": symbol, "binSize": frequency,
                                             "startTime": start_time.isoformat(),
                                             "endTime": end_time.isoformat(),
-                                            "count":MAX_HISTORY}, timeout=CHINA_CONNECT_TIMEOUT)
+                                            "count": MAX_HISTORY}, timeout=CHINA_CONNECT_TIMEOUT)
         except ConnectTimeout:
             raise ConnectTimeout(CHINA_WARNING)
         # 防止频率过快被断连
@@ -70,8 +71,9 @@ def fetch_bitmex_kline(symbol, start_time, end_time, frequency):
             remaining = int(req.headers['x-ratelimit-remaining'])
             ratelimit_reset = req.headers['X-RateLimit-Reset']
             retry_after = float(req.headers['Retry-After'])
-            warnings.warn(f"Your rate is too fast and remaining is {remaining}, retry after {retry_after}s, rate reset at {ratelimit_reset}")
-            time.sleep(retry_after + 3) # just sleep 3 more seconds to make safe
+            warnings.warn(
+                f"Your rate is too fast and remaining is {remaining}, retry after {retry_after}s, rate reset at {ratelimit_reset}")
+            time.sleep(retry_after + 3)  # just sleep 3 more seconds to make safe
             continue
         elif req.status_code == 403:
             warnings.warn(f"Your frequency is so fast that they won't let you access.Just rest for a while")
@@ -86,15 +88,17 @@ def fetch_bitmex_kline(symbol, start_time, end_time, frequency):
         return None
     return datas
 
-def to_json(datas):
+
+def to_json(datas: List):
     frame = pd.DataFrame(datas)
     frame['timestamp'] = pd.to_datetime(frame['timestamp'])
     return json.loads(frame.to_json(orient='records'))
 
-def save_kline(frequency, active=True):
+
+def save_kline(db_cli: pymongo.MongoClient, frequency: str, active: bool = True):
     symbol_list = fetch_bitmex_symbols(active=active)
     symbol_list = symbol_list
-    col = CONF.db.bitmex[frequency]
+    col = db_cli.bitmex[frequency]
     col.create_index(
         [("symbol", pymongo.ASCENDING), ("timestamp", pymongo.ASCENDING)], unique=True)
 
@@ -110,7 +114,7 @@ def save_kline(frequency, active=True):
 
         if ref.count() > 0:
             start_stamp = ref.next()['timestamp'] / 1000
-            start_time = datetime.datetime.fromtimestamp(start_stamp+1,tz=tzutc())
+            start_time = datetime.datetime.fromtimestamp(start_stamp + 1, tz=tzutc())
             console_log.info('UPDATE_SYMBOL {} Trying updating {} from {} to {}'.format(
                 frequency, symbol_info['symbol'], start_time, end))
         else:
@@ -120,7 +124,7 @@ def save_kline(frequency, active=True):
                 frequency, symbol_info['symbol'], start_time, end))
 
         data = fetch_bitmex_kline(symbol_info['symbol'],
-                                      start_time, end, frequency)
+                                  start_time, end, frequency)
         if data is None:
             console_log.info('SYMBOL {} from {} to {} has no data'.format(
                 symbol_info['symbol'], start_time, end))
@@ -129,18 +133,16 @@ def save_kline(frequency, active=True):
         col.insert_many(data)
 
 
-def save_symbols(active):
+def save_symbols(db_cli: pymongo.MongoClient, active: bool):
     symbols = fetch_bitmex_symbols(active)
-    col = CONF.db.bitmex.symbols
+    col = db_cli.bitmex.symbols
     if col.find().count() == len(symbols):
         console_log.info("SYMBOLS are already existed and no more to update")
     else:
         console_log.info("Delete the original symbols collections")
-        CONF.db.bitmex.drop_collection("symbols")
+        db_cli.bitmex.drop_collection("symbols")
         console_log.info("Downloading the new symbols")
         col.insert_many(symbols)
         console_log.info("Symbols download is done! Thank you man!")
 
 
-if __name__ == '__main__':
-    fetch_tick("XRPZ18", datetime.datetime(2018,1,1), datetime.datetime.now(), '1m')

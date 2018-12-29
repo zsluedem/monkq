@@ -21,16 +21,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.exchange.bitmex import PositionDirection
-
-class Order():
-    def __init__(self,instrument, quantity, order_type):
-        self.instrument = instrument
-        assert quantity != 0
-        self.quantity = quantity
-        self.order_type = order_type
-
-    @property
-    def direction(self):
-        return PositionDirection.LONG if self.amount > 0 else PositionDirection.SHORT
-

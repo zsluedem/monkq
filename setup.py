@@ -62,7 +62,7 @@ setup(
     ext_modules=[],
     entry_points={
         "console_scripts": [
-            "monktrader = MonkTrader.__main__:cmdEntry"
+            "monktrader = MonkTrader.__main__:cmd_main"
         ]
     },
     classifiers=[

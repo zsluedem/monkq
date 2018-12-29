@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 import asyncio
-from MonkTrader.bitmex.websocket import BitmexWebsocket
+from MonkTrader.exchange.bitmex import BitmexWebsocket
 
 class Trader():
     def __init__(self):

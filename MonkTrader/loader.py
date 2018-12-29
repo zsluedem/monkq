@@ -32,12 +32,8 @@ class StrategyLoader():
     def __init__(self):
         pass
 
-    def load_strategy(self, obj:Union[str, Type[AbcStrategy]]):
-        if issubclass(obj, AbcStrategy):
-            return obj
-        # elif isinstance(obj, str):
-        #     if os.path.exists(obj):
-        #         directory =
-        #         sys.path.insert(0, obj)
+    def load_strategy(self, cls:Union[str, Type[AbcStrategy]]):
+        if issubclass(cls, AbcStrategy):
+            return cls
         else:
             raise StrategyNotFound()

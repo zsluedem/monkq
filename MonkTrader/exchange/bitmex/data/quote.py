@@ -33,7 +33,7 @@ from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, DAILY
 from MonkTrader.logger import console_log
-from MonkTrader.config import CONF
+from MonkTrader.config import settings
 
 START_DATE = datetime.datetime(2014, 11, 22)
 now = datetime.datetime.now() + relativedelta(days=-1)
@@ -162,19 +162,24 @@ class MongoStream(CsvStreamRequest):
     collection_name = None
     index = None
 
+    def __init__(self, *args, **kwargs):
+        super(MongoStream, self).__init__(*args, **kwargs)
+        self._cli = pymongo.MongoClient(settings.DATABASE_URI)
+
+
     def setup(self):
-        col = CONF.db['bitmex'][self.collection_name]
+        col = self._cli['bitmex'][self.collection_name]
         col.create_index(self.index)
 
     def process_chunk(self):
-        col = CONF.db['bitmex'][self.collection_name]
+        col = self._cli['bitmex'][self.collection_name]
         col.insert_many(self.cache)
 
     def process_row(self, row):
         return row
 
     def rollback(self):
-        col = CONF.db['bitmex'][self.collection_name]
+        col = self._cli['bitmex'][self.collection_name]
         result = col.delete_many({'timestamp': {"$gte": self.date}})
         console_log.info(f"Rollback result: {result.raw_result}")
 
@@ -273,7 +278,7 @@ class QuoteFileStream(FileStream):
 
 
 
-def save_history(kind, mode, dst_dir):
+def save_history(kind: str, mode: str, dst_dir):
     console_log.info('Start downloading the data')
     if kind == 'quote':
         link = quote_link
@@ -299,7 +304,8 @@ def save_history(kind, mode, dst_dir):
         raise ValueError
 
     if mode == 'mongo':
-        col = CONF.db['bitmex'][kind]
+        cli = pymongo.MongoClient(settings.DATABASE_URI)
+        col = cli['bitmex'][kind]
         cur = col.find().sort("timestamp", pymongo.DESCENDING)
         try:
             item = cur.next()

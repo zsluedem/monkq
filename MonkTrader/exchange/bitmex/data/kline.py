@@ -133,7 +133,7 @@ def save_kline(db_cli: pymongo.MongoClient, frequency: str, active: bool = True)
         col.insert_many(data)
 
 
-def save_symbols(db_cli: pymongo.MongoClient, active: bool):
+def save_symbols_mongo(db_cli: pymongo.MongoClient, active: bool):
     symbols = fetch_bitmex_symbols(active)
     col = db_cli.bitmex.symbols
     if col.find().count() == len(symbols):
@@ -145,4 +145,9 @@ def save_symbols(db_cli: pymongo.MongoClient, active: bool):
         col.insert_many(symbols)
         console_log.info("Symbols download is done! Thank you man!")
 
+
+def save_symbols_json(active:bool, dst_path:str):
+    symbols = fetch_bitmex_symbols(active)
+    with open(dst_path, 'w') as f:
+        json.dumps(symbols, f)
 

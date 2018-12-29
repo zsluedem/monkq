@@ -22,5 +22,5 @@
 # SOFTWARE.
 #
 
-from .kline import save_kline, save_symbols
+from .kline import save_kline, save_symbols_mongo
 from .quote import save_history

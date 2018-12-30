@@ -21,10 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import dataclasses
-import datetime
-from collections import defaultdict
-from typing import Any, Type, Optional
 import os
 import sys
 import warnings
@@ -32,7 +28,6 @@ import warnings
 import lazy_object_proxy
 
 from MonkTrader.config import default_settings
-import operator
 
 # SETTINGS_ENV_VARIABLE = "SETTINGS_ENV_VARIABLE"
 

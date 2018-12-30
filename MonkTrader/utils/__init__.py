@@ -21,3 +21,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import os
+
+def assure_dir(dir: str):
+    """
+    Assure dir is a directory.
+    :param dir:
+    :return: If dir is a directory , return True, else create the directory and return False
+    :raise NotADirectoryError: if param dir is a file , raise NotADirectoryError
+    """
+    # if not os.path.exists(dir):
+    #     os.mkdir(dir)
+    #     return False
+    # elif not os.path.isdir(dir):
+    #     raise NotADirectoryError()
+    # return True
+    if os.path.isdir(dir):
+        return True
+    else:
+        try:
+            os.mkdir(dir)
+        except FileExistsError:
+            raise NotADirectoryError()
+
+
+

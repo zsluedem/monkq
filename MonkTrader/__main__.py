@@ -26,6 +26,7 @@ import shutil
 import click
 import os
 import pymongo
+from MonkTrader.utils import assure_dir
 from MonkTrader.logger import console_log
 from MonkTrader.config import settings
 from MonkTrader.exchange.bitmex.data.kline import save_symbols_json, save_kline
@@ -33,6 +34,7 @@ from MonkTrader.exchange.bitmex.data.quote import save_history
 
 from typing import List, Union, TypeVar
 
+USERHOME = os.path.join(os.path.expanduser("~"), '.monk')
 
 @click.group()
 @click.option('-c', '--config', type=str)
@@ -58,6 +60,8 @@ def gegnerate_settings(ctx, out):
 @click.option('--dst_dir', default=os.path.join(os.path.expanduser("~"), '.monk/data'), type=str)
 def download(kind, active, mode, dst_dir):
 
+    assure_dir(USERHOME)
+    assure_dir(dst_dir)
     # cli = pymongo.MongoClient(mongodb_uri)
     # def save_all_klines():
     #     save_kline(cli, '1m', active)

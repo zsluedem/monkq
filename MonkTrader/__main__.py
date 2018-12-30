@@ -55,7 +55,7 @@ def gegnerate_settings(ctx, out):
 # @click.option('--mongodb_uri', default='mongodb://127.0.0.1:27017', help="mongodb uri you want to download to")
 @click.option('--active', default=True, type=click.BOOL ,help="download active or all symbols")
 @click.option('--mode', default="mongo", type=click.Choice(['mongo', 'csv', 'tar']), help="Define the download mode")
-@click.option('--dst_dir', default=os.path.join(os.path.expanduser("~"), '.monktrade/data'), type=str)
+@click.option('--dst_dir', default=os.path.join(os.path.expanduser("~"), '.monk/data'), type=str)
 def download(kind, active, mode, dst_dir):
 
     # cli = pymongo.MongoClient(mongodb_uri)

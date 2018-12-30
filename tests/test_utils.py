@@ -21,41 +21,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-# from MonkTrader.exchange.bitmex.positionreal import SimulatePosition
-# from MonkTrader.exchange.bitmex.const import PositionDirection
-from MonkTrader.const import XBtUnit
+
+from MonkTrader.utils import assure_dir
 import pytest
+import tempfile
 
-class MockAccount():
-    def __init__(self, wallet_balance):
-        self.wallet_balance = wallet_balance
+def test_assure_home():
+    tmp_dir = tempfile.gettempdir()
+    assert assure_dir(tmp_dir)
 
-
-class MockInstrument():
-    def __init__(self):
-        self.maintMargin = 0.005
-        self.initMargin = 0.01
-        self.takerFee = 0.00075
-
-
-account = MockAccount(1000000)
-instrument = MockInstrument()
-
-@pytest.mark.skip
-def test_isolated_perpetual_position():
-    position = SimulatePosition(instrument, account)
-    position.isolated = True
-    position.amount = 1000
-    position.entry_price = 3600
-    position.leverage = 3
-
-    assert position.direction == PositionDirection.LONG
-    assert position.value == 1000 / 3600 * XBtUnit
-    assert position.liq_price == pytest.approx(2710.5, 0.1)
-
-@pytest.mark.skip
-def test_cross_perpetual_position():
-    position = SimulatePosition(instrument, account)
-    position.isolated = False
-    position.amount = 1000
-    position.entry_price = 3600
+    with tempfile.NamedTemporaryFile() as f:
+        with pytest.raises(NotADirectoryError):
+            assure_dir(f.name)

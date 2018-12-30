@@ -12,7 +12,7 @@ install:
 build: false
 
 test_script:
-  - python -m pytest tests
+  - python -m pytest --mypy tests
 
 branches:
   only:

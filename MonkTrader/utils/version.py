@@ -21,26 +21,5 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-from MonkTrader.config import Setting
-import os
 import sys
-import tempfile
-
-setting_content ="""
-A = 123
-B = 321
-"""
-
-
-def test_settings() ->None:
-    with tempfile.TemporaryDirectory() as temp:
-        with open(os.path.join(temp, 'settings.py'), 'w') as f:
-            f.write(setting_content)
-        sys.path.insert(0, temp)
-        setting = Setting()
-        sys.path.pop(0)
-        assert setting.A == 123 # type: ignore
-        assert setting.B == 321 # type: ignore
-
-
+PY36 = sys.version_info >= (3, 6)

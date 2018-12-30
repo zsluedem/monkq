@@ -21,7 +21,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import csv
 import os
+from collections import defaultdict
+
 
 def assure_dir(dir: str):
     """
@@ -45,4 +48,21 @@ def assure_dir(dir: str):
             raise NotADirectoryError()
 
 
+class CsvFileDefaultDict(defaultdict):
+    def __init__(self, dir, fieldnames, *args, **kwargs):
+        super(CsvFileDefaultDict, self).__init__(*args, **kwargs)
+        self.dir = dir
+        self.default_factory = csv.DictWriter
+        self.fieldnames = fieldnames
+        self.file_set = set()
 
+    def __missing__(self, key):
+        f = open(os.path.join(self.dir, '{}.csv'.format(key)), 'w')
+        self.file_set.add(f)
+        ret = self[key] = self.default_factory(f, fieldnames=self.fieldnames)
+        ret.writeheader()
+        return ret
+
+    def close(self):
+        for f in self.file_set:
+            f.close()

@@ -1,0 +1,20 @@
+environment:
+  matrix:
+    - PYTHON: C:\Python36-x64
+
+init:
+  - SET PATH=%PYTHON%;%PATH%
+
+install:
+  - python -m pip install .
+  - python -m pip install -r requirements_dev.txt
+
+build: false
+
+test_script:
+  - pytest tests
+
+branches:
+  only:
+    - master
+

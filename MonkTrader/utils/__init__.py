@@ -23,7 +23,7 @@
 #
 import csv
 import os
-from collections.__init__ import defaultdict
+from collections import defaultdict
 
 
 def assure_dir(dir: str):
@@ -57,7 +57,7 @@ class CsvFileDefaultDict(defaultdict):
         self.file_set = set()
 
     def __missing__(self, key):
-        f = open(os.path.join(self.dir, f'{key}.csv'), 'w')
+        f = open(os.path.join(self.dir, '{}.csv'.format(key)), 'w')
         self.file_set.add(f)
         ret = self[key] = self.default_factory(f, fieldnames=self.fieldnames)
         ret.writeheader()

@@ -32,7 +32,7 @@ class StrategyLoader():
     def __init__(self):
         pass
 
-    def load_strategy(self, cls:Union[str, Type[AbcStrategy]]):
+    def load_strategy(self, cls:Type[AbcStrategy]):
         if issubclass(cls, AbcStrategy):
             return cls
         else:

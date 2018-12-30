@@ -31,7 +31,7 @@ import lazy_object_proxy
 if PY36:
     from MonkTrader.config import default_settings36 as default_settings
 else:
-    from MonkTrader.config import default_settings3 as default_settings
+    from MonkTrader.config import default_settings3 as default_settings # type: ignore
 
 # SETTINGS_ENV_VARIABLE = "SETTINGS_ENV_VARIABLE"
 

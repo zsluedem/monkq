@@ -20,7 +20,7 @@ TICK_TYPE = 'tick'  # tick , bar
 
 STRATEGY = "strategy.MyStrategy"
 
-EXCHANGE= {
+EXCHANGE= { # type: ignore
     'bitmex': {
         "IS_TEST": True,
         "API_KEY": '',
@@ -28,10 +28,10 @@ EXCHANGE= {
     }
 }
 
-BUILTIN_PLUGINS= {
+BUILTIN_PLUGINS= { # type: ignore
 
 }
 
-INSTALLED_PLUGINS= {
+INSTALLED_PLUGINS= { # type: ignore
 
 }

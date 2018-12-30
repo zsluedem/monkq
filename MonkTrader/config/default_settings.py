@@ -1,6 +1,3 @@
-import logging
-import logbook
-
 # Mongodb uri which is used to load data or download data in.
 DATABASE_URI = "mongodb://127.0.0.1"
 
@@ -26,7 +23,7 @@ TICK_TYPE = 'tick' # tick , bar
 STRATEGY = "strategy.MyStrategy"
 
 
-EXCHANGE = {
+EXCHANGE:dict = {
     'bitmex':{
         "IS_TEST":True,
         "API_KEY": '',
@@ -34,11 +31,11 @@ EXCHANGE = {
     }
 }
 
-BUILTIN_PLUGINS = {
+BUILTIN_PLUGINS:dict = {
 
 }
 
 
-INSTALLED_PLUGINS = {
+INSTALLED_PLUGINS:dict = {
 
 }

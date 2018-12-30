@@ -6,3 +6,5 @@ matplotlib
 jupyter
 mpl_finance
 pytest
+pytest-mypy
+typeshed

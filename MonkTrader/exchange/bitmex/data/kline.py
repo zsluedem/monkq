@@ -35,7 +35,8 @@ from dateutil.relativedelta import relativedelta
 from requests.exceptions import ConnectTimeout
 
 from urllib.parse import urljoin
-from MonkTrader.const import Bitmex_api_url, CHINA_WARNING, CHINA_CONNECT_TIMEOUT, MAX_HISTORY
+from MonkTrader.const import CHINA_WARNING, CHINA_CONNECT_TIMEOUT, MAX_HISTORY
+from MonkTrader.exchange.bitmex.const import Bitmex_api_url
 
 from MonkTrader.logger import console_log
 

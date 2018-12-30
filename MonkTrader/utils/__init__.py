@@ -24,7 +24,7 @@
 import csv
 import os
 from collections import defaultdict
-from typing import List, Callable, Any
+from typing import List, Any, Set, Type
 
 
 def assure_dir(dir: str) -> bool:
@@ -45,15 +45,16 @@ def assure_dir(dir: str) -> bool:
 
 
 class CsvFileDefaultDict(defaultdict):
+    CSVNEWLINE = '\n' # type: str
     def __init__(self, dir: str, fieldnames: List[str], *args:Any, **kwargs: Any) -> None:
         super(CsvFileDefaultDict, self).__init__(*args, **kwargs)
         self.dir = dir
-        self.default_factory: Callable = csv.DictWriter
+        self.default_factory = csv.DictWriter # type: Type[csv.DictWriter]
         self.fieldnames = fieldnames
-        self.file_set: set = set()
+        self.file_set = set() # type: Set
 
-    def __missing__(self, key:str):
-        f = open(os.path.join(self.dir, '{}.csv'.format(key)), 'w')
+    def __missing__(self, key:str) -> csv.DictWriter:
+        f = open(os.path.join(self.dir, '{}.csv'.format(key)), 'w', newline=self.CSVNEWLINE)
         self.file_set.add(f)
         ret = self[key] = self.default_factory(f, fieldnames=self.fieldnames)
         ret.writeheader()

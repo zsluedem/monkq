@@ -33,7 +33,8 @@ import dataclasses
 import datetime
 from MonkTrader.logger import console_log, trade_log
 from MonkTrader import _settings
-from MonkTrader.const import Bitmex_api_url, Bitmex_testnet_api_url, Bitmex_testnet_websocket_url, Bitmex_websocket_url
+from MonkTrader.exchange.bitmex.const import Bitmex_api_url, Bitmex_websocket_url, Bitmex_testnet_api_url, \
+    Bitmex_testnet_websocket_url
 
 
 def import_path(fullpath):

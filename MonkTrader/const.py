@@ -22,12 +22,6 @@
 # SOFTWARE.
 #
 
-Bitmex_api_url = "https://www.bitmex.com/api/v1/"
-Bitmex_websocket_url = "wss://www.bitmex.com/realtime"
-
-Bitmex_testnet_api_url = "https://testnet.bitmex.com/api/v1/"
-Bitmex_testnet_websocket_url = "wss://testnet.bitmex.com/realtime"
-
 MAX_HISTORY = 750
 
 CHINA_WARNING =  "科学上网"

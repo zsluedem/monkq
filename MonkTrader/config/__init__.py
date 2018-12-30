@@ -24,10 +24,14 @@
 import os
 import sys
 import warnings
+from MonkTrader.utils.version import PY36
 
 import lazy_object_proxy
 
-from MonkTrader.config import default_settings
+if PY36:
+    from MonkTrader.config import default_settings36 as default_settings
+else:
+    from MonkTrader.config import default_settings3 as default_settings
 
 # SETTINGS_ENV_VARIABLE = "SETTINGS_ENV_VARIABLE"
 

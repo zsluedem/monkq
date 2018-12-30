@@ -40,7 +40,6 @@ USERHOME = os.path.join(os.path.expanduser("~"), '.monk')
 @click.option('-c', '--config', type=str)
 @click.pass_context
 def cmd_main(ctx:click.Context, config):
-    print(settings.START_TIME)
     pass
 
 

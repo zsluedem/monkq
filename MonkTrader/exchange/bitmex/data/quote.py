@@ -29,11 +29,11 @@ import csv
 import pymongo
 import os
 import shutil
-from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, DAILY
 from MonkTrader.logger import console_log
 from MonkTrader.config import settings
+from MonkTrader.utils import CsvFileDefaultDict
 
 START_DATE = datetime.datetime(2014, 11, 22)
 now = datetime.datetime.now() + relativedelta(days=-1)
@@ -42,25 +42,6 @@ trade_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}
 quote_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
 
 TARFILETYPE = '.csv.gz'
-
-class CsvFileDefaultDict(defaultdict):
-    def __init__(self, dir, fieldnames, *args, **kwargs):
-        super(CsvFileDefaultDict, self).__init__(*args, **kwargs)
-        self.dir = dir
-        self.default_factory = csv.DictWriter
-        self.fieldnames = fieldnames
-        self.file_set = set()
-
-    def __missing__(self, key):
-        f = open(os.path.join(self.dir, f'{key}.csv'), 'w')
-        self.file_set.add(f)
-        ret = self[key] = self.default_factory(f, fieldnames=self.fieldnames)
-        ret.writeheader()
-        return ret
-
-    def close(self):
-        for f in self.file_set:
-            f.close()
 
 
 class StreamRequest():

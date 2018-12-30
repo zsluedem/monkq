@@ -22,9 +22,11 @@
 # SOFTWARE.
 #
 
-from MonkTrader.utils import assure_dir
+from MonkTrader.utils import assure_dir, CsvFileDefaultDict
+import csv
 import pytest
 import tempfile
+import os
 
 def test_assure_home():
     tmp_dir = tempfile.gettempdir()
@@ -33,3 +35,22 @@ def test_assure_home():
     with tempfile.NamedTemporaryFile() as f:
         with pytest.raises(NotADirectoryError):
             assure_dir(f.name)
+
+def test_csv_file_defaultdict():
+    with tempfile.TemporaryDirectory() as tdir:
+        headers = ['1','2', '3']
+        csv_d = CsvFileDefaultDict(tdir, headers)
+
+        f1 = csv_d['123']
+        assert isinstance(f1, csv.DictWriter)
+
+        f1.writerow({'1':'3', '2':'2', '3':'1'})
+
+        csv_d.close()
+
+        assert os.path.isfile(os.path.join(tdir, '123.csv'))
+
+        with open(os.path.join(tdir, '123.csv'), 'r') as f:
+            content = f.read()
+
+        assert content == "1,2,3{}3,2,1{}".format(CsvFileDefaultDict.CSVNEWLINE, CsvFileDefaultDict.CSVNEWLINE)

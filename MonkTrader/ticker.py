@@ -44,7 +44,7 @@ class FrequencyTicker():
         self.current = start_time
 
     @staticmethod
-    def assure_datetime_aware(d: datetime.datetime):
+    def assure_datetime_aware(d: datetime.datetime) -> bool:
         return d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None
 
     def timer(self):

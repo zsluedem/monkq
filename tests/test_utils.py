@@ -53,4 +53,4 @@ def test_csv_file_defaultdict():
         with open(os.path.join(tdir, '123.csv'), 'r') as f:
             content = f.read()
 
-        assert content == "1,2,3\n3,2,1\n"
+        assert content == "1,2,3{}3,2,1{}".format(os.linesep, os.linesep)

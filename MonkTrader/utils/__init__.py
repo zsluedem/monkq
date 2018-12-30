@@ -24,21 +24,16 @@
 import csv
 import os
 from collections import defaultdict
+from typing import List, Callable, Any
 
 
-def assure_dir(dir: str):
+def assure_dir(dir: str) -> bool:
     """
     Assure dir is a directory.
     :param dir:
     :return: If dir is a directory , return True, else create the directory and return False
     :raise NotADirectoryError: if param dir is a file , raise NotADirectoryError
     """
-    # if not os.path.exists(dir):
-    #     os.mkdir(dir)
-    #     return False
-    # elif not os.path.isdir(dir):
-    #     raise NotADirectoryError()
-    # return True
     if os.path.isdir(dir):
         return True
     else:
@@ -46,17 +41,18 @@ def assure_dir(dir: str):
             os.mkdir(dir)
         except FileExistsError:
             raise NotADirectoryError()
+        return False
 
 
 class CsvFileDefaultDict(defaultdict):
-    def __init__(self, dir, fieldnames, *args, **kwargs):
+    def __init__(self, dir: str, fieldnames: List[str], *args:Any, **kwargs: Any) -> None:
         super(CsvFileDefaultDict, self).__init__(*args, **kwargs)
         self.dir = dir
-        self.default_factory = csv.DictWriter
+        self.default_factory: Callable = csv.DictWriter
         self.fieldnames = fieldnames
-        self.file_set = set()
+        self.file_set: set = set()
 
-    def __missing__(self, key):
+    def __missing__(self, key:str):
         f = open(os.path.join(self.dir, '{}.csv'.format(key)), 'w')
         self.file_set.add(f)
         ret = self[key] = self.default_factory(f, fieldnames=self.fieldnames)

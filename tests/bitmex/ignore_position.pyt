@@ -38,8 +38,8 @@ class MockInstrument():
         self.takerFee = 0.00075
 
 
-account = MockAccount(1000000)
-instrument = MockInstrument()
+# account = MockAccount(1000000) # typing: ignore
+# instrument = MockInstrument() # typing: ignore
 
 @pytest.mark.skip
 def test_isolated_perpetual_position():

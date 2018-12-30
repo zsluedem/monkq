@@ -22,14 +22,4 @@
 # SOFTWARE.
 #
 
-from MonkTrader.loader import StrategyLoader
-from MonkTrader.interface import AbcStrategy
-
-class Example(AbcStrategy):
-    pass
-
-def test_load_class():
-    loader = StrategyLoader()
-    cls = loader.load_strategy(Example)
-    assert issubclass(cls, AbcStrategy)
 

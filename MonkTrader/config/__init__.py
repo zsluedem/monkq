@@ -49,7 +49,7 @@ class Setting:
         except ImportError:
             warnings.warn("Can not find settings.py in the current path, we are going to use the default settings.")
             return
-        self._explicit_settings = set()
+        self._explicit_settings: set = set()
 
         for setting in dir(mod):
             if setting.isupper():

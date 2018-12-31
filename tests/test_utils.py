@@ -22,11 +22,13 @@
 # SOFTWARE.
 #
 
-from MonkTrader.utils import assure_dir, CsvFileDefaultDict
+from MonkTrader.utils import assure_dir, CsvFileDefaultDict, is_aware_datetime
 import csv
 import pytest
 import tempfile
 import os
+import datetime
+import pytz
 
 def test_assure_home():
     tmp_dir = tempfile.gettempdir()
@@ -54,3 +56,10 @@ def test_csv_file_defaultdict():
             content = f.read()
 
         assert content == "1,2,3{}3,2,1{}".format(CsvFileDefaultDict.CSVNEWLINE, CsvFileDefaultDict.CSVNEWLINE)
+
+def test_aware_datetime():
+    d1 = datetime.datetime(2018,1,1,12,0,0)
+    assert not is_aware_datetime(d1)
+
+    d2 = datetime.datetime(2018,1,1,12,tzinfo=pytz.utc)
+    assert is_aware_datetime(d2)

@@ -26,14 +26,15 @@ from dateutil.rrule import rrule, MINUTELY, DAILY
 FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
 from MonkTrader.interface import Ticker
 from MonkTrader.exception import BacktestTimeException
+from MonkTrader.utils import is_aware_datetime
 
 from typing import Union
 import datetime
 
 class FrequencyTicker():
     def __init__(self, start_time: datetime.datetime , end_time:datetime.datetime , frequency:str):
-        assert self.assure_datetime_aware(start_time)
-        assert self.assure_datetime_aware(end_time)
+        assert is_aware_datetime(start_time)
+        assert is_aware_datetime(end_time)
 
         if start_time >= end_time:
             raise BacktestTimeException()
@@ -43,14 +44,8 @@ class FrequencyTicker():
 
         self.current = start_time
 
-    @staticmethod
-    def assure_datetime_aware(d: datetime.datetime) -> bool:
-        return d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None
-
     def timer(self):
         for current_datetime in rrule(self.frequency, dtstart=self.start_time, until=self.end_time):
             self.current = current_datetime
             yield  self.current
 
-# class RealtimeTicker():
-#     def __init__(self):

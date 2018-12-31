@@ -25,6 +25,7 @@ import csv
 import os
 from collections import defaultdict
 from typing import List, Any, Set, Type
+import datetime
 
 
 def assure_dir(dir: str) -> bool:
@@ -42,6 +43,9 @@ def assure_dir(dir: str) -> bool:
         except FileExistsError:
             raise NotADirectoryError()
         return False
+
+def is_aware_datetime(t: datetime.datetime) -> bool:
+    return t.tzinfo is not None and t.tzinfo.utcoffset(t) is not None
 
 
 class CsvFileDefaultDict(defaultdict):

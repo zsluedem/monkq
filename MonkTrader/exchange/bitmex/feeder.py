@@ -40,7 +40,7 @@ class PickleDataFeeder(DataFeeder):
 
     def loaddata(self):
         for freq in ('1m', '5m'):
-            with open(os.path.join(self.directory,f"{freq}.pkl"), 'rb') as f:
+            with open(os.path.join(self.directory,"{}.pkl".format(freq)), 'rb') as f:
                 data = pickle.load(f)
                 del data['_id']
                 data.set_index('timestamp', inplace=True)

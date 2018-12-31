@@ -122,7 +122,7 @@ class BitmexWebsocket():
 
     async def run(self):
         async for message in self._ws:
-            trade_log.debug(f"Receive message from bitmex:{message.data}")
+            trade_log.debug("Receive message from bitmex:{}".format(message.data))
             decode_message = json.loads(message.data)
             self._on_message(decode_message)
 
@@ -344,6 +344,6 @@ class BitmexWebsocket():
                             self._data[table].remove(item)
                 else:
                     raise Exception("Unknown action: %s" % action)
-            trade_log.debug(f"Tick data process time: {round(time.time()- start, 7)}")
+            trade_log.debug("Tick data process time: {}".format(round(time.time()- start, 7)))
         except:
             trade_log.error(traceback.format_exc())

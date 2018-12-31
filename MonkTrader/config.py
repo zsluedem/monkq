@@ -130,7 +130,7 @@ class Conf(Configurable):
         settings = get_attrs_from_module(module)
         for key, attr in settings.items():
             if key not in self.allow_set:
-                console_log.warning(f"{key} is not a valid setting!")
+                console_log.warning("{} is not a valid setting!".format(key))
                 continue
             setattr(self, key, attr)
 

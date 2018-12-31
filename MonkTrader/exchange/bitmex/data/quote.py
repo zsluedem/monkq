@@ -90,11 +90,11 @@ class RawStreamRequest(StreamRequest):
                     f.write(chunk)
         except Exception as e:
             self.rollback()
-            console_log.exception(f"Exception #{e}# happened when process f{self.date} data")
+            console_log.exception("Exception #{}# happened when process {} data".format(e, self.date))
             raise DataDownloadException()
 
     def rollback(self):
-        console_log.info(f"Remove the not complete file {self.dst_file}")
+        console_log.info("Remove the not complete file {}".format(self.dst_file))
         os.remove(self.dst_file)
 
 
@@ -143,7 +143,7 @@ class CsvStreamRequest(StreamRequest):
                 self.process_chunk()
         except Exception as e:
             self.rollback()
-            console_log.exception(f"Exception {e} happened when process f{self.date} data")
+            console_log.exception("Exception {} happened when process f{} data".format(e, self.date))
             raise DataDownloadException()
         self.cleanup()
 
@@ -182,7 +182,7 @@ class MongoStream(CsvStreamRequest):
     def rollback(self):
         col = self._cli['bitmex'][self.collection_name]
         result = col.delete_many({'timestamp': {"$gte": self.date}})
-        console_log.info(f"Rollback result: {result.raw_result}")
+        console_log.info("Rollback result: {}".format(result.raw_result))
 
 
 class QuoteMongoStream(MongoStream):
@@ -233,7 +233,7 @@ class FileStream(CsvStreamRequest):
         return row
 
     def rollback(self):
-        console_log.info(f"Rollback : Remove the not complete dir {self.dst_dir}")
+        console_log.info("Rollback : Remove the not complete dir {}".format(self.dst_dir))
         shutil.rmtree(self.dst_dir)
 
     def cleanup(self):

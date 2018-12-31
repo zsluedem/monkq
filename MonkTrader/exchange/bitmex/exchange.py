@@ -247,10 +247,10 @@ class BitmexExchange():
         headers = {}
 
         async def retry(retry_time):
-            trade_log.info(f"Retry on remain times {retry_time}")
+            trade_log.info("Retry on remain times {}".format(retry_time))
             retry_time -= 1
             if retry_time < 0:
-                trade_log.error(f"Request with args {path}, {query}, {postdict}, {timeout}, {verb}, {max_retry} failed with retries")
+                trade_log.error("Request with args {}, {}, {}, {}, {}, {} failed with retries".format(path, query, postdict, timeout, verb, max_retry))
                 raise MaxRetryException()
             else:
                 return await self._curl_bitmex(path, query, postdict, timeout, verb, retry_time)
@@ -277,41 +277,41 @@ class BitmexExchange():
                 exit(1)
             elif resp.status == 404:
                 if verb == 'DELETE':
-                    trade_log.error(f"Order not found: {postdict['orderID']}")
+                    trade_log.error("Order not found: {}".format(postdict['orderID']))
                     return resp
                 trade_log.error("Unable to contact the BitMEX API (404). " +
-                                  f"Request: {url} \n {postdict}" )
+                                  "Request: {} \n {}".format(url, postdict) )
                 # exit_or_throw()
             elif resp.status == 429:
                 trade_log.error("Ratelimited on current request. Sleeping, then trying again. Try fewer " +
                                   "order pairs or contact support@bitmex.com to raise your limits. " +
-                                  f"Request: {url} \n {postdict}")
+                                  "Request: {} \n {}".format(url, postdict))
 
                 # Figure out how long we need to wait.
                 ratelimit_reset = resp.headers['X-RateLimit-Reset']
                 to_sleep = int(ratelimit_reset) - int(time.time())
                 reset_str = datetime.datetime.fromtimestamp(int(ratelimit_reset)).strftime('%X')
 
-                trade_log.error(f"Your ratelimit will reset at {reset_str}. Sleeping for {to_sleep} seconds.")
+                trade_log.error("Your ratelimit will reset at {}. Sleeping for {} seconds.".format(reset_str, to_sleep))
                 raise RateLimitException(ratelimit_reset)
 
             # 503 - BitMEX temporary downtime, likely due to a deploy. Try again
             elif resp.status == 503:
                 trade_log.warning("Unable to contact the BitMEX API (503), retrying. " +
-                                    f"Request: {url} \n {postdict}")
-                trade_log.warning(f"Response header :{resp.headers}")
+                                    "Request: {} \n {}".format(url, postdict))
+                trade_log.warning("Response header :{}".format(resp.headers))
                 return await retry(max_retry)
             elif resp.status == 400:
                 content = await resp.json()
                 error = content['error']
                 message = error['message'].lower() if error else ''
 
-                trade_log.error(f"An error occured, and return {content} \n Request: {url}, {postdict}")
+                trade_log.error("An error occured, and return {} \n Request: {}, {}".format(content,url, postdict))
                 if 'insufficient available balance' in message:
-                    trade_log.error(f'Account out of funds. The message: {error["message"]}' )
+                    trade_log.error('Account out of funds. The message: {}'.format(error["message"]) )
         except asyncio.TimeoutError:
             # Timeout, re-run this request
-            trade_log.warning(f"Timed out on request: {path} ({postdict}), retrying..." )
+            trade_log.warning("Timed out on request: {} ({}), retrying...".format(path,postdict) )
             return await retry(max_retry)
 
         return resp

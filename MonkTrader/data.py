@@ -22,16 +22,37 @@
 # SOFTWARE.
 #
 
-class DataDownloader():
-    def download(self):
-        pass
+from typing import Any
+from collections.abc import Iterator
+from abc import ABC, abstractproperty, abstractmethod
 
-    def reformat(self):
-        pass
 
-    def write(self):
-        pass
+class Point(ABC):
+    @abstractproperty
+    def value(self) -> Any:
+        raise NotImplementedError
+
+
+class ProcessPoints(Iterator):
+
+    def __iter__(self):
+        raise NotImplementedError
+
+
+class DataDownloader(ABC):
+    @abstractmethod
+    def process_point(self) -> ProcessPoints:
+        raise NotImplementedError
+
+    @abstractmethod
+    def download_one_point(self, point: Point) -> None:
+        raise NotImplementedError
+
+    def do_all(self) -> None:
+        for point in self.process_point():
+            self.download_one_point(point)
+
 
 class DataFeeder():
-    def loaddata(self):
+    def loaddata(self)-> None:
         pass

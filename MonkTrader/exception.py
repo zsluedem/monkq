@@ -23,7 +23,7 @@
 #
 
 
-class MonkException(Exception):
+class MonkException(BaseException):
     pass
 
 
@@ -39,4 +39,7 @@ class BacktestTimeException(MonkException):
     pass
 
 class StrategyNotFound(MonkException):
+    pass
+
+class DataDownloadException(MonkException):
     pass

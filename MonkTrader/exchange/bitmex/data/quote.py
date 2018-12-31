@@ -34,9 +34,12 @@ from dateutil.rrule import rrule, DAILY
 from MonkTrader.logger import console_log
 from MonkTrader.config import settings
 from MonkTrader.utils import CsvFileDefaultDict
+from MonkTrader.data import DataDownloader, Point, ProcessPoints
+from MonkTrader.exception import DataDownloadException
+
+from typing import Type, Generator
 
 START_DATE = datetime.datetime(2014, 11, 22)
-now = datetime.datetime.now() + relativedelta(days=-1)
 
 trade_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}.csv.gz"
 quote_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
@@ -45,15 +48,32 @@ TARFILETYPE = '.csv.gz'
 
 
 class StreamRequest():
-    def _stream_requests(self, url):
+    def _stream_requests(self, url: str) -> Generator[bytes, None, None]:
         response = requests.get(url, stream=True)
         response.raise_for_status()
         for chunk in response.iter_content(chunk_size=io.DEFAULT_BUFFER_SIZE):
             yield chunk
 
-class TarStreamRequest(StreamRequest):
-    def __init__(self, date:datetime.datetime, url:str, dst_dir:str):
-        super(TarStreamRequest, self).__init__()
+    def process(self):
+        """
+        process the data after the raw_process data
+        :return:
+        """
+        raise NotImplementedError
+
+    def rollback(self):
+        """
+        If there is anything wrong happening in the process, the whole process would rollback
+        :return:
+        """
+        raise NotImplementedError
+
+
+class RawStreamRequest(StreamRequest):
+    FILETYPE = '.csv.gz'
+
+    def __init__(self, date: datetime.datetime, url: str, dst_dir: str):
+        super(RawStreamRequest, self).__init__()
         self.date = date
         self.url = url
         assert os.path.isdir(dst_dir)
@@ -61,7 +81,7 @@ class TarStreamRequest(StreamRequest):
             os.mkdir(dst_dir)
         self.dst_dir = dst_dir
 
-        self.dst_file = os.path.join(self.dst_dir, self.date.strftime("%Y%m%d")+TARFILETYPE)
+        self.dst_file = os.path.join(self.dst_dir, self.date.strftime("%Y%m%d") + self.FILETYPE)
 
     def process(self):
         try:
@@ -70,15 +90,17 @@ class TarStreamRequest(StreamRequest):
                     f.write(chunk)
         except Exception as e:
             self.rollback()
-            console_log.exception(f"Exception #{e}# happened when process f{self.date} data")
-            os._exit(1)
+            console_log.exception("Exception #{}# happened when process {} data".format(e, self.date))
+            raise DataDownloadException()
 
     def rollback(self):
-        console_log.info(f"Remove the not complete file {self.dst_file}")
+        console_log.info("Remove the not complete file {}".format(self.dst_file))
         os.remove(self.dst_file)
 
+
 class CsvStreamRequest(StreamRequest):
-    def __init__(self, date:datetime.datetime, url:str, cache_num:int=100, chunk_process:bool=False, csv_reader=csv.DictReader, decompress=False):
+    def __init__(self, date: datetime.datetime, url: str, cache_num: int = 100, chunk_process: bool = False,
+                 csv_reader=csv.DictReader, decompress=False):
         super(CsvStreamRequest, self).__init__()
         self.date = date
         self.url = url
@@ -89,7 +111,6 @@ class CsvStreamRequest(StreamRequest):
         self.csv_reader = csv_reader
         self.decompress = decompress
         self.dec = zlib.decompressobj(32 + zlib.MAX_WBITS)
-
 
     def setup(self):
         raise NotImplementedError
@@ -122,8 +143,8 @@ class CsvStreamRequest(StreamRequest):
                 self.process_chunk()
         except Exception as e:
             self.rollback()
-            console_log.exception(f"Exception {e} happened when process f{self.date} data")
-            os._exit(-1)
+            console_log.exception("Exception {} happened when process f{} data".format(e, self.date))
+            raise DataDownloadException()
         self.cleanup()
 
     def rollback(self):
@@ -144,9 +165,8 @@ class MongoStream(CsvStreamRequest):
     index = None
 
     def __init__(self, *args, **kwargs):
-        super(MongoStream, self).__init__(*args, **kwargs)
+        super(MongoStream, self).__init__(chunk_process=True, *args, **kwargs)
         self._cli = pymongo.MongoClient(settings.DATABASE_URI)
-
 
     def setup(self):
         col = self._cli['bitmex'][self.collection_name]
@@ -162,15 +182,15 @@ class MongoStream(CsvStreamRequest):
     def rollback(self):
         col = self._cli['bitmex'][self.collection_name]
         result = col.delete_many({'timestamp': {"$gte": self.date}})
-        console_log.info(f"Rollback result: {result.raw_result}")
+        console_log.info("Rollback result: {}".format(result.raw_result))
 
 
 class QuoteMongoStream(MongoStream):
     collection_name = "quote"
     index = [("timestamp", pymongo.DESCENDING), ('symbol', pymongo.DESCENDING)]
 
-    def process_row(self, row):
-        row['timestamp'] = datetime.datetime.strptime(row['timestamp'][:26], '%Y-%m-%dD%H:%M:%S.%f')
+    def process_row(self, row: dict):
+        row['timestamp'] = datetime.datetime.strptime(row['timestamp'][:26], '%Y-%m-%dD%H:%M:%S.%f')  # utc time
         row['bidSize'] = float(row['bidSize']) if row['bidSize'] else 0
         row['bidPrice'] = float(row['bidPrice']) if row['bidPrice'] else 0
         row['askPrice'] = float(row['askPrice']) if row['askPrice'] else 0
@@ -183,17 +203,19 @@ class TradeMongoStream(MongoStream):
     index = [("timestamp", pymongo.DESCENDING), ('symbol', pymongo.DESCENDING)]
 
     def process_row(self, row):
-        row['timestamp'] = datetime.datetime.strptime(row['timestamp'][:26], '%Y-%m-%dD%H:%M:%S.%f')
+        row['timestamp'] = datetime.datetime.strptime(row['timestamp'][:26], '%Y-%m-%dD%H:%M:%S.%f')  # utc time
         row['size'] = float(row['size']) if row['size'] else 0
         row['price'] = float(row['price']) if row['price'] else 0
         row['grossValue'] = float(row['grossValue']) if row['grossValue'] else 0
         row['foreignNotional'] = float(row['foreignNotional']) if row['foreignNotional'] else 0
+        row['homeNotional'] = float(row['homeNotional']) if row['homeNotional'] else 0
         return row
+
 
 class FileStream(CsvStreamRequest):
     fieldnames = list()
 
-    def __init__(self, dst_dir, *args, **kwargs):
+    def __init__(self, dst_dir: str, *args, **kwargs):
         super(FileStream, self).__init__(chunk_process=False, *args, **kwargs)
         assert os.path.isdir(dst_dir)
         new_dir = os.path.join(dst_dir, self.date.strftime("%Y%m%d"))
@@ -205,111 +227,133 @@ class FileStream(CsvStreamRequest):
     def setup(self):
         pass
 
-    def process_row(self, row):
+    def process_row(self, row: dict):
         writer = self.csv_file_writers[row['symbol']]
         writer.writerow(row)
         return row
 
     def rollback(self):
-        console_log.info(f"Rollback : Remove the not complete dir {self.dst_dir}")
+        console_log.info("Rollback : Remove the not complete dir {}".format(self.dst_dir))
         shutil.rmtree(self.dst_dir)
 
     def cleanup(self):
         self.csv_file_writers.close()
 
+
 class TradeFileStream(FileStream):
-    fieldnames = ["timestamp","symbol","side","size","price","tickDirection","trdMatchID","grossValue","homeNotional","foreignNotional"]
+    fieldnames = ["timestamp", "symbol", "side", "size", "price", "tickDirection", "trdMatchID", "grossValue",
+                  "homeNotional", "foreignNotional"]
+
 
 class QuoteFileStream(FileStream):
-    fieldnames = ["timestamp","symbol","bidSize","bidPrice","askPrice","askSize"]
+    fieldnames = ["timestamp", "symbol", "bidSize", "bidPrice", "askPrice", "askSize"]
 
 
-# class Recover():
-#     def setup(self):
-#         pass
-#
-#     def get_checkpoint(self):
-#         pass
-#
-#     def recover(self):
-#         start = self.get_checkpoint()
-#         for date in rrule(freq=DAILY, dtstart=start, until=now):
-#             console_log.info(f'Downloading {kind} data on {date.isoformat()}')
-#             downloader:CsvStreamRequest= self.downloader(date, link.format(date.strftime("%Y%m%d")))
-#             downloader.process()
-#             console_log.info(f'Finished downloading {kind} data on {date.isoformat()}')
-#
-# class MongoRecover(Recover):
-#     def __init__(self, downloader, *args, **kwargs):
-#         self.downloader = downloader
-#
-#     def get_checkpoint(self):
-#         col = CONF.db['bitmex'][kind]
-#         cur = col.find().sort("timestamp", pymongo.DESCENDING)
-#         try:
-#             item = cur.next()
-#             start = item['timestamp'] + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
-#         except StopIteration:
-#             console_log.info('There is no data in the database. We are going to start download data from scratch')
-#             start = START_DATE
-#         return start
-#
-#
-# class CsvFileRecover(Recover):
+class DatePoint(Point):
+    def __init__(self, date: datetime.datetime):
+        self.date = date
+
+    def __eq__(self, other):
+        assert isinstance(other, Point)
+        return self.date == other.date
+
+    @property
+    def value(self):
+        return self.date
 
 
+class BitMexProcessPoints(ProcessPoints):
+    def __init__(self, start: datetime.datetime, end: datetime.datetime):
+        self.start = start
+        self.end = end
+        self.current = start
 
-def save_history(kind: str, mode: str, dst_dir):
-    console_log.info('Start downloading the data')
-    if kind == 'quote':
-        link = quote_link
-        if mode == 'csv':
-            Streamer = QuoteFileStream
-        elif mode == 'tar':
-            Streamer = TarStreamRequest
-        elif mode == 'mongo':
-            Streamer = QuoteMongoStream
+        self.rruls_date = rrule(freq=DAILY, dtstart=self.start, until=self.end)
+
+    def __iter__(self):
+        for date in rrule(freq=DAILY, dtstart=self.start, until=self.end):
+            yield DatePoint(date)
+
+    def __next__(self):
+        if self.current <= self.end:
+            date = self.current
+            self.current += relativedelta(days=1)
+            return DatePoint(date)
+        else:
+            raise StopIteration()
+
+
+class BitMexDownloader(DataDownloader):
+    def __init__(self, kind: str, mode: str, dst_dir: str):
+        console_log.info('Start downloading the data')
+        self.mode = mode
+        self.kind = kind
+        self.dst_dir = dst_dir
+        self.init_kind(mode, kind)
+        self.init_mode(mode, dst_dir, kind)
+
+    def init_kind(self, mode: str, kind: str):
+        if kind == 'quote':
+            self.link = quote_link
+            if mode == 'csv':
+                Streamer = QuoteFileStream
+            elif mode == 'tar':
+                Streamer = RawStreamRequest
+            elif mode == 'mongo':
+                Streamer = QuoteMongoStream
+            else:
+                raise ValueError
+        elif kind == 'trade':
+            self.link = trade_link
+            if mode == 'csv':
+                Streamer = TradeFileStream
+            elif mode == 'tar':
+                Streamer = RawStreamRequest
+            elif mode == 'mongo':
+                Streamer = TradeMongoStream
+            else:
+                raise ValueError
         else:
             raise ValueError
-    elif kind == 'trade':
-        link = trade_link
-        if mode == 'csv':
-            Streamer = TradeFileStream
+        self.Streamer = Streamer  # type: Type[CsvStreamRequest]
+
+    def init_mode(self, mode: str, dst_dir: str, kind: str):
+
+        if mode == 'mongo':
+            cli = pymongo.MongoClient(settings.DATABASE_URI)
+            col = cli['bitmex'][kind]
+            cur = col.find().sort("timestamp", pymongo.DESCENDING)
+            try:
+                item = cur.next()
+                start = item['timestamp'] + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
+            except StopIteration:
+                console_log.info('There is no data in the database. We are going to start download data from scratch')
+                start = START_DATE
+        elif mode == 'csv':
+            dones = os.listdir(dst_dir)
+            if dones:
+                current = max(dones)
+                start = datetime.datetime.strptime(current, "%Y%m%d") + relativedelta(days=+1)
+            else:
+                start = START_DATE
         elif mode == 'tar':
-            Streamer = TarStreamRequest
-        elif mode == 'mongo':
-            Streamer = TradeMongoStream
+            dones = os.listdir(dst_dir)
+            if dones:
+                current = max(dones)
+                start = datetime.datetime.strptime(current, "%Y%m%d" + TARFILETYPE) + relativedelta(days=+1)
+            else:
+                start = START_DATE
         else:
             raise ValueError
-    else:
-        raise ValueError
+        self.start = start
+        self.end = datetime.datetime.now() + relativedelta(days=-1)
 
-    if mode == 'mongo':
-        cli = pymongo.MongoClient(settings.DATABASE_URI)
-        col = cli['bitmex'][kind]
-        cur = col.find().sort("timestamp", pymongo.DESCENDING)
-        try:
-            item = cur.next()
-            start = item['timestamp'] + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
-        except StopIteration:
-            console_log.info('There is no data in the database. We are going to start download data from scratch')
-            start = START_DATE
-    elif mode == 'csv':
-        dones = os.listdir(dst_dir.exists)
-        if dones:
-            current= max(dones)
-            start = datetime.datetime.strptime(current, "%Y%m%d") + relativedelta(days=+1)
-        else:
-            start = START_DATE
-    elif mode == 'tar':
-        dones = os.listdir(dst_dir.exists)
-        if dones:
-            current= max(dones)
-            start = datetime.datetime.strptime(current, "%Y%m%d"+TARFILETYPE) + relativedelta(days=+1)
-        else:
-            start = START_DATE
-    for date in rrule(freq=DAILY, dtstart=start, until=now):
-        console_log.info(f'Downloading {kind} data on {date.isoformat()}')
-        qstream = Streamer(date=date, url=link.format(date.strftime("%Y%m%d")), dst_dir=dst_dir.exists)
+    def process_point(self) -> BitMexProcessPoints:
+        return BitMexProcessPoints(self.start, self.end)
+
+    def download_one_point(self, point: DatePoint) -> None:
+        console_log.info('Downloading {} data on {}'.format(self.kind, point.value.isoformat))
+        qstream = self.Streamer(date=point.value, url=self.link.format(point.value.strftime("%Y%m%d")),
+                                dst_dir=self.dst_dir)
         qstream.process()
-        console_log.info(f'Finished downloading {kind} data on {date.isoformat()}')
+        console_log.info('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat))

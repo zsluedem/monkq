@@ -70,7 +70,8 @@ class StreamRequest():
 
 
 class RawStreamRequest(StreamRequest):
-    FILETYPE  = '.csv.gz'
+    FILETYPE = '.csv.gz'
+
     def __init__(self, date: datetime.datetime, url: str, dst_dir: str):
         super(RawStreamRequest, self).__init__()
         self.date = date
@@ -164,7 +165,7 @@ class MongoStream(CsvStreamRequest):
     index = None
 
     def __init__(self, *args, **kwargs):
-        super(MongoStream, self).__init__(chunk_process=True,*args, **kwargs)
+        super(MongoStream, self).__init__(chunk_process=True, *args, **kwargs)
         self._cli = pymongo.MongoClient(settings.DATABASE_URI)
 
     def setup(self):
@@ -188,8 +189,8 @@ class QuoteMongoStream(MongoStream):
     collection_name = "quote"
     index = [("timestamp", pymongo.DESCENDING), ('symbol', pymongo.DESCENDING)]
 
-    def process_row(self, row):
-        row['timestamp'] = datetime.datetime.strptime(row['timestamp'][:26], '%Y-%m-%dD%H:%M:%S.%f') # utc time
+    def process_row(self, row: dict):
+        row['timestamp'] = datetime.datetime.strptime(row['timestamp'][:26], '%Y-%m-%dD%H:%M:%S.%f')  # utc time
         row['bidSize'] = float(row['bidSize']) if row['bidSize'] else 0
         row['bidPrice'] = float(row['bidPrice']) if row['bidPrice'] else 0
         row['askPrice'] = float(row['askPrice']) if row['askPrice'] else 0
@@ -202,7 +203,7 @@ class TradeMongoStream(MongoStream):
     index = [("timestamp", pymongo.DESCENDING), ('symbol', pymongo.DESCENDING)]
 
     def process_row(self, row):
-        row['timestamp'] = datetime.datetime.strptime(row['timestamp'][:26], '%Y-%m-%dD%H:%M:%S.%f') # utc time
+        row['timestamp'] = datetime.datetime.strptime(row['timestamp'][:26], '%Y-%m-%dD%H:%M:%S.%f')  # utc time
         row['size'] = float(row['size']) if row['size'] else 0
         row['price'] = float(row['price']) if row['price'] else 0
         row['grossValue'] = float(row['grossValue']) if row['grossValue'] else 0
@@ -214,7 +215,7 @@ class TradeMongoStream(MongoStream):
 class FileStream(CsvStreamRequest):
     fieldnames = list()
 
-    def __init__(self, dst_dir, *args, **kwargs):
+    def __init__(self, dst_dir: str, *args, **kwargs):
         super(FileStream, self).__init__(chunk_process=False, *args, **kwargs)
         assert os.path.isdir(dst_dir)
         new_dir = os.path.join(dst_dir, self.date.strftime("%Y%m%d"))
@@ -226,7 +227,7 @@ class FileStream(CsvStreamRequest):
     def setup(self):
         pass
 
-    def process_row(self, row):
+    def process_row(self, row: dict):
         writer = self.csv_file_writers[row['symbol']]
         writer.writerow(row)
         return row
@@ -249,8 +250,12 @@ class QuoteFileStream(FileStream):
 
 
 class DatePoint(Point):
-    def __init__(self, date):
+    def __init__(self, date: datetime.datetime):
         self.date = date
+
+    def __eq__(self, other):
+        assert isinstance(other, Point)
+        return self.date == other.date
 
     @property
     def value(self):
@@ -261,10 +266,21 @@ class BitMexProcessPoints(ProcessPoints):
     def __init__(self, start: datetime.datetime, end: datetime.datetime):
         self.start = start
         self.end = end
+        self.current = start
+
+        self.rruls_date = rrule(freq=DAILY, dtstart=self.start, until=self.end)
+
+    def __iter__(self):
+        for date in rrule(freq=DAILY, dtstart=self.start, until=self.end):
+            yield DatePoint(date)
 
     def __next__(self):
-        for date in rrule(freq=DAILY, dtstart=self.start, until=self.end):
+        if self.current <= self.end:
+            date = self.current
+            self.current += relativedelta(days=1)
             return DatePoint(date)
+        else:
+            raise StopIteration()
 
 
 class BitMexDownloader(DataDownloader):

@@ -34,7 +34,8 @@ class Point(ABC):
 
 
 class ProcessPoints(Iterator):
-    def __next__(self) -> Point:
+
+    def __iter__(self):
         raise NotImplementedError
 
 
@@ -44,14 +45,14 @@ class DataDownloader(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def download_one_point(self, point: Point):
+    def download_one_point(self, point: Point) -> None:
         raise NotImplementedError
 
-    def do_all(self):
+    def do_all(self) -> None:
         for point in self.process_point():
             self.download_one_point(point)
 
 
 class DataFeeder():
-    def loaddata(self):
+    def loaddata(self)-> None:
         pass

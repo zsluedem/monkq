@@ -22,7 +22,8 @@
 # SOFTWARE.
 #
 from MonkTrader.exchange.bitmex.data.quote import RawStreamRequest, QuoteMongoStream, TradeMongoStream, QuoteFileStream, \
-    TradeFileStream
+    TradeFileStream, BitMexDownloader, BitMexProcessPoints, DatePoint
+
 from MonkTrader.utils import is_aware_datetime
 from MonkTrader.exception import DataDownloadException
 import tempfile
@@ -60,6 +61,34 @@ stream_trade = b"""timestamp,symbol,side,size,price,tickDirection,trdMatchID,gro
 stream_trade_s = stream_trade.decode('utf8')
 stream_trade = zlib.compress(stream_trade)
 
+
+def test_datepoint():
+    d = DatePoint(datetime.datetime(2018, 1, 1))
+    assert d.value == datetime.datetime(2018, 1, 1)
+
+
+def test_bitmex_process_points():
+    p = BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 5))
+    assert next(p).value == datetime.datetime(2018, 1, 1)
+    assert next(p).value == datetime.datetime(2018, 1, 2)
+    assert next(p).value == datetime.datetime(2018, 1, 3)
+    assert next(p).value == datetime.datetime(2018, 1, 4)
+    assert next(p).value == datetime.datetime(2018, 1, 5)
+
+    with pytest.raises(StopIteration):
+        next(p)
+
+    p_list = list(p)
+    assert p_list[0] == DatePoint(datetime.datetime(2018, 1, 1))
+    assert p_list[1] == DatePoint(datetime.datetime(2018, 1, 2))
+    assert p_list[2] == DatePoint(datetime.datetime(2018, 1, 3))
+    assert p_list[3] == DatePoint(datetime.datetime(2018, 1, 4))
+    assert p_list[4] == DatePoint(datetime.datetime(2018, 1, 5))
+
+
+@pytest.mark.xfail
+def test_bitmex_downloader():
+    assert False
 
 def _mock_stream(self, url: str):
     s = 0
@@ -233,6 +262,7 @@ def test_trade_mongo_stream_exception():
     obj = stream._cli.bitmex.trade.find_one({'symbol': "XBTZ18", "trdMatchID": "214aa626-cb6a-054f-ccf5-da4e14b5fd23"})
     assert obj is None
 
+
 def test_trade_file_stream():
     d = datetime.datetime(2018, 1, 1)
 
@@ -274,6 +304,7 @@ def test_trade_file_stream_exception():
 
         assert not os.path.exists(tar_dir)
 
+
 def test_quote_file_stream():
     d = datetime.datetime(2018, 1, 1)
 
@@ -300,6 +331,8 @@ def test_quote_file_stream():
             assert content == """timestamp,symbol,bidSize,bidPrice,askPrice,askSize
 2018-12-05D00:00:07.302458000,XBTZ18,256083,9.54e-06,9.55e-06,574060
 """
+
+
 def test_quote_file_stream_exception():
     d = datetime.datetime(2018, 1, 1)
 
@@ -312,4 +345,3 @@ def test_quote_file_stream_exception():
             stream.process()
 
         assert not os.path.exists(tar_dir)
-

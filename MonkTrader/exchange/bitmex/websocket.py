@@ -115,7 +115,7 @@ class BitmexWebsocket():
         while 1:
             if time.time() - self._last_comm_time > INTERVAL_FACTOR:
                 trade_log.debug(
-                    f'No communication during {INTERVAL_FACTOR} seconds. Send ping signal to keep connection open')
+                    'No communication during {} seconds. Send ping signal to keep connection open'.format(INTERVAL_FACTOR))
                 await self._ws.ping()
                 self._last_comm_time = time.time()
             await asyncio.sleep(INTERVAL_FACTOR)
@@ -132,11 +132,11 @@ class BitmexWebsocket():
                 if decode_message.get('table') == 'execution':
                     start = time.time()
                     await self.caller.on_trade(message=decode_message)
-                    trade_log.debug(f'User on_trade process time: {round(time.time()- start, 7)}')
+                    trade_log.debug('User on_trade process time: {}'.format(round(time.time()- start, 7)))
                 else:
                     start = time.time()
                     await self.caller.tick(message=decode_message)
-                    trade_log.debug(f'User tick process time: {round(time.time()- start, 7)}')
+                    trade_log.debug('User tick process time: {}'.format(round(time.time()- start, 7)))
 
     @timestamp_update
     async def subscribe(self, topic, symbol=''):

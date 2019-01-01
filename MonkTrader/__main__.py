@@ -27,11 +27,7 @@ import click
 import os
 import pymongo
 from MonkTrader.utils import assure_dir
-from MonkTrader.logger import console_log
-from MonkTrader.config import settings
-from MonkTrader.exchange.bitmex.data.kline import save_symbols_json, save_kline
-from MonkTrader.exchange.bitmex.data.quote import save_history
-
+from MonkTrader.exchange.bitmex.data import BitMexDownloader
 from typing import List, Union, TypeVar
 
 USERHOME = os.path.join(os.path.expanduser("~"), '.monk')

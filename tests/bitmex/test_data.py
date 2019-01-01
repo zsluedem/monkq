@@ -22,17 +22,17 @@
 # SOFTWARE.
 #
 from MonkTrader.exchange.bitmex.data.quote import TarStreamRequest, QuoteMongoStream, TradeMongoStream, QuoteFileStream, \
-    TradeFileStream, BitMexDownloader, BitMexProcessPoints, DatePoint, SymbolsStreamRequest
+    TradeFileStream, SymbolsStreamRequest
+from MonkTrader.exchange.bitmex.data import DatePoint, BitMexProcessPoints, BitMexDownloader, START_DATE
 
-from MonkTrader.utils import is_aware_datetime
 from MonkTrader.exception import DataDownloadException
+from dateutil.relativedelta import relativedelta
 import tempfile
 import zlib
 import datetime
 import random
 import pytz
 import os
-import mongomock
 import pytest
 
 stream_b = b"""c1,c2,c3,c4
@@ -97,9 +97,77 @@ def test_bitmex_process_points():
         _ = p2_list[1]
 
 
-@pytest.mark.xfail
-def test_bitmex_downloader():
-    assert False
+def test_bitmex_downloader(bitmex_mongo):
+    def mkfile(filename):
+        with open(filename, 'w') as f:
+            f.write('1')
+
+    with tempfile.TemporaryDirectory() as tmp:
+        b = BitMexDownloader(kind='quote', mode='csv', dst_dir=tmp)
+        assert b.Streamer == QuoteFileStream
+        assert b.start == START_DATE
+
+    with tempfile.TemporaryDirectory() as tmp:
+        mkfile(os.path.join(tmp, '20180103'))
+        b = BitMexDownloader(kind='quote', mode='csv', dst_dir=tmp)
+        assert b.Streamer == QuoteFileStream
+        assert b.start == datetime.datetime(2018, 1, 4)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        mkfile(os.path.join(tmp, '20180103'))
+        b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
+        assert b.Streamer == TradeFileStream
+        assert b.start == datetime.datetime(2018, 1, 4)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
+        assert b.Streamer == TradeFileStream
+        assert b.start == START_DATE
+
+    with tempfile.TemporaryDirectory() as tmp:
+        b = BitMexDownloader(kind='symbols', mode='csv', dst_dir=tmp)
+        assert b.Streamer == SymbolsStreamRequest
+        assert b.start == b.end
+
+    with tempfile.TemporaryDirectory() as tmp:
+        b = BitMexDownloader(kind='trade', mode='tar', dst_dir=tmp)
+        assert b.Streamer == TarStreamRequest
+        assert b.start == START_DATE
+
+    with tempfile.TemporaryDirectory() as tmp:
+        mkfile(os.path.join(tmp, '20180103.csv.gz'))
+        b = BitMexDownloader(kind='trade', mode='tar', dst_dir=tmp)
+        assert b.Streamer == TarStreamRequest
+        assert b.start == datetime.datetime(2018, 1, 4)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        mkfile(os.path.join(tmp, '20180103.csv.gz'))
+        b = BitMexDownloader(kind='quote', mode='tar', dst_dir=tmp)
+        assert b.Streamer == TarStreamRequest
+        assert b.start == datetime.datetime(2018, 1, 4)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        b = BitMexDownloader(kind='quote', mode='tar', dst_dir=tmp)
+        assert b.Streamer == TarStreamRequest
+        assert b.start == START_DATE
+
+    b = BitMexDownloader(kind='quote', mode='mongo', dst_dir=tmp)
+    assert b.Streamer == QuoteMongoStream
+    assert b.start == START_DATE
+
+    b = BitMexDownloader(kind='trade', mode='mongo', dst_dir=tmp)
+    assert b.Streamer == TradeMongoStream
+    assert b.start == START_DATE
+
+    bitmex_mongo.quote.insert({'timestamp': datetime.datetime(2018, 1, 3, 12)})
+    b = BitMexDownloader(kind='quote', mode='mongo', dst_dir=tmp)
+    assert b.Streamer == QuoteMongoStream
+    assert b.start == datetime.datetime(2018, 1, 4)
+
+    bitmex_mongo.trade.insert({'timestamp': datetime.datetime(2018, 1, 3, 12)})
+    b = BitMexDownloader(kind='trade', mode='mongo', dst_dir=tmp)
+    assert b.Streamer == TradeMongoStream
+    assert b.start == datetime.datetime(2018, 1, 4)
 
 
 def _mock_stream(self, url: str):
@@ -126,7 +194,6 @@ class MockQuoteMongoStream(QuoteMongoStream):
     def __init__(self, *args, **kwargs):
         self._stream = kwargs.pop('stream', '')
         super(MockQuoteMongoStream, self).__init__(*args, **kwargs)
-        self._cli = mongomock.MongoClient()
 
     _stream_requests = _mock_stream
 
@@ -135,7 +202,6 @@ class MockTradeMongoStream(TradeMongoStream):
     def __init__(self, *args, **kwargs):
         self._stream = kwargs.pop('stream', '')
         super(MockTradeMongoStream, self).__init__(*args, **kwargs)
-        self._cli = mongomock.MongoClient()
 
     _stream_requests = _mock_stream
 

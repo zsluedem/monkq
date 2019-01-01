@@ -1,5 +1,5 @@
 # Mongodb uri which is used to load data or download data in.
-DATABASE_URI = "mongodb://127.0.0.1"
+DATABASE_URI = "mongodb://127.0.0.1:27017"
 
 # HTTP Proxy
 HTTP_PROXY = ""

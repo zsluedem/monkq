@@ -23,9 +23,13 @@
 #
 
 import pytest
-# from MonkTrader.exchange.bitmex.exchange import BitmexExchange
+import pymongo
 
 
-@pytest.yield_fixture(scope="session")
-def bitmex_exchange():
-    yield BitmexExchange()
+@pytest.yield_fixture(scope="function")
+def bitmex_mongo():
+    cli = pymongo.MongoClient()
+    yield cli.bitmex
+
+    cli.drop_database('bitmex')
+

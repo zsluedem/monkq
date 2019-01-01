@@ -27,19 +27,16 @@ import click
 import os
 import pymongo
 from MonkTrader.utils import assure_dir
-from MonkTrader.logger import console_log
-from MonkTrader.config import settings
-from MonkTrader.exchange.bitmex.data.kline import save_symbols_json, save_kline
-from MonkTrader.exchange.bitmex.data.quote import save_history
-
+from MonkTrader.exchange.bitmex.data import BitMexDownloader
 from typing import List, Union, TypeVar
 
 USERHOME = os.path.join(os.path.expanduser("~"), '.monk')
 
+
 @click.group()
 @click.option('-c', '--config', type=str)
 @click.pass_context
-def cmd_main(ctx:click.Context, config):
+def cmd_main(ctx: click.Context, config):
     pass
 
 
@@ -54,11 +51,10 @@ def gegnerate_settings(ctx, out):
 @click.help_option()
 @click.option('--kind', default="all", type=click.Choice(['all', 'quote', 'trade', 'kline', 'symbol']))
 # @click.option('--mongodb_uri', default='mongodb://127.0.0.1:27017', help="mongodb uri you want to download to")
-@click.option('--active', default=True, type=click.BOOL ,help="download active or all symbols")
+@click.option('--active', default=True, type=click.BOOL, help="download active or all symbols")
 @click.option('--mode', default="mongo", type=click.Choice(['mongo', 'csv', 'tar']), help="Define the download mode")
 @click.option('--dst_dir', default=os.path.join(os.path.expanduser("~"), '.monk/data'), type=str)
 def download(kind, active, mode, dst_dir):
-
     assure_dir(USERHOME)
     assure_dir(dst_dir)
     # cli = pymongo.MongoClient(mongodb_uri)

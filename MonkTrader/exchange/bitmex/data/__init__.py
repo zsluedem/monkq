@@ -23,3 +23,4 @@
 #
 
 from .kline import save_kline, save_symbols_mongo
+from .quote import BitMexDownloader

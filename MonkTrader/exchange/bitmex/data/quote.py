@@ -33,9 +33,11 @@ from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, DAILY
 from MonkTrader.logger import console_log
 from MonkTrader.config import settings
-from MonkTrader.utils import CsvFileDefaultDict
+from MonkTrader.utils import CsvFileDefaultDict, assure_dir
 from MonkTrader.data import DataDownloader, Point, ProcessPoints
 from MonkTrader.exception import DataDownloadException
+from MonkTrader.exchange.bitmex.const import Bitmex_api_url
+from urllib.parse import urljoin
 
 from typing import Type, Generator
 
@@ -43,7 +45,7 @@ START_DATE = datetime.datetime(2014, 11, 22)
 
 trade_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}.csv.gz"
 quote_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
-
+symbols_link = urljoin(Bitmex_api_url, "instrument")
 TARFILETYPE = '.csv.gz'
 
 
@@ -70,18 +72,14 @@ class StreamRequest():
 
 
 class RawStreamRequest(StreamRequest):
-    FILETYPE = '.csv.gz'
+    FILENAME = None
 
-    def __init__(self, date: datetime.datetime, url: str, dst_dir: str):
-        super(RawStreamRequest, self).__init__()
-        self.date = date
+    def __init__(self, url: str, dst_dir: str):
         self.url = url
-        assert os.path.isdir(dst_dir)
-        if not os.path.exists(dst_dir):
-            os.mkdir(dst_dir)
+        assure_dir(dst_dir)
         self.dst_dir = dst_dir
 
-        self.dst_file = os.path.join(self.dst_dir, self.date.strftime("%Y%m%d") + self.FILETYPE)
+        self.dst_file = os.path.join(self.dst_dir, self.FILENAME)
 
     def process(self):
         try:
@@ -90,12 +88,25 @@ class RawStreamRequest(StreamRequest):
                     f.write(chunk)
         except Exception as e:
             self.rollback()
-            console_log.exception("Exception #{}# happened when process {} data".format(e, self.date))
+            console_log.exception("Exception #{}# happened when process {} {}".format(e, self.url, self.dst_file))
             raise DataDownloadException()
 
     def rollback(self):
         console_log.info("Remove the not complete file {}".format(self.dst_file))
         os.remove(self.dst_file)
+
+
+class TarStreamRequest(RawStreamRequest):
+    def __init__(self, date: datetime.datetime, url: str, dst_dir: str):
+        self.FILENAME = date.strftime("%Y%m%d") + '.csv.gz'
+        super(TarStreamRequest, self).__init__(url, dst_dir)
+
+
+class SymbolsStreamRequest(RawStreamRequest):
+    FILENAME = 'symbols.json'
+
+    def __init__(self, url: str, dst_dir: str, *args, **kwargs):
+        super(SymbolsStreamRequest, self).__init__(url, dst_dir)
 
 
 class CsvStreamRequest(StreamRequest):
@@ -298,7 +309,7 @@ class BitMexDownloader(DataDownloader):
             if mode == 'csv':
                 Streamer = QuoteFileStream
             elif mode == 'tar':
-                Streamer = RawStreamRequest
+                Streamer = TarStreamRequest
             elif mode == 'mongo':
                 Streamer = QuoteMongoStream
             else:
@@ -308,45 +319,50 @@ class BitMexDownloader(DataDownloader):
             if mode == 'csv':
                 Streamer = TradeFileStream
             elif mode == 'tar':
-                Streamer = RawStreamRequest
+                Streamer = TarStreamRequest
             elif mode == 'mongo':
                 Streamer = TradeMongoStream
             else:
                 raise ValueError
+        elif kind == 'symbols':
+            self.link = symbols_link
+            Streamer = SymbolsStreamRequest
         else:
             raise ValueError
         self.Streamer = Streamer  # type: Type[CsvStreamRequest]
 
     def init_mode(self, mode: str, dst_dir: str, kind: str):
-
+        self.end = datetime.datetime.now() + relativedelta(days=-1)
+        if kind == 'symbols':
+            self.start = datetime.datetime.now() + relativedelta(days=-1)
+            return
         if mode == 'mongo':
             cli = pymongo.MongoClient(settings.DATABASE_URI)
             col = cli['bitmex'][kind]
             cur = col.find().sort("timestamp", pymongo.DESCENDING)
             try:
                 item = cur.next()
-                start = item['timestamp'] + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
+                self.start = item['timestamp'] + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
             except StopIteration:
-                console_log.info('There is no data in the database. We are going to start download data from scratch')
-                start = START_DATE
+                console_log.info(
+                    'There is no data in the database. We are going to self.star download data from scratch')
+                self.start = START_DATE
         elif mode == 'csv':
             dones = os.listdir(dst_dir)
             if dones:
                 current = max(dones)
-                start = datetime.datetime.strptime(current, "%Y%m%d") + relativedelta(days=+1)
+                self.start = datetime.datetime.strptime(current, "%Y%m%d") + relativedelta(days=+1)
             else:
-                start = START_DATE
+                self.start = START_DATE
         elif mode == 'tar':
             dones = os.listdir(dst_dir)
             if dones:
                 current = max(dones)
-                start = datetime.datetime.strptime(current, "%Y%m%d" + TARFILETYPE) + relativedelta(days=+1)
+                self.start = datetime.datetime.strptime(current, "%Y%m%d" + TARFILETYPE) + relativedelta(days=+1)
             else:
-                start = START_DATE
+                self.start = START_DATE
         else:
             raise ValueError
-        self.start = start
-        self.end = datetime.datetime.now() + relativedelta(days=-1)
 
     def process_point(self) -> BitMexProcessPoints:
         return BitMexProcessPoints(self.start, self.end)

@@ -28,7 +28,7 @@ jobs:
 
       - run:
           name: test
-          command: "python3 -m pytest --mypy -m mypy tests"
+          command: "python -m pytest --mypy -m mypy tests"
 
       - store_artifacts:
           path: test-reports
@@ -61,7 +61,7 @@ jobs:
 
       - run:
           name: test
-          command: "python3 -m pytest --mypy -m mypy tests"
+          command: "python -m pytest --mypy -m mypy tests"
 
       - store_artifacts:
           path: test-reports

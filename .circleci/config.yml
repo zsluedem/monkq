@@ -1,0 +1,42 @@
+version: 2
+jobs:
+
+  test36:
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - checkout
+      - run:
+          name: Activate venv and install requirements
+          command: |
+            python3 -m venv ~/venv
+            echo ". ~/venv/bin/activate" >> $BASH_ENV
+            source $BASH_ENV
+            pip install .
+            pip install -r requirements-dev.txt
+      - run:
+          name: test
+          command: "pytest --mypy -m mypy tests"
+
+  test35:
+    docker:
+    - image: circleci/python:3.5
+    steps:
+      - checkout
+      - run:
+          name: Activate venv and install requirements
+          command: |
+            python3 -m venv ~/venv
+            echo ". ~/venv/bin/activate" >> $BASH_ENV
+            source $BASH_ENV
+            pip install .
+            pip install -r requirements-dev.txt
+      - run:
+          name: test
+          command: "pytest --mypy -m mypy tests"
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test35
+      - test36

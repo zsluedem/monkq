@@ -87,7 +87,7 @@ def test_bitmex_process_points():
     assert p_list[3] == DatePoint(datetime.datetime(2018, 1, 4))
     assert p_list[4] == DatePoint(datetime.datetime(2018, 1, 5))
 
-    p2 =  BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1))
+    p2 = BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1))
     assert next(p2).value == datetime.datetime(2018, 1, 1)
     with pytest.raises(StopIteration):
         next(p2)
@@ -96,9 +96,11 @@ def test_bitmex_process_points():
     with pytest.raises(IndexError):
         _ = p2_list[1]
 
+
 @pytest.mark.xfail
 def test_bitmex_downloader():
     assert False
+
 
 def _mock_stream(self, url: str):
     s = 0
@@ -161,6 +163,7 @@ class MockSymbolsStream(SymbolsStreamRequest):
 
     _stream_requests = _mock_stream
 
+
 def test_symbols_stream_request():
     with tempfile.TemporaryDirectory() as tmp:
         stream = MockSymbolsStream(mock_url, tmp, stream=stream_symbols)
@@ -170,6 +173,7 @@ def test_symbols_stream_request():
             content = f.read()
 
         assert content == stream_symbols
+
 
 def test_raw_stream_request():
     with tempfile.TemporaryDirectory() as tmp:

@@ -95,16 +95,18 @@ class RawStreamRequest(StreamRequest):
         console_log.info("Remove the not complete file {}".format(self.dst_file))
         os.remove(self.dst_file)
 
+
 class TarStreamRequest(RawStreamRequest):
     def __init__(self, date: datetime.datetime, url: str, dst_dir: str):
         self.FILENAME = date.strftime("%Y%m%d") + '.csv.gz'
         super(TarStreamRequest, self).__init__(url, dst_dir)
 
+
 class SymbolsStreamRequest(RawStreamRequest):
     FILENAME = 'symbols.json'
-    def __init__(self, url:str, dst_dir:str, *args, **kwargs):
-        super(SymbolsStreamRequest, self).__init__(url, dst_dir)
 
+    def __init__(self, url: str, dst_dir: str, *args, **kwargs):
+        super(SymbolsStreamRequest, self).__init__(url, dst_dir)
 
 
 class CsvStreamRequest(StreamRequest):
@@ -342,7 +344,8 @@ class BitMexDownloader(DataDownloader):
                 item = cur.next()
                 self.start = item['timestamp'] + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
             except StopIteration:
-                console_log.info('There is no data in the database. We are going to self.star download data from scratch')
+                console_log.info(
+                    'There is no data in the database. We are going to self.star download data from scratch')
                 self.start = START_DATE
         elif mode == 'csv':
             dones = os.listdir(dst_dir)

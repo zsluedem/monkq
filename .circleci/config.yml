@@ -1,0 +1,75 @@
+version: 2
+jobs:
+
+  test36:
+    docker:
+      - image: circleci/python:3.6
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run:
+          name: Activate venv and install requirements
+          command: |
+            python3 -m venv ~/venv
+            . ~/venv/bin/activate
+            pip3 install .
+            pip3 install -r requirements_dev.txt
+
+      - save_cache:
+          paths:
+          - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - run:
+          name: test
+          command: "~/venv/bin/python -m pytest --mypy -m mypy tests"
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+  test35:
+    docker:
+    - image: circleci/python:3.5
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run:
+          name: Activate venv and install requirements
+          command: |
+            python3 -m venv ~/venv
+            . ~/venv/bin/activate
+            pip3 install .
+            pip3 install -r requirements_dev.txt
+
+      - save_cache:
+          paths:
+          - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - run:
+          name: test
+          command: "~/venv/bin/python -m pytest --mypy -m mypy tests"
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test35
+      - test36

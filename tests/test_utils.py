@@ -22,13 +22,15 @@
 # SOFTWARE.
 #
 
-from MonkTrader.utils import assure_dir, CsvFileDefaultDict, is_aware_datetime
+from MonkTrader.utils import assure_dir, CsvFileDefaultDict, is_aware_datetime, CsvZipDefaultDict
+import gzip
 import csv
 import pytest
 import tempfile
 import os
 import datetime
 import pytz
+
 
 def test_assure_home():
     tmp_dir = tempfile.gettempdir()
@@ -38,15 +40,16 @@ def test_assure_home():
         with pytest.raises(NotADirectoryError):
             assure_dir(f.name)
 
+
 def test_csv_file_defaultdict():
     with tempfile.TemporaryDirectory() as tdir:
-        headers = ['1','2', '3']
+        headers = ['1', '2', '3']
         csv_d = CsvFileDefaultDict(tdir, headers)
 
         f1 = csv_d['123']
         assert isinstance(f1, csv.DictWriter)
 
-        f1.writerow({'1':'3', '2':'2', '3':'1'})
+        f1.writerow({'1': '3', '2': '2', '3': '1'})
 
         csv_d.close()
 
@@ -57,9 +60,25 @@ def test_csv_file_defaultdict():
 
         assert content == "1,2,3{}3,2,1{}".format(CsvFileDefaultDict.CSVNEWLINE, CsvFileDefaultDict.CSVNEWLINE)
 
+
+def test_csv_zip_default_dict():
+    with tempfile.TemporaryDirectory() as tmp:
+        csv_d = CsvZipDefaultDict(tmp, ['1', '2', '3'])
+
+        f = csv_d['file1']
+
+        csv_d.writerow(f, ['1', '2', '3'])
+
+        csv_d.close()
+        assert os.path.isfile(os.path.join(tmp, 'file1.csv.gz'))
+        with gzip.open(os.path.join(tmp, 'file1.csv.gz'), 'rb') as f2:
+            content = f2.read()
+        assert content == b"1,2,3\n1,2,3\n"
+
+
 def test_aware_datetime():
-    d1 = datetime.datetime(2018,1,1,12,0,0)
+    d1 = datetime.datetime(2018, 1, 1, 12, 0, 0)
     assert not is_aware_datetime(d1)
 
-    d2 = datetime.datetime(2018,1,1,12,tzinfo=pytz.utc)
+    d2 = datetime.datetime(2018, 1, 1, 12, tzinfo=pytz.utc)
     assert is_aware_datetime(d2)

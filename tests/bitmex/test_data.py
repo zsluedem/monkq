@@ -124,24 +124,24 @@ def test_bitmex_downloader(bitmex_mongo):
 
     with tempfile.TemporaryDirectory() as tmp:
         b = BitMexDownloader(kind='quote', mode='csv', dst_dir=tmp)
-        assert b.Streamer == QuoteFileStream
+        assert b.Streamer == QuoteZipFileStream
         assert b.start == START_DATE
 
     with tempfile.TemporaryDirectory() as tmp:
         mkfile(os.path.join(tmp, '20180103'))
         b = BitMexDownloader(kind='quote', mode='csv', dst_dir=tmp)
-        assert b.Streamer == QuoteFileStream
+        assert b.Streamer == QuoteZipFileStream
         assert b.start == datetime.datetime(2018, 1, 4)
 
     with tempfile.TemporaryDirectory() as tmp:
         mkfile(os.path.join(tmp, '20180103'))
         b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
-        assert b.Streamer == TradeFileStream
+        assert b.Streamer == TradeZipFileStream
         assert b.start == datetime.datetime(2018, 1, 4)
 
     with tempfile.TemporaryDirectory() as tmp:
         b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
-        assert b.Streamer == TradeFileStream
+        assert b.Streamer == TradeZipFileStream
         assert b.start == START_DATE
 
     with tempfile.TemporaryDirectory() as tmp:

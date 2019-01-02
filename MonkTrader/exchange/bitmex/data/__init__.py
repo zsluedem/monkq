@@ -30,8 +30,8 @@ from dateutil.rrule import rrule, DAILY
 
 from MonkTrader.config import settings
 from MonkTrader.data import Point, ProcessPoints, DataDownloader
-from MonkTrader.exchange.bitmex.data.quote import quote_link, QuoteFileStream, TarStreamRequest, QuoteMongoStream, \
-    trade_link, TradeFileStream, TradeMongoStream, symbols_link, SymbolsStreamRequest, START_DATE, TARFILETYPE
+from MonkTrader.exchange.bitmex.data.quote import quote_link, QuoteZipFileStream, TarStreamRequest, QuoteMongoStream, \
+    trade_link, TradeZipFileStream, TradeMongoStream, symbols_link, SymbolsStreamRequest, START_DATE, TARFILETYPE
 from MonkTrader.logger import console_log
 
 
@@ -83,7 +83,7 @@ class BitMexDownloader(DataDownloader):
         if kind == 'quote':
             self.link = quote_link
             if mode == 'csv':
-                Streamer = QuoteFileStream
+                Streamer = QuoteZipFileStream
             elif mode == 'tar':
                 Streamer = TarStreamRequest
             elif mode == 'mongo':
@@ -93,7 +93,7 @@ class BitMexDownloader(DataDownloader):
         elif kind == 'trade':
             self.link = trade_link
             if mode == 'csv':
-                Streamer = TradeFileStream
+                Streamer = TradeZipFileStream
             elif mode == 'tar':
                 Streamer = TarStreamRequest
             elif mode == 'mongo':

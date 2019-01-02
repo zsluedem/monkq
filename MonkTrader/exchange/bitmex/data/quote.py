@@ -31,14 +31,14 @@ import os
 import shutil
 from MonkTrader.logger import console_log
 from MonkTrader.config import settings
-from MonkTrader.utils import CsvFileDefaultDict, assure_dir
+from MonkTrader.utils import CsvFileDefaultDict, assure_dir, CsvZipDefaultDict
 from MonkTrader.exception import DataDownloadException
 from MonkTrader.exchange.bitmex.const import Bitmex_api_url
 from urllib.parse import urljoin
 
 from typing import Generator
 
-START_DATE = datetime.datetime(2014, 11, 22) # bitmex open date
+START_DATE = datetime.datetime(2014, 11, 22)  # bitmex open date
 
 trade_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}.csv.gz"
 quote_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
@@ -69,6 +69,15 @@ class StreamRequest():
 
 
 class RawStreamRequest(StreamRequest):
+    """
+    Stream a url request and save the raw contents to local.
+    The child class has to be configured the `FILENAME`
+
+    If anything exception happens in the process, the stream file would be deleted and raise `DataDownloadException`.
+
+    :param url: the url used to stream, the url should be response content not just header.
+    :param dst_dir: the content would save to the dst_dir directory with the `FILENAMe`.
+    """
     FILENAME = None
 
     def __init__(self, url: str, dst_dir: str):
@@ -102,14 +111,25 @@ class TarStreamRequest(RawStreamRequest):
 class SymbolsStreamRequest(RawStreamRequest):
     FILENAME = 'symbols.json'
 
-    def __init__(self, url: str, dst_dir: str, *args, **kwargs):
-        super(SymbolsStreamRequest, self).__init__(url, dst_dir)
 
+class _CsvStreamRequest(StreamRequest):
+    """
+    A base class to process the stream a url request which would return a zip csv file.
+    If any Exceptions happened in the process , the class would trigger `rollback` and raise `DataDownloadException` error.
+    After all data are finished streaming, `cleanup` would trigger.
 
-class CsvStreamRequest(StreamRequest):
+    The child class has to implement `setup`, `process_chunk`, `process_row`
+
+    :param date: the date for the class to process
+    :param url: use the url to stream the response to process
+    :param cache_num: it worked with the param chunk_process ,if the chunk_process is True, the class would process the csv rows
+        when the cached items reach to the cache_num
+    :param chunk_process: If chunk_process is True , the class would process with cached items.Otherwise, it would process row by row.
+    """
+
     def __init__(self, date: datetime.datetime, url: str, cache_num: int = 100, chunk_process: bool = False,
-                 csv_reader=csv.DictReader, decompress=False):
-        super(CsvStreamRequest, self).__init__()
+                 csv_reader=csv.DictReader):
+        super(_CsvStreamRequest, self).__init__()
         self.date = date
         self.url = url
         self.cache_num = cache_num
@@ -117,7 +137,6 @@ class CsvStreamRequest(StreamRequest):
         self.data = bytearray()
         self.cache = list()
         self.csv_reader = csv_reader
-        self.decompress = decompress
         self.dec = zlib.decompressobj(32 + zlib.MAX_WBITS)
 
     def setup(self):
@@ -168,7 +187,12 @@ class CsvStreamRequest(StreamRequest):
         return row
 
 
-class MongoStream(CsvStreamRequest):
+class MongoStream(_CsvStreamRequest):
+    """
+    The class used to save the zip stream csv into MongoDB.
+    The child class has to be configured the collection name and if you want to create an index for the collections, you
+    have to configure the index, too.
+    """
     collection_name = None
     index = None
 
@@ -220,11 +244,34 @@ class TradeMongoStream(MongoStream):
         return row
 
 
-class FileStream(CsvStreamRequest):
+class _FileStream(_CsvStreamRequest):
+    """
+    The child class which inherit this class has to be configured the filednames which are used to generate the csv headers.
+    It takes a url and a destination directory to init and the class would stream the url response to several single files
+    which are classified by the symbol name.
+
+    The directory structure would be like :
+
+    dst_dir
+    |
+    +--date1
+    |    |
+    |    |---symbol_name.csv
+    |    |---symbol_name.csv
+    |
+    +--date2
+    |    |
+    |    |---symbol_name.csv
+    |    |---symbol_name.csv
+    |
+    .......
+
+
+    """
     fieldnames = list()
 
     def __init__(self, dst_dir: str, *args, **kwargs):
-        super(FileStream, self).__init__(chunk_process=False, *args, **kwargs)
+        super(_FileStream, self).__init__(chunk_process=False, *args, **kwargs)
         assert os.path.isdir(dst_dir)
         new_dir = os.path.join(dst_dir, self.date.strftime("%Y%m%d"))
         if not os.path.exists(new_dir):
@@ -242,18 +289,42 @@ class FileStream(CsvStreamRequest):
 
     def rollback(self):
         console_log.info("Rollback : Remove the not complete dir {}".format(self.dst_dir))
+        self.csv_file_writers.close()
         shutil.rmtree(self.dst_dir)
 
     def cleanup(self):
         self.csv_file_writers.close()
 
 
-class TradeFileStream(FileStream):
+class TradeFileStream(_FileStream):
     fieldnames = ["timestamp", "symbol", "side", "size", "price", "tickDirection", "trdMatchID", "grossValue",
                   "homeNotional", "foreignNotional"]
 
 
-class QuoteFileStream(FileStream):
+class QuoteFileStream(_FileStream):
     fieldnames = ["timestamp", "symbol", "bidSize", "bidPrice", "askPrice", "askSize"]
 
 
+class _ZipFileStream(_FileStream):
+    """
+    Instead of saving raw csv file in the directory, this class save a compressed csv into local to save storage.
+    """
+    DEFAULT = 'DEFAULT'
+
+    def __init__(self, dst_dir: str, *args, **kwargs):
+        super(_ZipFileStream, self).__init__(dst_dir, *args, **kwargs)
+        self.csv_file_writers = CsvZipDefaultDict(self.dst_dir, self.fieldnames)  # type: CsvZipDefaultDict
+
+    def process_row(self, row: dict):
+        f = self.csv_file_writers[row['symbol']]
+        row_tuple = [row.get(key, self.DEFAULT) for key in self.fieldnames]
+        self.csv_file_writers.writerow(f, row_tuple)
+
+
+class TradeZipFileStream(_ZipFileStream):
+    fieldnames = ["timestamp", "symbol", "side", "size", "price", "tickDirection", "trdMatchID", "grossValue",
+                  "homeNotional", "foreignNotional"]
+
+
+class QuoteZipFileStream(_ZipFileStream):
+    fieldnames = ["timestamp", "symbol", "bidSize", "bidPrice", "askPrice", "askSize"]

@@ -23,7 +23,6 @@
 #
 import requests
 import json
-from MonkTrader.config import CONF
 
 def cal_liq_price(open_price:float, current_position:int, leverage:float, buy_amount:int, long:bool):
     pass

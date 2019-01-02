@@ -24,8 +24,9 @@
 import csv
 import os
 from collections import defaultdict
-from typing import List, Any, Set, Type
+from typing import List, Any, Set, Type, IO
 import datetime
+import gzip
 
 
 def assure_dir(dir: str) -> bool:
@@ -44,25 +45,57 @@ def assure_dir(dir: str) -> bool:
             raise NotADirectoryError()
         return False
 
+
 def is_aware_datetime(t: datetime.datetime) -> bool:
     return t.tzinfo is not None and t.tzinfo.utcoffset(t) is not None
 
 
 class CsvFileDefaultDict(defaultdict):
-    CSVNEWLINE = '\n' # type: str
-    def __init__(self, dir: str, fieldnames: List[str], *args:Any, **kwargs: Any) -> None:
+    CSVNEWLINE = '\n'  # type: str
+
+    def __init__(self, dir: str, fieldnames: List[str], *args: Any, **kwargs: Any) -> None:
         super(CsvFileDefaultDict, self).__init__(*args, **kwargs)
         self.dir = dir
-        self.default_factory = csv.DictWriter # type: Type[csv.DictWriter]
+        self.default_factory = csv.DictWriter  # type: Type[csv.DictWriter]
         self.fieldnames = fieldnames
-        self.file_set = set() # type: Set
+        self.file_set = set()  # type: Set
 
-    def __missing__(self, key:str) -> csv.DictWriter:
+    def __missing__(self, key: str) -> csv.DictWriter:
         f = open(os.path.join(self.dir, '{}.csv'.format(key)), 'w', newline=self.CSVNEWLINE)
         self.file_set.add(f)
         ret = self[key] = self.default_factory(f, fieldnames=self.fieldnames)
         ret.writeheader()
         return ret
+
+    def close(self):
+        for f in self.file_set:
+            f.close()
+
+
+class CsvZipDefaultDict(defaultdict):
+    CSVNEWLINE = '\n'  # type: str
+
+    def __init__(self, dir: str, fieldnames: List[str], level: int = -1, *args, **kwargs):
+        super(CsvZipDefaultDict, self).__init__(*args, **kwargs)
+        self.dir = dir
+        self.fieldnames = fieldnames
+        self._level = level
+        self.default_factory = gzip.open
+
+        self.file_set = set()  # type: Set[IO]
+
+    def __missing__(self, key):
+        f = gzip.open(os.path.join(self.dir, '{}.csv.gz'.format(key)), 'wb')
+        self.writerow(f, self.fieldnames)
+        self.file_set.add(f)
+        ret = self[key] = f
+        return ret
+
+    def writerow(self, f: IO, row: List):
+        data = ','.join(row)
+        data += self.CSVNEWLINE
+        data = data.encode('utf8')
+        f.write(data)
 
     def close(self):
         for f in self.file_set:

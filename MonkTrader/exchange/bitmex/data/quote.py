@@ -297,11 +297,13 @@ class _FileStream(_CsvStreamRequest):
 
 
 class TradeFileStream(_FileStream):
+    # depreciated because it takes too much storage
     fieldnames = ["timestamp", "symbol", "side", "size", "price", "tickDirection", "trdMatchID", "grossValue",
                   "homeNotional", "foreignNotional"]
 
 
 class QuoteFileStream(_FileStream):
+    # depreciated because it takes too much storage
     fieldnames = ["timestamp", "symbol", "bidSize", "bidPrice", "askPrice", "askSize"]
 
 

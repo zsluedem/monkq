@@ -200,7 +200,7 @@ def test_bitmexdownloader_do_all():
         b.Streamer = m
         b.do_all()
         stream = m()
-        stream.process.assert_called_once()
+        stream.process.assert_called_once_with()
 
         b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
         m = MagicMock(side_effect=DataDownloadException())

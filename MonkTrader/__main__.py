@@ -22,13 +22,10 @@
 # SOFTWARE.
 #
 
-import shutil
 import click
 import os
-import pymongo
-from MonkTrader.utils import assure_dir
 from MonkTrader.exchange.bitmex.data import BitMexDownloader
-from typing import List, Union, TypeVar
+from MonkTrader.utils import assure_dir
 
 USERHOME = os.path.join(os.path.expanduser("~"), '.monk')
 
@@ -49,10 +46,12 @@ def gegnerate_settings(ctx, out):
 
 @cmd_main.command()
 @click.help_option()
-@click.option('--kind', default="all", type=click.Choice([ 'quote', 'trade', 'kline', 'symbol']))
-@click.option('--mode', default="mongo", type=click.Choice(['mongo', 'csv', 'tar']), help="Define the download mode")
+@click.option('--kind', default="trade", type=click.Choice(['quote', 'trade', 'symbol']))
+@click.option('--mode', default="csv", type=click.Choice(['mongo', 'csv', 'tar']), help="Define the download mode")
 @click.option('--dst_dir', default=os.path.join(os.path.expanduser("~"), '.monk/data'), type=str)
-def download(kind, mode, dst_dir):
+def download(kind: str, mode: str, dst_dir: str):
+    dst_dir = os.path.join(dst_dir, '#'.join((mode, kind)))
+    assure_dir(dst_dir)
     b = BitMexDownloader(kind, mode, dst_dir)
     b.do_all()
 

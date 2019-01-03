@@ -46,7 +46,7 @@ def gegnerate_settings(ctx, out):
 
 @cmd_main.command()
 @click.help_option()
-@click.option('--kind', default="trade", type=click.Choice(['quote', 'trade', 'symbol']))
+@click.option('--kind', default="trade", type=click.Choice(['quote', 'trade', 'symbols']))
 @click.option('--mode', default="csv", type=click.Choice(['mongo', 'csv', 'tar']), help="Define the download mode")
 @click.option('--dst_dir', default=os.path.join(os.path.expanduser("~"), '.monk/data'), type=str)
 def download(kind: str, mode: str, dst_dir: str):

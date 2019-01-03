@@ -22,35 +22,29 @@
 # SOFTWARE.
 #
 
-from enum import Enum
+from MonkTrader.exchange.bitmex.auth import generate_signature, gen_header_dict, generate_expires
+import time
+
+secret = "chNOOS4KvNXR_Xq4k4c9qsfoKWvnDecLATCRlcBwyKDYnWgO"
+api_id = "LAqUlngMIQkIUjXMUreyu3qn"
+
+def test_generate_expires():
+    assert generate_expires(123) == 3723
+    now = time.time()
+    d = generate_expires() -now-3600
+    assert  d < 2
 
 
-class CommissionType(Enum):
-    MAKER = 1
-    TAKER = 2
+def test_generate_signature():
+    assert generate_signature(secret, 'GET', 'http://testnet.bitmex.com/api/v1/instrument', 1518064236, '') == \
+           'c7682d435d0cfe87c16098df34ef2eb5a549d4c5a3c2b1f0f77b8af73423bf00'
 
 
-class PositionDirection(Enum):
-    LONG = 1
-    SHORT = 2
+    assert generate_signature(
+        secret, 'GET', '/api/v1/instrument?filter=%7B%22symbol%22%3A+%22XBTM15%22%7D', 1518064237, '') == \
+           'e2f422547eecb5b3cb29ade2127e21b858b235b386bfa45e1c1756eb3383919f'
 
+    assert generate_signature(secret,'POST','http://testnet.bitmex.com/api/v1/order',1518064238,
+        '{"symbol":"XBTM15","price":219.0,"clOrdID":"mm_bitmex_1a/oemUeQ4CAJZgP3fjHsA","orderQty":98}') == \
+           '1749cd2ccae4aa49048ae09f0b95110cee706e0944e6a14ad0b3a8cb45bd336b'
 
-class Side(Enum):
-    BUY = 1
-    SELL = 2
-
-
-class OrderType(Enum):
-    LIMIT = 1
-    MARKET = 2
-    # MarketWithLeftOverAsLimit = 3
-    # STOP = 4
-    # StopLimit = 5
-    # MarketIfTouched = 6
-    # LimitIfTouched = 7
-
-
-Bitmex_api_url = "https://www.bitmex.com/api/v1/"
-Bitmex_websocket_url = "wss://www.bitmex.com/realtime"
-Bitmex_testnet_api_url = "https://testnet.bitmex.com/api/v1/"
-Bitmex_testnet_websocket_url = "wss://testnet.bitmex.com/realtime"

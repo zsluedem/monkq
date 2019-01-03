@@ -22,8 +22,7 @@
 # SOFTWARE.
 #
 
-from typing import Any
-from collections.abc import Iterator
+from typing import Any, Iterator
 from MonkTrader.exception import DataDownloadException
 from abc import ABC, abstractproperty, abstractmethod
 from MonkTrader.logger import console_log

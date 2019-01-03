@@ -40,6 +40,15 @@ def test_assure_home():
         with pytest.raises(NotADirectoryError):
             assure_dir(f.name)
 
+    with tempfile.TemporaryDirectory() as tmp:
+        assert assure_dir(tmp)
+
+        new_p = os.path.join(tmp, 't/w')
+
+        assert not assure_dir(new_p)
+
+        assert assure_dir(new_p)
+
 
 def test_csv_file_defaultdict():
     with tempfile.TemporaryDirectory() as tdir:

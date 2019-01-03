@@ -27,20 +27,22 @@ from collections import defaultdict
 from typing import List, Any, Set, Type, IO
 import datetime
 import gzip
+import pathlib
 
 
-def assure_dir(dir: str) -> bool:
+def assure_dir(directory: str) -> bool:
     """
     Assure dir is a directory.
-    :param dir:
+    :param directory:
     :return: If dir is a directory , return True, else create the directory and return False
     :raise NotADirectoryError: if param dir is a file , raise NotADirectoryError
     """
-    if os.path.isdir(dir):
+    path = pathlib.Path(directory)
+    if path.is_dir():
         return True
     else:
         try:
-            os.mkdir(dir)
+            path.mkdir(parents=True)
         except FileExistsError:
             raise NotADirectoryError()
         return False

@@ -148,4 +148,4 @@ class BitMexDownloader(DataDownloader):
         qstream = self.Streamer(date=point.value, url=self.link.format(point.value.strftime("%Y%m%d")),
                                 dst_dir=self.dst_dir)
         qstream.process()
-        console_log.info('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat))
+        console_log.info('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat()))

@@ -24,13 +24,18 @@
 import time
 import hashlib
 import hmac
-from MonkTrader.config import CONF
 from urllib.parse import urlparse
+from MonkTrader.utils import local_offset_seconds
 
-def generate_expires(expire:int=3600):
-    return int(time.time() + expire)
+_safe_nonce = 300
 
-def generate_signature(secret, verb, url, nonce, data):
+expire_ts = local_offset_seconds + _safe_nonce
+
+def generate_expires(timestamp: float = time.time(), expire: int = expire_ts):
+    return int(timestamp + expire)
+
+
+def generate_signature(secret: str, verb: str, url: str, nonce: float, data: str):
     """Generate a request signature compatible with BitMEX."""
     # Parse the url so we can remove the base and extract just the path.
     parsedURL = urlparse(url)
@@ -48,16 +53,14 @@ def generate_signature(secret, verb, url, nonce, data):
     return signature
 
 
-def gen_header_dict(verb, url, data, nonce=3600):
-    if not CONF.API_KEY or not CONF.API_SECRET:
-        return {}
-    expire = generate_expires(nonce)
+def gen_header_dict(api_key: str, api_secret: str, verb: str, url: str, data: str, now: float = time.time(),
+                    nonce: float =expire_ts):
+    expire = generate_expires(now, nonce)
 
-    sign = generate_signature(CONF.API_SECRET, verb, url, expire, data)
+    sign = generate_signature(api_secret, verb, url, expire, data)
 
     return {
         "api-expires": str(expire),
         "api-signature": sign,
-        "api-key": CONF.API_KEY
+        "api-key": api_key
     }
-

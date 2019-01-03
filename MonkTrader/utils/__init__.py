@@ -26,6 +26,7 @@ import os
 from collections import defaultdict
 from typing import List, Any, Set, Type, IO
 import datetime
+from dateutil.tz import tzlocal
 import gzip
 import pathlib
 
@@ -102,3 +103,11 @@ class CsvZipDefaultDict(defaultdict):
     def close(self):
         for f in self.file_set:
             f.close()
+
+
+def local_tz_offset():
+    now = datetime.datetime.now(tzlocal())
+    return now.utcoffset()
+
+local_offset = local_tz_offset()
+local_offset_seconds = local_offset.total_seconds()

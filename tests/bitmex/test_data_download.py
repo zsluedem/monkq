@@ -28,6 +28,7 @@ from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
 from MonkTrader.exception import DataDownloadException
 from dateutil.relativedelta import relativedelta
+from unittest.mock import MagicMock
 import tempfile
 import zlib
 import datetime
@@ -117,11 +118,11 @@ def test_bitmex_process_points():
     with pytest.raises(IndexError):
         _ = p2_list[1]
 
-
+def mkfile(filename):
+    with open(filename, 'w') as f:
+        f.write('1')
 def test_bitmex_downloader(bitmex_mongo):
-    def mkfile(filename):
-        with open(filename, 'w') as f:
-            f.write('1')
+
 
     with tempfile.TemporaryDirectory() as tmp:
         b = BitMexDownloader(kind='quote', mode='csv', dst_dir=tmp)
@@ -190,6 +191,27 @@ def test_bitmex_downloader(bitmex_mongo):
     assert b.Streamer == TradeMongoStream
     assert b.start == datetime.datetime(2018, 1, 4)
 
+def test_bitmexdownloader_do_all():
+    with tempfile.TemporaryDirectory() as tmp:
+        start = datetime.datetime.now() + relativedelta(days=-2, hour=0, minute=0, second=0, microsecond=0)
+        mkfile(os.path.join(tmp, start.strftime('%Y%m%d')))
+        b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
+        m = MagicMock()
+        b.Streamer = m
+        b.do_all()
+        stream = m()
+        stream.process.assert_called_once()
+
+        b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
+        m = MagicMock(side_effect=DataDownloadException())
+        b.Streamer = m
+        b.do_all()
+
+        with pytest.raises(KeyError):
+            b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
+            m = MagicMock(side_effect=KeyError())
+            b.Streamer = m
+            b.do_all()
 
 class MockRawStreamRequest(TarStreamRequest):
     def __init__(self, *args, **kwargs):

@@ -100,7 +100,7 @@ class BitMexDownloader(DataDownloader):
                 Streamer = TradeMongoStream
             else:
                 raise ValueError
-        elif kind == 'symbols':
+        elif kind == 'instruments':
             self.link = symbols_link
             Streamer = SymbolsStreamRequest
         else:
@@ -109,7 +109,7 @@ class BitMexDownloader(DataDownloader):
 
     def init_mode(self, mode: str, dst_dir: str, kind: str):
         self.end = datetime.datetime.now() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
-        if kind == 'symbols':
+        if kind == 'instruments':
             self.start = datetime.datetime.now() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
             return
         if mode == 'mongo':

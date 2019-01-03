@@ -80,7 +80,7 @@ class RawStreamRequest(StreamRequest):
     """
     FILENAME = None
 
-    def __init__(self, url: str, dst_dir: str):
+    def __init__(self, url: str, dst_dir: str, *args, **kwargs):
         self.url = url
         assure_dir(dst_dir)
         self.dst_dir = dst_dir
@@ -109,7 +109,7 @@ class TarStreamRequest(RawStreamRequest):
 
 
 class SymbolsStreamRequest(RawStreamRequest):
-    FILENAME = 'symbols.json'
+    FILENAME = 'instruments.json'
 
 
 class _CsvStreamRequest(StreamRequest):

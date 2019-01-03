@@ -48,3 +48,10 @@ def test_generate_signature():
         '{"symbol":"XBTM15","price":219.0,"clOrdID":"mm_bitmex_1a/oemUeQ4CAJZgP3fjHsA","orderQty":98}') == \
            '1749cd2ccae4aa49048ae09f0b95110cee706e0944e6a14ad0b3a8cb45bd336b'
 
+def test_gen_header_dict():
+    assert gen_header_dict(api_id, secret, 'GET', 'http://testnet.bitmex.com/api/v1/instrument', '', 1518064236, 0) == \
+           {
+               "api-expires": '1518064236',
+               "api-signature": 'c7682d435d0cfe87c16098df34ef2eb5a549d4c5a3c2b1f0f77b8af73423bf00',
+               "api-key": api_id
+           }

@@ -25,9 +25,14 @@ import time
 import hashlib
 import hmac
 from urllib.parse import urlparse
+from MonkTrader.utils import local_offset_seconds
 
-def generate_expires(timestamp:float=time.time(),expire:int=3600):
+_safe_nonce = 300
+
+
+def generate_expires(timestamp: float = time.time(), expire: int = local_offset_seconds + _safe_nonce):
     return int(timestamp + expire)
+
 
 def generate_signature(secret, verb, url, nonce, data):
     """Generate a request signature compatible with BitMEX."""
@@ -47,8 +52,8 @@ def generate_signature(secret, verb, url, nonce, data):
     return signature
 
 
-def gen_header_dict(api_key, api_secret, verb, url, data, nonce=3600):
-    expire = generate_expires(nonce)
+def gen_header_dict(api_key, api_secret, verb, url, data, now=time.time(), nonce=local_offset_seconds + _safe_nonce):
+    expire = generate_expires(now, nonce)
 
     sign = generate_signature(api_secret, verb, url, expire, data)
 
@@ -57,4 +62,3 @@ def gen_header_dict(api_key, api_secret, verb, url, data, nonce=3600):
         "api-signature": sign,
         "api-key": api_key
     }
-

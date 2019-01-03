@@ -165,7 +165,7 @@ class _CsvStreamRequest(StreamRequest):
                 self.process_chunk()
         except BaseException as e:
             self.rollback()
-            console_log.exception("Exception {} happened when process f{} data".format(e, self.date))
+            console_log.exception("Exception {} happened when process {} data".format(e, self.date))
             raise DataDownloadException()
         self.cleanup()
 

@@ -22,16 +22,16 @@
 # SOFTWARE.
 #
 
-from MonkTrader.exchange.bitmex.auth import generate_signature, gen_header_dict, generate_expires
+from MonkTrader.exchange.bitmex.auth import generate_signature, gen_header_dict, generate_expires, expire_ts
 import time
 
 secret = "chNOOS4KvNXR_Xq4k4c9qsfoKWvnDecLATCRlcBwyKDYnWgO"
 api_id = "LAqUlngMIQkIUjXMUreyu3qn"
 
 def test_generate_expires():
-    assert generate_expires(123) == 3723
+    assert generate_expires(123,123) == 246
     now = time.time()
-    d = generate_expires() -now-3600
+    d = generate_expires() -now-expire_ts
     assert  d < 2
 
 

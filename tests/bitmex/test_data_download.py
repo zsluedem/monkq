@@ -21,9 +21,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.exchange.bitmex.data.quote import TarStreamRequest, QuoteMongoStream, TradeMongoStream, QuoteFileStream, \
-    TradeFileStream, SymbolsStreamRequest, TradeZipFileStream, QuoteZipFileStream, INSTRUMENTS_FILE
+from MonkTrader.exchange.bitmex.data.download import TarStreamRequest, QuoteMongoStream, TradeMongoStream, QuoteFileStream, \
+    TradeFileStream, SymbolsStreamRequest, TradeZipFileStream, QuoteZipFileStream
 from MonkTrader.exchange.bitmex.data import DatePoint, BitMexProcessPoints, BitMexDownloader, START_DATE
+from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
 from MonkTrader.exception import DataDownloadException
 from dateutil.relativedelta import relativedelta
@@ -145,7 +146,7 @@ def test_bitmex_downloader(bitmex_mongo):
         assert b.start == START_DATE
 
     with tempfile.TemporaryDirectory() as tmp:
-        b = BitMexDownloader(kind='symbols', mode='csv', dst_dir=tmp)
+        b = BitMexDownloader(kind='instruments', mode='csv', dst_dir=tmp)
         assert b.Streamer == SymbolsStreamRequest
         assert b.start == b.end
 
@@ -259,7 +260,7 @@ def test_symbols_stream_request():
         stream = MockSymbolsStream(mock_url, tmp, stream=stream_symbols)
         stream.process()
 
-        with open(os.path.join(tmp, INSTRUMENTS_FILE), 'rb') as f:
+        with open(os.path.join(tmp, INSTRUMENT_FILENAME), 'rb') as f:
             content = f.read()
 
         assert content == stream_symbols

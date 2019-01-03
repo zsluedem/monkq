@@ -21,6 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from MonkTrader.exchange.bitmex.const import trade_link, quote_link, symbols_link, TARFILETYPE
 import datetime
 import os
 
@@ -30,10 +31,9 @@ from dateutil.rrule import rrule, DAILY
 
 from MonkTrader.config import settings
 from MonkTrader.data import Point, ProcessPoints, DataDownloader
-from MonkTrader.exchange.bitmex.data.quote import quote_link, QuoteZipFileStream, TarStreamRequest, QuoteMongoStream, \
-    trade_link, TradeZipFileStream, TradeMongoStream, symbols_link, SymbolsStreamRequest, START_DATE, TARFILETYPE
+from MonkTrader.exchange.bitmex.data.download import QuoteZipFileStream, TarStreamRequest, QuoteMongoStream, \
+    TradeZipFileStream, TradeMongoStream, SymbolsStreamRequest, START_DATE
 from MonkTrader.logger import console_log
-
 
 
 class DatePoint(Point):
@@ -104,7 +104,7 @@ class BitMexDownloader(DataDownloader):
             self.link = symbols_link
             Streamer = SymbolsStreamRequest
         else:
-            raise ValueError
+            raise ValueError()
         self.Streamer = Streamer  # type: Type[StreamRequest]
 
     def init_mode(self, mode: str, dst_dir: str, kind: str):
@@ -149,3 +149,5 @@ class BitMexDownloader(DataDownloader):
                                 dst_dir=self.dst_dir)
         qstream.process()
         console_log.info('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat()))
+
+

@@ -144,8 +144,8 @@ class BitMexDownloader(DataDownloader):
         return BitMexProcessPoints(self.start, self.end)
 
     def download_one_point(self, point: DatePoint) -> None:
-        console_log.info('Downloading {} data on {}'.format(self.kind, point.value.isoformat))
+        console_log.info('Downloading {} data on {}'.format(self.kind, point.value.isoformat()))
         qstream = self.Streamer(date=point.value, url=self.link.format(point.value.strftime("%Y%m%d")),
                                 dst_dir=self.dst_dir)
         qstream.process()
-        console_log.info('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat))
+        console_log.info('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat()))

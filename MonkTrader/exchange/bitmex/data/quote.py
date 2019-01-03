@@ -44,6 +44,7 @@ trade_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}
 quote_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
 symbols_link = urljoin(Bitmex_api_url, "instrument")
 TARFILETYPE = '.csv.gz'
+INSTRUMENTS_FILE = 'instruments.json'
 
 
 class StreamRequest():
@@ -109,7 +110,7 @@ class TarStreamRequest(RawStreamRequest):
 
 
 class SymbolsStreamRequest(RawStreamRequest):
-    FILENAME = 'instruments.json'
+    FILENAME = INSTRUMENTS_FILE
 
 
 class _CsvStreamRequest(StreamRequest):

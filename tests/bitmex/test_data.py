@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 from MonkTrader.exchange.bitmex.data.quote import TarStreamRequest, QuoteMongoStream, TradeMongoStream, QuoteFileStream, \
-    TradeFileStream, SymbolsStreamRequest, TradeZipFileStream, QuoteZipFileStream
+    TradeFileStream, SymbolsStreamRequest, TradeZipFileStream, QuoteZipFileStream, INSTRUMENTS_FILE
 from MonkTrader.exchange.bitmex.data import DatePoint, BitMexProcessPoints, BitMexDownloader, START_DATE
 
 from MonkTrader.exception import DataDownloadException
@@ -259,7 +259,7 @@ def test_symbols_stream_request():
         stream = MockSymbolsStream(mock_url, tmp, stream=stream_symbols)
         stream.process()
 
-        with open(os.path.join(tmp, 'symbols.json'), 'rb') as f:
+        with open(os.path.join(tmp, INSTRUMENTS_FILE), 'rb') as f:
             content = f.read()
 
         assert content == stream_symbols

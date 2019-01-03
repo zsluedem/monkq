@@ -151,8 +151,8 @@ class _CsvStreamRequest(StreamRequest):
                         yield line.decode('utf8')
 
     def process(self):
-        self.setup()
         try:
+            self.setup()
             for i, row in enumerate(self.csv_reader(self.stream_decompress_requests())):
                 if self.chunk_process:
                     self.cache.append(self.process_row(row))
@@ -163,7 +163,7 @@ class _CsvStreamRequest(StreamRequest):
                     self.process_row(row)
             if self.cache:
                 self.process_chunk()
-        except Exception as e:
+        except BaseException as e:
             self.rollback()
             console_log.exception("Exception {} happened when process f{} data".format(e, self.date))
             raise DataDownloadException()
@@ -269,13 +269,12 @@ class _FileStream(_CsvStreamRequest):
         super(_FileStream, self).__init__(chunk_process=False, *args, **kwargs)
         assert os.path.isdir(dst_dir)
         new_dir = os.path.join(dst_dir, self.date.strftime("%Y%m%d"))
-        if not os.path.exists(new_dir):
-            os.mkdir(new_dir)
         self.dst_dir = new_dir
         self.csv_file_writers = CsvFileDefaultDict(self.dst_dir, self.fieldnames)
 
     def setup(self):
-        pass
+        if not os.path.exists(self.dst_dir):
+            os.mkdir(self.dst_dir)
 
     def process_row(self, row: dict):
         writer = self.csv_file_writers[row['symbol']]

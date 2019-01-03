@@ -24,7 +24,9 @@
 
 from typing import Any
 from collections.abc import Iterator
+from MonkTrader.exception import DataDownloadException
 from abc import ABC, abstractproperty, abstractmethod
+from MonkTrader.logger import console_log
 
 
 class Point(ABC):
@@ -33,8 +35,7 @@ class Point(ABC):
         raise NotImplementedError
 
 
-class ProcessPoints(Iterator):
-
+class ProcessPoints(Iterator[Point]):
     def __iter__(self):
         raise NotImplementedError
 
@@ -49,9 +50,17 @@ class DataDownloader(ABC):
         raise NotImplementedError
 
     def do_all(self) -> None:
-        for point in self.process_point():
-            self.download_one_point(point)
+        try:
+            for point in self.process_point():
+                self.download_one_point(point)
+        except DataDownloadException:
+            console_log.info('some exception occured when you download data at point {}. Check!!'.format(point.value))
 
+
+class DataLoader(ABC):
+    @abstractmethod
+    def load_instruments(self):
+        raise NotImplementedError()
 
 class DataFeeder():
     def loaddata(self)-> None:

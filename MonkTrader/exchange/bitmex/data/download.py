@@ -29,21 +29,16 @@ import csv
 import pymongo
 import os
 import shutil
+
 from MonkTrader.logger import console_log
 from MonkTrader.config import settings
 from MonkTrader.utils import CsvFileDefaultDict, assure_dir, CsvZipDefaultDict
 from MonkTrader.exception import DataDownloadException
-from MonkTrader.exchange.bitmex.const import Bitmex_api_url
-from urllib.parse import urljoin
+from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
 from typing import Generator
 
 START_DATE = datetime.datetime(2014, 11, 22)  # bitmex open date
-
-trade_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}.csv.gz"
-quote_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
-symbols_link = urljoin(Bitmex_api_url, "instrument")
-TARFILETYPE = '.csv.gz'
 
 
 class StreamRequest():
@@ -80,7 +75,7 @@ class RawStreamRequest(StreamRequest):
     """
     FILENAME = None
 
-    def __init__(self, url: str, dst_dir: str):
+    def __init__(self, url: str, dst_dir: str, *args, **kwargs):
         self.url = url
         assure_dir(dst_dir)
         self.dst_dir = dst_dir
@@ -109,7 +104,7 @@ class TarStreamRequest(RawStreamRequest):
 
 
 class SymbolsStreamRequest(RawStreamRequest):
-    FILENAME = 'symbols.json'
+    FILENAME = INSTRUMENT_FILENAME
 
 
 class _CsvStreamRequest(StreamRequest):

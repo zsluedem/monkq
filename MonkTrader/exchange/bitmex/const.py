@@ -21,7 +21,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from urllib.parse import urljoin
+
+trade_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}.csv.gz"
+quote_link = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
 Bitmex_api_url = "https://www.bitmex.com/api/v1/"
 Bitmex_websocket_url = "wss://www.bitmex.com/realtime"
 Bitmex_testnet_api_url = "https://testnet.bitmex.com/api/v1/"
 Bitmex_testnet_websocket_url = "wss://testnet.bitmex.com/realtime"
+symbols_link = urljoin(Bitmex_api_url, "instrument")
+TARFILETYPE = '.csv.gz'
+INSTRUMENT_FILENAME = 'instruments.json'

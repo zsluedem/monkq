@@ -193,7 +193,7 @@ def test_bitmex_downloader(bitmex_mongo):
 
 def test_bitmexdownloader_do_all():
     with tempfile.TemporaryDirectory() as tmp:
-        start = datetime.datetime.now() + relativedelta(days=-2, hour=0, minute=0, second=0, microsecond=0)
+        start = datetime.datetime.utcnow() + relativedelta(days=-2, hour=0, minute=0, second=0, microsecond=0)
         mkfile(os.path.join(tmp, start.strftime('%Y%m%d')))
         b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
         m = MagicMock()

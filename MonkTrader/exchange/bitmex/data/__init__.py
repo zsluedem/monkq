@@ -109,9 +109,9 @@ class BitMexDownloader(DataDownloader):
         self.Streamer = Streamer  # type: Type[StreamRequest]
 
     def init_mode(self, mode: str, dst_dir: str, kind: str):
-        self.end = datetime.datetime.now(tzutc()) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
+        self.end = datetime.datetime.utcnow() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
         if kind == 'instruments':
-            self.start = datetime.datetime.now(tzutc()) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
+            self.start = datetime.datetime.utcnow() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
             return
         if mode == 'mongo':
             cli = pymongo.MongoClient(settings.DATABASE_URI)

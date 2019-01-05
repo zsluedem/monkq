@@ -23,6 +23,7 @@
 #
 import datetime
 from dateutil.tz import tzutc
+from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
 up_raw_data = {
     "symbol": "XBT7D_U105",
@@ -484,6 +485,48 @@ test_future_instrument_keymap = {
     'rootSymbol': 'root_symbol'
 }
 
+class MockExchange(AbcExchange):
+    def withdraw(self):
+        pass
+
+    def deposit(self):
+        pass
+
+    def exchange_info(self):
+        pass
+
+    def order_book(self):
+        pass
+
+    def get_account(self):
+        pass
+
+    def place_limit_order(self):
+        pass
+
+    def place_market_order(self):
+        pass
+
+    def place_stop_limit_order(self):
+        pass
+
+    def place_stop_market_order(self):
+        pass
+
+    def open_orders(self):
+        pass
+
+    def cancel_order(self):
+        pass
+
+    def available_instruments(self):
+        pass
+
+    def setup(self):
+        pass
+
+exchange = MockExchange()
+
 def test_instrument():
     instrument = Instrument.create(test_instrument_keymap, {
         'symbol': 'RHOC',
@@ -495,7 +538,7 @@ def test_instrument():
         'tickSize': .00001,
         'makerFee': .005,
         'takerFee': .005,
-    })
+    }, exchange)
 
     assert instrument.symbol == "RHOC"
     assert instrument.listing_date == datetime.datetime(2018,12,28,12,tzinfo=tzutc())
@@ -506,10 +549,11 @@ def test_instrument():
     assert instrument.tick_size == 0.00001
     assert instrument.maker_fee == 0.005
     assert instrument.taker_fee == 0.005
+    assert instrument.exchange == exchange
 
 
 def test_future_instrument():
-    instrument = FutureInstrument.create(test_future_instrument_keymap, future_raw_date)
+    instrument = FutureInstrument.create(test_future_instrument_keymap, future_raw_date, exchange)
     assert instrument.symbol == "TRXH19"
     assert instrument.listing_date == datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc())
     assert instrument.expiry_date == datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc())
@@ -529,6 +573,7 @@ def test_future_instrument():
     assert instrument.front_date == datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc())
     assert instrument.reference_symbol == '.TRXXBT30M'
     assert instrument.deleverage == True
+    assert instrument.exchange == exchange
 
 # test_upside_instrument_keymap = {
 #

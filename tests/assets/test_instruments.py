@@ -485,7 +485,6 @@ test_future_instrument_keymap = {
     'rootSymbol': 'root_symbol'
 }
 
-@deactivate_abc
 class MockExchange(AbcExchange):
     def withdraw(self):
         pass

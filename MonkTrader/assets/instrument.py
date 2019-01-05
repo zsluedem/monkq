@@ -24,6 +24,7 @@
 import dataclasses
 import datetime
 from dateutil.parser import parse
+from MonkTrader.assets import AbcExchange
 from typing import Optional, TypeVar, Type, Dict, Union
 from MonkTrader.exception import MonkException
 
@@ -45,8 +46,10 @@ class Instrument():
     maker_fee: Optional[float] = None
     taker_fee: Optional[float] = None
 
+    exchange: Optional[AbcExchange] = None
+
     @classmethod
-    def create(cls: Type[INSTRUMENT], key_map: dict, values: dict) -> "INSTRUMENT":
+    def create(cls: Type[INSTRUMENT], key_map: dict, values: dict, exchange:AbcExchange) -> INSTRUMENT:
         annotation_dict = {}
         for mro in cls.__mro__[::-1]:
             if mro is object:
@@ -64,12 +67,8 @@ class Instrument():
                 if not isinstance(v, datetime.datetime):
                     v = parse(v)
             init_values.update({key_map.get(k): v})
-
+        init_values.update({'exchange': exchange})
         return cls(**init_values) # type: ignore
-
-    @property
-    def exchange(self) -> None:
-        return
 
     @property
     def state(self):

@@ -181,12 +181,12 @@ def test_bitmex_downloader(bitmex_mongo):
     assert b.Streamer == TradeMongoStream
     assert b.start == START_DATE
 
-    bitmex_mongo.quote.insert({'timestamp': datetime.datetime(2018, 1, 3, 12)})
+    bitmex_mongo.quote.insert_one({'timestamp': datetime.datetime(2018, 1, 3, 12)})
     b = BitMexDownloader(kind='quote', mode='mongo', dst_dir=tmp)
     assert b.Streamer == QuoteMongoStream
     assert b.start == datetime.datetime(2018, 1, 4)
 
-    bitmex_mongo.trade.insert({'timestamp': datetime.datetime(2018, 1, 3, 12)})
+    bitmex_mongo.trade.insert_one({'timestamp': datetime.datetime(2018, 1, 3, 12)})
     b = BitMexDownloader(kind='trade', mode='mongo', dst_dir=tmp)
     assert b.Streamer == TradeMongoStream
     assert b.start == datetime.datetime(2018, 1, 4)

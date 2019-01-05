@@ -24,25 +24,29 @@
 import dataclasses
 import datetime
 from dateutil.parser import parse
+from typing import Optional, TypeVar, Type, Dict, Union
+from MonkTrader.exception import MonkException
+
+INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
 
 @dataclasses.dataclass()
 class Instrument():
-    symbol: str = None
+    symbol: Optional[str] = None
 
-    listing_date: datetime.datetime = None
-    expiry_date: datetime.datetime = None
+    listing_date: Optional[datetime.datetime] = None
+    expiry_date: Optional[datetime.datetime] = None
 
-    underlying: str = None
-    quote_currency: str = None
+    underlying: Optional[str] = None
+    quote_currency: Optional[str] = None
 
-    lot_size: float = None
-    tick_size: float = None
+    lot_size: Optional[float] = None
+    tick_size: Optional[float] = None
 
-    maker_fee: float = None
-    taker_fee: float = None
+    maker_fee: Optional[float] = None
+    taker_fee: Optional[float] = None
 
     @classmethod
-    def create(cls, key_map:dict, values:dict):
+    def create(cls: Type[INSTRUMENT], key_map: dict, values: dict) -> "INSTRUMENT":
         annotation_dict = {}
         for mro in cls.__mro__[::-1]:
             if mro is object:
@@ -50,50 +54,58 @@ class Instrument():
             annotation_dict.update(mro.__annotations__)
         init_values = {}
         for k, v in values.items():
-            annotate = annotation_dict.get(key_map.get(k))
+            key_map_value = key_map.get(k)
+            if key_map_value is None:
+                continue
+            annotate = annotation_dict.get(key_map_value)
             if annotate is None:
                 continue
-            elif annotate == datetime.datetime:
+            elif annotate ==  Optional[datetime.datetime]:
                 if not isinstance(v, datetime.datetime):
                     v = parse(v)
             init_values.update({key_map.get(k): v})
 
-        return cls(**init_values)
+        return cls(**init_values) # type: ignore
 
     @property
-    def exchange(self)-> None:
+    def exchange(self) -> None:
         return
 
     @property
     def state(self):
         return
 
+
 @dataclasses.dataclass()
 class FutureInstrument(Instrument):
-    root_symbol:str = None
+    root_symbol: Optional[str] = None
     init_margin: float = 0
     main_margin: float = 0
 
     settlement_fee: float = 0
-    settle_currency: str = None
+    settle_currency: Optional[str] = None
 
-    settle_date: datetime.datetime = None
-    front_date: datetime.datetime = None
+    settle_date: Optional[datetime.datetime] = None
+    front_date: Optional[datetime.datetime] = None
 
-    reference_symbol: str = None
+    reference_symbol: Optional[str] = None
 
     deleverage: bool = True
+
 
 @dataclasses.dataclass()
 class UpsideInstrument(FutureInstrument):
     pass
 
+
 @dataclasses.dataclass()
 class DownsideInstrument(FutureInstrument):
     pass
+
 
 @dataclasses.dataclass()
 class PerpetualInstrument(FutureInstrument):
     @property
     def funding_rate(self) -> float:
         return 0
+

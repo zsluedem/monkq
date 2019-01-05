@@ -25,7 +25,6 @@ import datetime
 from dateutil.tz import tzutc
 from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from ..common import deactivate_abc
 up_raw_data = {
     "symbol": "XBT7D_U105",
     "rootSymbol": "XBT",

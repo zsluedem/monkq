@@ -21,9 +21,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import random
-import string
+import os
 
-def random_string(length: int) -> str:
-    return ''.join(random.choice(string.ascii_letters) for _ in range(length))
 
+def get_resource_path(file=None):
+    current = os.path.realpath(__file__)
+    if file is None:
+        return os.path.dirname(current)
+    else:
+        return os.path.join(os.path.dirname(current), file)

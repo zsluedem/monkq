@@ -21,31 +21,55 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from MonkTrader.assets import AbcExchange
+import pytest
+import importlib
 
 
-class MonkException(BaseException):
-    pass
+class MockExchange(AbcExchange):
+    def withdraw(self):
+        pass
+
+    def deposit(self):
+        pass
+
+    def exchange_info(self):
+        pass
+
+    def order_book(self):
+        pass
+
+    def get_account(self):
+        pass
+
+    def place_limit_order(self):
+        pass
+
+    def place_market_order(self):
+        pass
+
+    def place_stop_limit_order(self):
+        pass
+
+    def place_stop_market_order(self):
+        pass
+
+    def open_orders(self):
+        pass
+
+    def cancel_order(self):
+        pass
+
+    def available_instruments(self):
+        pass
+
+    def setup(self):
+        pass
 
 
-class MaxRetryException(MonkException):
-    pass
-
-class RateLimitException(MonkException):
-    def __init__(self, ratelimit_reset):
-        self.ratelimit_reset = ratelimit_reset
-
-
-class BacktestTimeException(MonkException):
-    pass
-
-class StrategyNotFound(MonkException):
-    pass
-
-class DataDownloadException(MonkException):
-    pass
-
-class AuthException(MonkException):
-    pass
-
-class LoadDataException(MonkException):
-    pass
+@pytest.fixture
+def mock_exchange():
+    try:
+        yield MockExchange()
+    finally:
+        pass

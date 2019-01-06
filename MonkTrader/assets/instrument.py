@@ -65,7 +65,7 @@ class Instrument():
                 continue
             elif annotate ==  Optional[datetime.datetime]:
                 if not isinstance(v, datetime.datetime):
-                    v = parse(v)
+                    v = parse(v) if v is not None else v
             init_values.update({key_map.get(k): v})
         init_values.update({'exchange': exchange})
         return cls(**init_values) # type: ignore

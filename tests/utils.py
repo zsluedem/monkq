@@ -21,31 +21,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import random
+import string
+from MonkTrader.config import settings
+from functools import wraps
 
+def random_string(length: int) -> str:
+    return ''.join(random.choice(string.ascii_letters) for _ in range(length))
 
-class MonkException(BaseException):
-    pass
-
-
-class MaxRetryException(MonkException):
-    pass
-
-class RateLimitException(MonkException):
-    def __init__(self, ratelimit_reset):
-        self.ratelimit_reset = ratelimit_reset
-
-
-class BacktestTimeException(MonkException):
-    pass
-
-class StrategyNotFound(MonkException):
-    pass
-
-class DataDownloadException(MonkException):
-    pass
-
-class AuthException(MonkException):
-    pass
-
-class LoadDataException(MonkException):
-    pass
+def over_written_settings(**options):
+    def decorate_func(func):
+        @wraps(func)
+        def _wrap(*args, **kwargs):
+            for k, v in options.items():
+                setattr(settings, k, v)
+            return func(*args, **kwargs)
+    return decorate_func

@@ -1,3 +1,5 @@
+import os
+
 # Mongodb uri which is used to load data or download data in.
 DATABASE_URI = "mongodb://127.0.0.1:27017"
 
@@ -20,7 +22,9 @@ TICK_TYPE = 'tick'  # tick , bar
 
 STRATEGY = "strategy.MyStrategy"
 
-EXCHANGE= { # type: ignore
+DATA_DIR = os.path.expanduser("~/.monk/data")
+
+EXCHANGE = {  # type: ignore
     'bitmex': {
         "IS_TEST": True,
         "API_KEY": '',
@@ -28,10 +32,10 @@ EXCHANGE= { # type: ignore
     }
 }
 
-BUILTIN_PLUGINS= { # type: ignore
+BUILTIN_PLUGINS = {  # type: ignore
 
 }
 
-INSTALLED_PLUGINS= { # type: ignore
+INSTALLED_PLUGINS = {  # type: ignore
 
 }

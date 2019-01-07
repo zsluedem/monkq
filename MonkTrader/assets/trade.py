@@ -22,9 +22,9 @@
 # SOFTWARE.
 #
 import dataclasses
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
+from MonkTrader.assets.order import BaseOrder, SIDE
 if TYPE_CHECKING:
-    from MonkTrader.assets.order import BaseOrder, SIDE
     from MonkTrader.assets.instrument import Instrument
 
 @dataclasses.dataclass()
@@ -46,3 +46,17 @@ class Trade():
     def order_id(self) -> str:
         return self.order.order_id
 
+    @property
+    def value(self) -> float:
+        return self.exec_quantity * self.exec_price
+
+    @property
+    def commission(self) -> float:
+        return abs(self.value) * self.instrument.taker_fee
+
+    @property
+    def avg_price(self) -> float:
+        # not (abs(self.value) + self.commission) / (self.exec_quantity)
+        # because this one is faster. It is the same result
+        return (self.value + self.commission) / self.exec_quantity if self.side==SIDE.BUY \
+            else (self.value - self.commission) / self.exec_quantity

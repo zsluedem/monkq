@@ -26,6 +26,7 @@ import enum
 from MonkTrader.assets.instrument import Instrument
 from MonkTrader.exception import ImpossibleException
 from typing import TYPE_CHECKING, List
+
 if TYPE_CHECKING:
     from MonkTrader.assets.trade import Trade
 
@@ -45,23 +46,27 @@ class ORDERSTATUS(enum.Enum):
 class BaseOrder():
     order_id: str
     instrument: Instrument
-    side: SIDE
     quantity: float = 0
     traded_quantity: float = 0
     trades: List["Trade"] = field(default_factory=list)
 
     @property
     def order_status(self) -> ORDERSTATUS:
-        if self.traded_quantity==0:
+        if self.traded_quantity == 0:
             return ORDERSTATUS.NOT_TRADED
-        elif self.traded_quantity < self.quantity:
-            return ORDERSTATUS.PARTLY_TRADED
         elif self.traded_quantity == self.quantity:
             return ORDERSTATUS.FULL_TRADED
+        elif abs(self.traded_quantity) < abs(self.quantity):
+            return ORDERSTATUS.PARTLY_TRADED
         else:
-            raise ImpossibleException("order quantity: {}, traded quantity: {}".format(self.quantity, self.traded_quantity))
+            raise ImpossibleException(
+                "order quantity: {}, traded quantity: {}".format(self.quantity, self.traded_quantity))
 
-    def traded(self, trade:"Trade")->None:
+    @property
+    def side(self):
+        return SIDE.BUY if self.quantity > 0 else SIDE.SELL
+
+    def traded(self, trade: "Trade") -> None:
         assert trade not in self.trades
         self.traded_quantity += trade.exec_quantity
         self.trades.append(trade)
@@ -69,6 +74,9 @@ class BaseOrder():
 class LimitOrder(BaseOrder):
     price: float
 
+    @property
+    def order_value(self):
+        return self.price * self.quantity
 
 class MarketOrder(BaseOrder):
     pass
@@ -80,3 +88,11 @@ class StopMarketOrder(BaseOrder):
 
 class StopLimitOrder(BaseOrder):
     stop_price: float
+
+
+class FutureLimitOrder(LimitOrder):
+    leverage: float =1
+    @property
+    def margin_value(self):
+        return self.order_value / self.leverage
+

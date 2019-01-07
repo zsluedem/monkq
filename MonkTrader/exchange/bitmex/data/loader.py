@@ -50,7 +50,7 @@ instrument_map = {
     'takerFee': 'taker_fee',
 
     'initMargin': 'init_margin',
-    'maintMargin': 'main_margin',
+    'maintMargin': 'maint_margin',
 
     'settlementFee': 'settlement_fee',
     'settlCurrency': 'settle_currency',

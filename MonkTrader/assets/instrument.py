@@ -79,7 +79,7 @@ class Instrument():
 class FutureInstrument(Instrument):
     root_symbol: Optional[str] = None
     init_margin: float = 0
-    main_margin: float = 0
+    maint_margin: float = 0
 
     settlement_fee: float = 0
     settle_currency: Optional[str] = None

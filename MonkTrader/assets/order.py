@@ -63,7 +63,7 @@ class BaseOrder():
                 "order quantity: {}, traded quantity: {}".format(self.quantity, self.traded_quantity))
 
     @property
-    def side(self):
+    def side(self) -> SIDE:
         return SIDE.BUY if self.quantity > 0 else SIDE.SELL
 
     def traded(self, trade: "Trade") -> None:

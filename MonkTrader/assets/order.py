@@ -66,7 +66,7 @@ class BaseOrder():
     def side(self) -> SIDE:
         return SIDE.BUY if self.quantity > 0 else SIDE.SELL
 
-    def traded(self, trade: "Trade") -> None:
+    def deal(self, trade: "Trade") -> None:
         assert trade not in self.trades
         self.traded_quantity += trade.exec_quantity
         self.trades.append(trade)

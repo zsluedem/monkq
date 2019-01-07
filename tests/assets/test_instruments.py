@@ -472,7 +472,7 @@ test_future_instrument_keymap = {
     'takerFee': 'taker_fee',
 
     'initMargin':'init_margin',
-    'maintMargin': 'main_margin',
+    'maintMargin': 'maint_margin',
 
     'settlementFee': 'settlement_fee',
     'settlCurrency': 'settle_currency',
@@ -525,7 +525,7 @@ def test_future_instrument(mock_exchange):
 
     assert instrument.root_symbol == 'TRX'
     assert instrument.init_margin == 0.05
-    assert instrument.main_margin == 0.025
+    assert instrument.maint_margin == 0.025
     assert instrument.settlement_fee == 0
     assert instrument.settle_currency == 'XBt'
     assert instrument.settle_date == datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc())

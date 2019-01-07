@@ -30,7 +30,7 @@ from MonkTrader.exception import MonkException
 
 INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(frozen=True)
 class Instrument():
     symbol: Optional[str] = None
 
@@ -43,8 +43,8 @@ class Instrument():
     lot_size: Optional[float] = None
     tick_size: Optional[float] = None
 
-    maker_fee: Optional[float] = None
-    taker_fee: Optional[float] = None
+    maker_fee: float = 0
+    taker_fee: float = 0
 
     exchange: Optional[AbcExchange] = None
 
@@ -75,11 +75,11 @@ class Instrument():
         return
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(frozen=True)
 class FutureInstrument(Instrument):
     root_symbol: Optional[str] = None
     init_margin: float = 0
-    main_margin: float = 0
+    maint_margin: float = 0
 
     settlement_fee: float = 0
     settle_currency: Optional[str] = None
@@ -92,17 +92,17 @@ class FutureInstrument(Instrument):
     deleverage: bool = True
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(frozen=True)
 class UpsideInstrument(FutureInstrument):
     pass
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(frozen=True)
 class DownsideInstrument(FutureInstrument):
     pass
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(frozen=True)
 class PerpetualInstrument(FutureInstrument):
     @property
     def funding_rate(self) -> float:

@@ -23,7 +23,9 @@
 #
 from MonkTrader.interface import AbcContext
 
-class Context(AbcContext):
+EXCHANGE = ('bitmex')
 
-    def get_exchange(self):
-        return 0
+
+class Context(AbcContext):
+    def __init__(self, settings):
+        self._settings = settings

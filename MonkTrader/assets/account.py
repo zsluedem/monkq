@@ -21,34 +21,36 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import dataclasses
+from MonkTrader.assets import AbcExchange
+from MonkTrader.assets.positions import PositionManager
+from typing import Optional
+
+@dataclasses.dataclass()
+class BaseAccount():
+    exchange: AbcExchange
 
 
-class MonkException(BaseException):
-    pass
+class FutureAccount(BaseAccount):
+    wallet_balance: float = 0
+    positions: PositionManager = PositionManager()
 
+    @property
+    def position_balance(self) -> float:
+        return
 
-class MaxRetryException(MonkException):
-    pass
+    @property
+    def order_margin(self) -> float:
+        return
 
-class RateLimitException(MonkException):
-    def __init__(self, ratelimit_reset):
-        self.ratelimit_reset = ratelimit_reset
+    @property
+    def unrealised_pnl(self) -> float:
+        return
 
+    @property
+    def margin_balance(self):
+        return self.wallet_balance + self.unrealised_pnl
 
-class BacktestTimeException(MonkException):
-    pass
-
-class StrategyNotFound(MonkException):
-    pass
-
-class DataDownloadException(MonkException):
-    pass
-
-class AuthException(MonkException):
-    pass
-
-class LoadDataException(MonkException):
-    pass
-
-class ImpossibleException(MonkException):
-    pass
+    @property
+    def available_balance(self):
+        return self.margin_balance - self.order_margin - self.position_balance

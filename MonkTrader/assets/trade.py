@@ -21,34 +21,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import dataclasses
+from typing import TYPE_CHECKING, TypeVar
+if TYPE_CHECKING:
+    from MonkTrader.assets.order import BaseOrder, SIDE
+    from MonkTrader.assets.instrument import Instrument
 
+@dataclasses.dataclass()
+class Trade():
+    order: "BaseOrder"
+    exec_price: float
+    exec_quantity: float
+    trade_id: str
 
-class MonkException(BaseException):
-    pass
+    @property
+    def side(self) -> "SIDE":
+        return self.order.side
 
+    @property
+    def instrument(self) -> "Instrument":
+        return self.order.instrument
 
-class MaxRetryException(MonkException):
-    pass
+    @property
+    def order_id(self) -> str:
+        return self.order.order_id
 
-class RateLimitException(MonkException):
-    def __init__(self, ratelimit_reset):
-        self.ratelimit_reset = ratelimit_reset
-
-
-class BacktestTimeException(MonkException):
-    pass
-
-class StrategyNotFound(MonkException):
-    pass
-
-class DataDownloadException(MonkException):
-    pass
-
-class AuthException(MonkException):
-    pass
-
-class LoadDataException(MonkException):
-    pass
-
-class ImpossibleException(MonkException):
-    pass

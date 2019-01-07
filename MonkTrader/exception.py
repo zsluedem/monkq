@@ -49,3 +49,6 @@ class AuthException(MonkException):
 
 class LoadDataException(MonkException):
     pass
+
+class ImpossibleException(MonkException):
+    pass

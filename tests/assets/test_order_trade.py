@@ -39,16 +39,16 @@ def test_buy_order_trade():
     assert order.order_status == ORDERSTATUS.NOT_TRADED
 
     trade1 = Trade(order=order, exec_price=10, exec_quantity=50, trade_id=random_string(6))
-    order.traded(trade1)
+    order.deal(trade1)
     assert order.traded_quantity == 50
     assert order.order_status == ORDERSTATUS.PARTLY_TRADED
 
     with pytest.raises(AssertionError):
-        order.traded(trade1)
+        order.deal(trade1)
 
     trade2 = Trade(order=order, exec_price=11, exec_quantity=50, trade_id=random_string(6))
 
-    order.traded(trade2)
+    order.deal(trade2)
 
     assert order.traded_quantity == 100
     assert order.order_status == ORDERSTATUS.FULL_TRADED
@@ -81,16 +81,16 @@ def test_sell_order_trade():
     assert order.order_status == ORDERSTATUS.NOT_TRADED
 
     trade1 = Trade(order=order, exec_price=10, exec_quantity=-50, trade_id=random_string(6))
-    order.traded(trade1)
+    order.deal(trade1)
     assert order.traded_quantity == -50
     assert order.order_status == ORDERSTATUS.PARTLY_TRADED
 
     with pytest.raises(AssertionError):
-        order.traded(trade1)
+        order.deal(trade1)
 
     trade2 = Trade(order=order, exec_price=11, exec_quantity=-50, trade_id=random_string(6))
 
-    order.traded(trade2)
+    order.deal(trade2)
 
     assert order.traded_quantity == -100
     assert order.order_status == ORDERSTATUS.FULL_TRADED

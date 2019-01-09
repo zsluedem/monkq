@@ -38,6 +38,7 @@ class AbcContext(ABC):
     def available_exchanges(self) -> List[AbcExchange]:
         raise NotImplementedError()
 
+
 class AbcRunner(ABC):
     @abstractmethod
     def setup(self):

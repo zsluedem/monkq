@@ -54,7 +54,6 @@ class RealtimeRunner(AbcRunner):
 class Framework():
     def __init__(self):
 
-
         if CONF.RUN_TYPE == BACKTEST:
             self.runner = BacktestRunner()
         elif CONF.RUN_TYPE == REALTIME:
@@ -62,7 +61,7 @@ class Framework():
 
         self.tick_type = CONF.TICK_TYPE
 
-        self.strategy:AbcStrategy = None
+        self.strategy: AbcStrategy = None
 
     def load_strategy(self):
         pass

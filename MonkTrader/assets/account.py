@@ -26,20 +26,21 @@ from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.positions import PositionManager, BasePosition
 from typing import Optional, Type
 
+
 @dataclass()
 class BaseAccount():
     exchange: AbcExchange
     position_cls: Type[BasePosition]
-    positions: PositionManager =field(init=False)
+    positions: PositionManager = field(init=False)
 
     def __post_init__(self):
         self.positions = PositionManager(self.position_cls, self)
 
 
-
 @dataclass()
 class FutureAccount(BaseAccount):
     wallet_balance: float = 0
+
     @property
     def position_balance(self) -> float:
         return sum([position.margin_value for intrument, position in self.positions.items()])

@@ -23,10 +23,12 @@
 #
 from abc import ABC, abstractmethod, abstractproperty
 from typing import TypeVar, TYPE_CHECKING
+
 if TYPE_CHECKING:
     from MonkTrader.assets.instrument import Instrument
 
 INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
+
 
 class AbcInstrument(ABC):
     pass

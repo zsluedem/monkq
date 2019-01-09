@@ -31,8 +31,9 @@ from MonkTrader.utils import is_aware_datetime
 from typing import Union
 import datetime
 
+
 class FrequencyTicker():
-    def __init__(self, start_time: datetime.datetime , end_time:datetime.datetime , frequency:str):
+    def __init__(self, start_time: datetime.datetime, end_time: datetime.datetime, frequency: str):
         assert is_aware_datetime(start_time)
         assert is_aware_datetime(end_time)
 
@@ -47,5 +48,4 @@ class FrequencyTicker():
     def timer(self):
         for current_datetime in rrule(self.frequency, dtstart=self.start_time, until=self.end_time):
             self.current = current_datetime
-            yield  self.current
-
+            yield self.current

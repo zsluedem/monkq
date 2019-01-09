@@ -25,6 +25,7 @@ import types
 import inspect
 from MonkTrader.ticker import FrequencyTicker
 
+
 class Trading():
     pass
 

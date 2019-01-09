@@ -23,8 +23,9 @@
 #
 from MonkTrader.exchange.bitmex import PositionDirection
 
+
 class Order():
-    def __init__(self,instrument, quantity, order_type):
+    def __init__(self, instrument, quantity, order_type):
         self.instrument = instrument
         assert quantity != 0
         self.quantity = quantity
@@ -33,4 +34,3 @@ class Order():
     @property
     def direction(self):
         return PositionDirection.LONG if self.amount > 0 else PositionDirection.SHORT
-

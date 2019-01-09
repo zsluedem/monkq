@@ -40,7 +40,7 @@ class PickleDataFeeder(DataFeeder):
 
     def loaddata(self):
         for freq in ('1m', '5m'):
-            with open(os.path.join(self.directory,"{}.pkl".format(freq)), 'rb') as f:
+            with open(os.path.join(self.directory, "{}.pkl".format(freq)), 'rb') as f:
                 data = pickle.load(f)
                 del data['_id']
                 data.set_index('timestamp', inplace=True)
@@ -48,14 +48,13 @@ class PickleDataFeeder(DataFeeder):
                 data['last'].fillna(method='ffill', inplace=True)
                 self._data[freq] = data
 
-
     def update_date(self, current_time):
         self.current_time = current_time
 
     def history(self, freq, count, include_now=False):
         if include_now:
             end = self.current_time
-            count -=1
+            count -= 1
         else:
             end = self.current_time - relativedelta(minutes=1)
         start = self.current_time - relativedelta(minutes=count)
@@ -66,21 +65,18 @@ class PickleDataFeeder(DataFeeder):
         return self._data['1m'].loc[self.current_time]['last']
 
 
-
 class MongoDataFeeder(DataFeeder):
     def __init__(self, uri):
         self.client = pymongo.MongoClient(uri)
         self.data = dict()
 
     def loaddata(self):
-        for freq  in ('1m', '5m'):
+        for freq in ('1m', '5m'):
             col = self.client['bitmex'][freq]
-            data = list(col.find({'symbol':"XBTUSD"}))
-            self.data[freq]=pandas.DataFrame(data)
+            data = list(col.find({'symbol': "XBTUSD"}))
+            self.data[freq] = pandas.DataFrame(data)
 
 
 if __name__ == '__main__':
     a = MongoDataFeeder('localhost')
     a.loaddata()
-
-

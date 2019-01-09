@@ -109,5 +109,6 @@ def local_tz_offset():
     now = datetime.datetime.now(tzlocal())
     return now.utcoffset()
 
+
 local_offset = local_tz_offset()
 local_offset_seconds = local_offset.total_seconds()

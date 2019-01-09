@@ -64,7 +64,7 @@ class BasePosition():
         elif self.quantity * trade.exec_quantity > 0:
             # get more on position
             self.open_price = (trade.avg_price * trade.exec_quantity + self.quantity * self.open_price) / (
-                        trade.exec_quantity + self.quantity)
+                    trade.exec_quantity + self.quantity)
             self.quantity += trade.exec_quantity
         else:
             # 3,4,5 condition

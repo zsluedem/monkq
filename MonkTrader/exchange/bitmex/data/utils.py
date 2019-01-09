@@ -24,6 +24,7 @@
 
 import pandas
 
+
 def _date_parse(one):
     return pandas.to_datetime(one, format="%Y-%m-%dD%H:%M:%S.%f")
 
@@ -33,15 +34,17 @@ def _read_trade_tar(path):
                               parse_dates=[0],
                               infer_datetime_format=True,
                               usecols=["timestamp", "symbol", "side", "size", "price", "tickDirection",
-                                                               "trdMatchID", "grossValue", "homeNotional", "foreignNotional"],
+                                       "trdMatchID", "grossValue", "homeNotional", "foreignNotional"],
                               engine='c', low_memory=True, date_parser=_date_parse)
     t_frame.set_index('timestamp', inplace=True)
     return t_frame
+
 
 def _trade_to_kline(frame, frequency):
     kline = frame['price'].resample(frequency).ohlc()
     kline['value'] = frame['grossValue'].resample(frequency).sum()
     return kline
+
 
 def tar_to_kline(path, frequency):
     t_frame = _read_trade_tar(path)
@@ -52,4 +55,3 @@ def tar_to_kline(path, frequency):
         klines[symbol] = _trade_to_kline(obj, frequency)
 
     return klines
-

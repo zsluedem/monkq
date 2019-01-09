@@ -73,7 +73,9 @@ def fetch_bitmex_kline(symbol: str, start_time: datetime.datetime, end_time: dat
             ratelimit_reset = req.headers['X-RateLimit-Reset']
             retry_after = float(req.headers['Retry-After'])
             warnings.warn(
-                "Your rate is too fast and remaining is {}, retry after {}s, rate reset at {}".format(remaining,retry_after, ratelimit_reset))
+                "Your rate is too fast and remaining is {}, retry after {}s, rate reset at {}".format(remaining,
+                                                                                                      retry_after,
+                                                                                                      ratelimit_reset))
             time.sleep(retry_after + 3)  # just sleep 3 more seconds to make safe
             continue
         elif req.status_code == 403:
@@ -147,8 +149,7 @@ def save_symbols_mongo(db_cli: pymongo.MongoClient, active: bool):
         console_log.info("Symbols download is done! Thank you man!")
 
 
-def save_symbols_json(active:bool, dst_path:str):
+def save_symbols_json(active: bool, dst_path: str):
     symbols = fetch_bitmex_symbols(active)
     with open(dst_path, 'w') as f:
         json.dumps(symbols, f)
-

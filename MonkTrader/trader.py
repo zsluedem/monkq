@@ -24,16 +24,15 @@
 import asyncio
 from MonkTrader.exchange.bitmex import BitmexWebsocket
 
+
 class Trader():
     def __init__(self):
         self.event_loop = asyncio.new_event_loop()
 
         self.bitmex_websocket = BitmexWebsocket(self.event_loop)
 
-
     def setup(self):
         self.bitmex_websocket.setup()
 
     def run_loop(self):
         self.event_loop.run_forever()
-

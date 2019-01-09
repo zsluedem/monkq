@@ -24,8 +24,10 @@
 import dataclasses
 from typing import TYPE_CHECKING
 from MonkTrader.assets.order import BaseOrder, SIDE
+
 if TYPE_CHECKING:
     from MonkTrader.assets.instrument import Instrument
+
 
 @dataclasses.dataclass()
 class Trade():
@@ -58,5 +60,5 @@ class Trade():
     def avg_price(self) -> float:
         # not (abs(self.value) + self.commission) / (self.exec_quantity)
         # because this one is faster. It is the same result
-        return (self.value + self.commission) / self.exec_quantity if self.side==SIDE.BUY \
+        return (self.value + self.commission) / self.exec_quantity if self.side == SIDE.BUY \
             else (self.value - self.commission) / self.exec_quantity

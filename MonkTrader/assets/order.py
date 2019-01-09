@@ -91,7 +91,7 @@ class MarketOrder(BaseOrder):
 
 @dataclass()
 class StopMarketOrder(BaseOrder):
-    stop_price: float =0
+    stop_price: float = 0
 
 
 @dataclass()
@@ -107,7 +107,7 @@ class FutureLimitOrder(LimitOrder):
 
     @property
     def margin_value(self):
-        if self.account.positions[self.instrument].quantity * self.quantity <=0:
+        if self.account.positions[self.instrument].quantity * self.quantity <= 0:
             return self.order_value / self.leverage * (1 + self.instrument.init_margin + self.instrument.taker_fee)
         else:
             return 0

@@ -25,7 +25,6 @@
 import logbook
 from logbook.more import ColorizedStderrHandler
 
-
 console_log = logbook.Logger("console")
 
 console_log.handlers.append(ColorizedStderrHandler(bubble=True))

@@ -29,11 +29,12 @@ from typing import Set
 
 import lazy_object_proxy
 
-from MonkTrader.config import default_settings as default_settings # type: ignore
+from MonkTrader.config import default_settings as default_settings  # type: ignore
 
 # SETTINGS_ENV_VARIABLE = "SETTINGS_ENV_VARIABLE"
 
 SETTING_FILE = 'settings'
+
 
 class Setting:
     def __init__(self):
@@ -58,6 +59,7 @@ class Setting:
 
     def is_overridden(self, setting):
         return setting in self._explicit_settings
+
 
 def gen_settings():
     # get the current path to import settings

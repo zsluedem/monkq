@@ -154,4 +154,6 @@ class PositionManager(defaultdict, Dict[Instrument, BasePosition]):
         self.account = account
 
     def __missing__(self, key):
-        return self.position_cls(instrument=key, account=self.account)
+        ret = self.position_cls(instrument=key, account=self.account)
+        self[key] = ret
+        return ret

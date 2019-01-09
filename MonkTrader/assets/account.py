@@ -23,7 +23,7 @@
 #
 from dataclasses import dataclass, field
 from MonkTrader.assets import AbcExchange
-from MonkTrader.assets.positions import PositionManager, BasePosition
+from MonkTrader.assets.positions import PositionManager, BasePosition, FuturePosition
 from typing import Optional, Type
 
 
@@ -39,6 +39,7 @@ class BaseAccount():
 
 @dataclass()
 class FutureAccount(BaseAccount):
+    position_cls: Type[FuturePosition]
     wallet_balance: float = 0
 
     @property

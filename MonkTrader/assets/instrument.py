@@ -32,6 +32,7 @@ INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
 
 @dataclasses.dataclass(frozen=True)
 class Instrument():
+    exchange: AbcExchange
     symbol: Optional[str] = None
 
     listing_date: Optional[datetime.datetime] = None
@@ -46,7 +47,6 @@ class Instrument():
     maker_fee: float = 0
     taker_fee: float = 0
 
-    exchange: Optional[AbcExchange] = None
 
     @classmethod
     def create(cls: Type[INSTRUMENT], key_map: dict, values: dict, exchange:AbcExchange) -> INSTRUMENT:
@@ -75,7 +75,7 @@ class Instrument():
         return
 
     @property
-    def last_price(self):
+    def last_price(self) -> float:
         return self.exchange.get_last_price(self)
 
 @dataclasses.dataclass(frozen=True)

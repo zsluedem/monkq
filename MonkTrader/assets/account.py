@@ -21,18 +21,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import dataclasses
+from dataclasses import dataclass, field
 from MonkTrader.assets import AbcExchange
-from MonkTrader.assets.positions import PositionManager
-from typing import Optional
+from MonkTrader.assets.positions import PositionManager, BasePosition
+from typing import Optional, Type
 
-@dataclasses.dataclass()
+@dataclass()
 class BaseAccount():
     exchange: AbcExchange
+    position_cls: Type[BasePosition]
+    positions: PositionManager =field(init=False)
+
+    def __post_init__(self):
+        self.positions = PositionManager(self.position_cls, self)
 
 
+
+@dataclass()
 class FutureAccount(BaseAccount):
-    positions: PositionManager
     wallet_balance: float = 0
     @property
     def position_balance(self) -> float:
@@ -40,7 +46,7 @@ class FutureAccount(BaseAccount):
 
     @property
     def order_margin(self) -> float:
-        return
+        return sum([order.margin_value for order in self.exchange.open_orders()])
 
     @property
     def unrealised_pnl(self) -> float:

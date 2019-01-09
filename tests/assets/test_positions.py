@@ -30,7 +30,9 @@ from .mock_resource import instrument, future_instrument, account
 
 def test_position_manager():
     position_manager = PositionManager(BasePosition, account)
-    assert isinstance(position_manager[instrument], BasePosition)
+    position = position_manager[instrument]
+    assert isinstance(position, BasePosition)
+    assert position is position_manager[instrument]
 
 
 def test_empty_position_deal():

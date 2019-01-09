@@ -25,7 +25,7 @@
 from MonkTrader.assets.order import BaseOrder, SIDE, ORDERSTATUS, FutureLimitOrder
 from MonkTrader.assets.trade import Trade
 from ..utils import random_string
-from .mock_resource import instrument, account
+from .mock_resource import instrument, account, future_instrument, future_account
 import pytest
 
 
@@ -114,4 +114,62 @@ def test_sell_order_trade():
 
 
 def test_future_limit_order():
-    pass
+    future_account.positions[future_instrument].quantity = 0
+    future_account.positions[future_instrument].leverage = 10
+    order1 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
+                              quantity=100, price=11)
+    assert order1.margin_value == 115.775  # open a position, 100 * 11 /10 * (1+ 0.05 + 0.0025)
+
+    future_account.positions[future_instrument].quantity = 100
+    future_account.positions[future_instrument].leverage = 5
+    order2 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
+                              quantity=100, price=11)
+    assert order2.margin_value == 231.55  # get more on a position 100 * 11 /5 * (1+ 0.05 + 0.0025)
+
+    future_account.positions[future_instrument].quantity = 200
+    future_account.positions[future_instrument].leverage = 5
+    order3 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
+                              quantity=-200, price=11)
+    assert order3.margin_value == 0  # reduce position does't require the margin
+
+    future_account.positions[future_instrument].quantity = 100
+    future_account.positions[future_instrument].leverage = 5
+    order4 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
+                              quantity=-100, price=11)
+    assert order4.margin_value == 0  # close position does't require the margin
+
+    future_account.positions[future_instrument].quantity = 200
+    future_account.positions[future_instrument].leverage = 5
+    order5 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
+                              quantity=-300, price=12)
+    assert order5.margin_value == 252.6  # close position and open a opposite position 100 * 12 /5 * (1+ 0.05+ 0.0025)
+
+    future_account.positions[future_instrument].quantity = 0
+    future_account.positions[future_instrument].leverage = 3
+    order6 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
+                              quantity=-300, price=12)
+    assert order6.margin_value == 1263.0  # open a position, 300 * 12 /3 * (1+ 0.05 + 0.0025)
+
+    future_account.positions[future_instrument].quantity = -300
+    future_account.positions[future_instrument].leverage = 3
+    order7 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
+                              quantity=-100, price=12)
+    assert order7.margin_value == 421.0  # open a position, 300 * 12 /3 * (1+ 0.05 + 0.0025)
+
+    future_account.positions[future_instrument].quantity = -400
+    future_account.positions[future_instrument].leverage = 3
+    order8 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
+                              quantity=200, price=12)
+    assert order8.margin_value == 0  # reduce position does't require the margin
+
+    future_account.positions[future_instrument].quantity = -200
+    future_account.positions[future_instrument].leverage = 2
+    order9 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
+                              quantity=200, price=12)
+    assert order9.margin_value == 0  # close position does't require the margin
+
+    future_account.positions[future_instrument].quantity = -200
+    future_account.positions[future_instrument].leverage = 2
+    order10 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
+                               quantity=300, price=12)
+    assert order10.margin_value == 631.5  # close position and open a opposite position 100 * 12 /2 * (1+ 0.05+ 0.0025)

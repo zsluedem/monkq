@@ -103,11 +103,27 @@ class StopLimitOrder(BaseOrder):
 class FutureLimitOrder(LimitOrder):
     account: FutureAccount
     instrument: FutureInstrument
-    leverage: float = 1
 
     @property
     def margin_value(self):
-        if self.account.positions[self.instrument].quantity * self.quantity <= 0:
-            return self.order_value / self.leverage * (1 + self.instrument.init_margin + self.instrument.taker_fee)
+        """
+        It is related with the position
+        1. open a position
+        2. get more on a position
+        3. close a position and reduce position
+        4. close a position and open a opposite position
+        """
+        if self.account.positions[self.instrument].quantity * self.quantity >= 0:
+            # open a position  or get more on a position
+            ret = self.order_value / self.account.positions[self.instrument].leverage * (
+                    1 + self.instrument.init_margin + self.instrument.taker_fee)
+        elif abs(self.account.positions[self.instrument].quantity) >= abs(self.quantity):
+            # close a position and reduce position
+            ret = 0
         else:
-            return 0
+            # close a position and open a opposite position
+            ret = self.order_value / self.quantity * \
+                  abs(self.account.positions[self.instrument].quantity + self.quantity) / \
+                  self.account.positions[self.instrument].leverage * (
+                              1 + self.instrument.init_margin + self.instrument.taker_fee)
+        return abs(ret)

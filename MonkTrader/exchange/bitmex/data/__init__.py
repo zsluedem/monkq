@@ -52,8 +52,8 @@ class DatePoint(Point):
 
 class BitMexProcessPoints(ProcessPoints):
     def __init__(self, start: datetime.datetime, end: datetime.datetime):
-        self.start = start +relativedelta(hour=0, minute=0, second=0, microsecond=0)
-        self.end = end +relativedelta(hour=0, minute=0, second=0, microsecond=0)
+        self.start = start + relativedelta(hour=0, minute=0, second=0, microsecond=0)
+        self.end = end + relativedelta(hour=0, minute=0, second=0, microsecond=0)
         self.current = start
 
         self.rruls_date = rrule(freq=DAILY, dtstart=self.start, until=self.end)
@@ -150,5 +150,3 @@ class BitMexDownloader(DataDownloader):
                                 dst_dir=self.dst_dir)
         qstream.process()
         console_log.info('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat()))
-
-

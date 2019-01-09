@@ -1,4 +1,4 @@
-    #
+#
 # MIT License
 #
 # Copyright (c) 2018 WillQ
@@ -24,21 +24,24 @@
 import requests
 import json
 
-def cal_liq_price(open_price:float, current_position:int, leverage:float, buy_amount:int, long:bool):
+
+def cal_liq_price(open_price: float, current_position: int, leverage: float, buy_amount: int, long: bool):
     pass
 
 
 def cal_liq_price_isolate():
     pass
 
-def get_recent_klines(symbol:str, frequency:str, count:int):
+
+def get_recent_klines(symbol: str, frequency: str, count: int):
     query = {
-            "symbol": symbol,
-            "binSize": frequency,
-            "count": count,
-            "reverse": "true"
-        }
-    resp = requests.get("https://www.bitmex.com/api/v1/" + "trade/bucketed", params=query, proxies={'https':"http://127.0.0.1:1087"})
+        "symbol": symbol,
+        "binSize": frequency,
+        "count": count,
+        "reverse": "true"
+    }
+    resp = requests.get("https://www.bitmex.com/api/v1/" + "trade/bucketed", params=query,
+                        proxies={'https': "http://127.0.0.1:1087"})
     content = resp.content
     return json.loads(content)
 

@@ -31,6 +31,7 @@ _safe_nonce = 300
 
 expire_ts = local_offset_seconds + _safe_nonce
 
+
 def generate_expires(timestamp: float = time.time(), expire: int = expire_ts):
     return int(timestamp + expire)
 
@@ -54,7 +55,7 @@ def generate_signature(secret: str, verb: str, url: str, nonce: float, data: str
 
 
 def gen_header_dict(api_key: str, api_secret: str, verb: str, url: str, data: str, now: float = time.time(),
-                    nonce: float =expire_ts):
+                    nonce: float = expire_ts):
     expire = generate_expires(now, nonce)
 
     sign = generate_signature(api_secret, verb, url, expire, data)

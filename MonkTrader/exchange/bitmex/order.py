@@ -51,10 +51,12 @@ class Order():
 
     @classmethod
     def create_dict_order(cls, symbol: str, quantity: int, price: Optional[float] = None, side: Optional[str] = None,
-                 order_type: Optional[str] = None, displayQty: Optional[int] = None, stopPx: Optional[float] = None,
-                 clOrdID: Optional[str] = None, pegOffsetValue: Optional[float] = None,
-                 pegPriceType: Optional[str] = None, timeInForce: Optional[str] = None, execInst: Optional[str] = None,
-                 text: Optional[str] = None):
+                          order_type: Optional[str] = None, displayQty: Optional[int] = None,
+                          stopPx: Optional[float] = None,
+                          clOrdID: Optional[str] = None, pegOffsetValue: Optional[float] = None,
+                          pegPriceType: Optional[str] = None, timeInForce: Optional[str] = None,
+                          execInst: Optional[str] = None,
+                          text: Optional[str] = None):
         return {
             'symbol': symbol,
             'side': side,
@@ -73,8 +75,7 @@ class Order():
 
     @classmethod
     def create_market_order_dict(cls, symbol: str, quantity: int):
-        return { 'symbol': symbol, 'quantity': quantity,}
-
+        return {'symbol': symbol, 'quantity': quantity, }
 
     def to_postdict(self):
         return {

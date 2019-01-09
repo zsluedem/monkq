@@ -27,13 +27,17 @@ from MonkTrader.exchange.bitmex.instrument import Instrument
 from MonkTrader.exchange.bitmex import SimulateAccount
 from MonkTrader.const import XBtUnit
 
+
 @dataclass
 class Position():
     symbol: str
     currentQty: int
 
+
 class PositionReal():
-    def __init__(self, symbol, currency, underlying, quoteCurrency, initMarginReq, maintMarginReq, crossMargin, deleveragePercentile, prevRealisedPnl, rebalancedPnl, currentQty, realisedPnl, unrealisedPnl, liquidationPrice, bankruptPrice, markPrice, markValue, homeNotional, foreignNotional):
+    def __init__(self, symbol, currency, underlying, quoteCurrency, initMarginReq, maintMarginReq, crossMargin,
+                 deleveragePercentile, prevRealisedPnl, rebalancedPnl, currentQty, realisedPnl, unrealisedPnl,
+                 liquidationPrice, bankruptPrice, markPrice, markValue, homeNotional, foreignNotional):
         self.symbol = symbol
         self.currency = currency
         self.underlying = underlying
@@ -44,16 +48,17 @@ class PositionReal():
         self.crossMargin = crossMargin
         self.deleveragePercentile = deleveragePercentile
         self.prevRealisedPnl = prevRealisedPnl  # 上次清仓的盈亏
-        self.rebalancedPnl = rebalancedPnl # 一天已经实现的盈亏
+        self.rebalancedPnl = rebalancedPnl  # 一天已经实现的盈亏
         self.currentQty = currentQty
-        self.realisedPnl = realisedPnl # 根据book上价格的盈亏
-        self.unrealisedPnl = unrealisedPnl # 根据mark price的盈亏
-        self.liquidationPrice = liquidationPrice # 强平价格
-        self.bankruptPrice = bankruptPrice # 破产价格
-        self.markValue = markValue # 标记市值
-        self.markPrice = markPrice # 标记价格
-        self.foreignNotional =foreignNotional
+        self.realisedPnl = realisedPnl  # 根据book上价格的盈亏
+        self.unrealisedPnl = unrealisedPnl  # 根据mark price的盈亏
+        self.liquidationPrice = liquidationPrice  # 强平价格
+        self.bankruptPrice = bankruptPrice  # 破产价格
+        self.markValue = markValue  # 标记市值
+        self.markPrice = markPrice  # 标记价格
+        self.foreignNotional = foreignNotional
         self.homeNotional = homeNotional
+
 
 class SimulatePosition():
     def __init__(self, instrument: Instrument, account: "SimulateAccount", exchange):
@@ -62,7 +67,7 @@ class SimulatePosition():
         self.exchange = exchange
         self.amount = 0
         self.entry_price = 0
-        self.isolated = False # isolated or cross
+        self.isolated = False  # isolated or cross
         self.leverage = 0
 
     @property
@@ -89,10 +94,14 @@ class SimulatePosition():
         else:
             if self.direction == PositionDirection.LONG:
                 funding_rate = self.funding_rate if self.funding_rate > 0 else 0
-                return 1/ (1 / self.entry_price * (1 - self.instrument.maintMargin - funding_rate) + self.account.wallet_balance / XBtUnit / abs(self.amount))
+                return 1 / (1 / self.entry_price * (
+                            1 - self.instrument.maintMargin - funding_rate) + self.account.wallet_balance / XBtUnit / abs(
+                    self.amount))
             else:
                 funding_rate = self.funding_rate if self.funding_rate < 0 else 0
-                return 1/ (1 / self.entry_price * (1 + self.instrument.maintMargin - funding_rate) - self.account.wallet_balance / XBtUnit / abs(self.amount))
+                return 1 / (1 / self.entry_price * (
+                            1 + self.instrument.maintMargin - funding_rate) - self.account.wallet_balance / XBtUnit / abs(
+                    self.amount))
 
     @property
     def mark_price(self) -> float:
@@ -108,8 +117,10 @@ class SimulatePosition():
 
     @property
     def init_margin(self):
-        return 1 / self.entry_price * abs(self.amount) * XBtUnit / self.leverage + 1 / self.entry_price * abs(self.amount) * self.instrument.takerFee * 2 \
-            if self.isolated else 1 / self.entry_price * abs(self.amount) * XBtUnit * (self.instrument.initMargin + self.instrument.takerFee * 2)
+        return 1 / self.entry_price * abs(self.amount) * XBtUnit / self.leverage + 1 / self.entry_price * abs(
+            self.amount) * self.instrument.takerFee * 2 \
+            if self.isolated else 1 / self.entry_price * abs(self.amount) * XBtUnit * (
+                    self.instrument.initMargin + self.instrument.takerFee * 2)
 
     @property
     def position_margin(self):
@@ -117,10 +128,12 @@ class SimulatePosition():
 
     @property
     def unrealised_pnl(self):
-        return (1/ self.entry_price -1/self.mark_price) * self.amount
+        return (1 / self.entry_price - 1 / self.mark_price) * self.amount
+
 
 if __name__ == '__main__':
     from MonkTrader.exchange.bitmex.instrument import XBT_SYMBOL
+
     print(XBT_SYMBOL.takerFee, XBT_SYMBOL.maintMargin)
     account = SimulateAccount(5000000)
     p = SimulatePosition(XBT_SYMBOL, account)

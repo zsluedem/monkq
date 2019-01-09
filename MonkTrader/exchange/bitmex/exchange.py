@@ -42,6 +42,7 @@ from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.tradecounter import TradeCounter
 from typing import List
 
+
 def authentication_required(fn):
     """Annotation for methods that require auth."""
 
@@ -68,6 +69,7 @@ class BitmexSimulateExchange(AbcExchange):
     def _load_instruments(self):
         pass
 
+
 class BitmexExchange(AbcExchange):
     def __init__(self, base_url: str, loop: asyncio.AbstractEventLoop, orderIDPrefix: str, caller):
         self._loop = loop
@@ -85,10 +87,10 @@ class BitmexExchange(AbcExchange):
             self._ssl = None
 
         self._connector = aiohttp.TCPConnector(keepalive_timeout=90)
-        self.session = aiohttp.ClientSession(trace_configs=[self._trace_config], loop=self._loop, connector=self._connector)
+        self.session = aiohttp.ClientSession(trace_configs=[self._trace_config], loop=self._loop,
+                                             connector=self._connector)
         self.caller = caller
         self.ws = BitmexWebsocket(loop=loop, session=self.session, ssl=self._ssl, caller=self.caller)
-
 
     async def setup(self):
         await self.ws.setup()
@@ -157,13 +159,13 @@ class BitmexExchange(AbcExchange):
     def deposit(self):
         pass
 
-    async def subscribe(self, topic:str, symbol:str=''):
+    async def subscribe(self, topic: str, symbol: str = ''):
         await self.ws.subscribe(topic, symbol)
 
-    async def subscribe_multiple(self, topics:list):
+    async def subscribe_multiple(self, topics: list):
         await self.ws.subscribe_multiple(topics)
 
-    async def unsubscribe(self, topic:str, symbol:str=''):
+    async def unsubscribe(self, topic: str, symbol: str = ''):
         await self.ws.unsubscribe(topic, symbol)
 
     def ticker_data(self, symbol=None):
@@ -178,7 +180,7 @@ class BitmexExchange(AbcExchange):
         """Get recent trades."""
         return self.ws.recent_trades()
 
-    async def recent_klines(self, symbol:str, frequency:str, count:int):
+    async def recent_klines(self, symbol: str, frequency: str, count: int):
         path = 'trade/bucketed'
         query = {
             "symbol": symbol,
@@ -186,7 +188,7 @@ class BitmexExchange(AbcExchange):
             "count": count,
             "reverse": "true"
         }
-        return  await self._curl_bitmex(path=path, query=query)
+        return await self._curl_bitmex(path=path, query=query)
 
     async def instruments(self, filter=None):
         query = {}
@@ -207,29 +209,31 @@ class BitmexExchange(AbcExchange):
         return await resp.json()
 
     @authentication_required
-    async def isolate_position(self, symbol:str, is_not:bool):
+    async def isolate_position(self, symbol: str, is_not: bool):
         path = "position/isolate"
         postdict = {
             'symbol': symbol,
-            'enabled': 'true' if is_not else  'false'
+            'enabled': 'true' if is_not else 'false'
         }
         resp = self._curl_bitmex(path=path, postdict=postdict, verb="POST")
         return await resp.json()
 
     @authentication_required
-    async def place_quick_order(self, order:dict, max_retry=5):
+    async def place_quick_order(self, order: dict, max_retry=5):
         return await self._curl_bitmex(path="order", postdict=order, verb="POST", max_retry=max_retry)
 
     @authentication_required
-    async def amend_bulk_orders(self, orders:List[Order]):
+    async def amend_bulk_orders(self, orders: List[Order]):
         """Amend multiple orders."""
         # Note rethrow; if this fails, we want to catch it and re-tick
-        return await self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='PUT')
+        return await self._curl_bitmex(path='order/bulk',
+                                       postdict={'orders': [order.to_postdict() for order in orders]}, verb='PUT')
 
     @authentication_required
-    async def create_bulk_orders(self, orders:List[Order]):
+    async def create_bulk_orders(self, orders: List[Order]):
         """Create multiple orders."""
-        return await self._curl_bitmex(path='order/bulk', postdict={'orders': [order.to_postdict() for order in orders]}, verb='POST')
+        return await self._curl_bitmex(path='order/bulk',
+                                       postdict={'orders': [order.to_postdict() for order in orders]}, verb='POST')
 
     @authentication_required
     async def http_open_orders(self, symbol):
@@ -255,13 +259,16 @@ class BitmexExchange(AbcExchange):
 
     @authentication_required
     async def cancel_all_after_http(self, timeout, max_retry=5):
-        return await self._curl_bitmex(path='order/cancelAllAfter', postdict={'timeout': timeout*1000}, verb="POST", max_retry=max_retry)
+        return await self._curl_bitmex(path='order/cancelAllAfter', postdict={'timeout': timeout * 1000}, verb="POST",
+                                       max_retry=max_retry)
 
     @authentication_required
     async def close_position(self, symbol, max_retry=5):
-        return await self._curl_bitmex(path='order', postdict={'execInst':"Close", "symbol":symbol}, verb="POST", max_retry=max_retry)
+        return await self._curl_bitmex(path='order', postdict={'execInst': "Close", "symbol": symbol}, verb="POST",
+                                       max_retry=max_retry)
 
-    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=sentinel, verb=None, max_retry=5) ->  aiohttp.ClientResponse:
+    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=sentinel, verb=None,
+                           max_retry=5) -> aiohttp.ClientResponse:
         url = self.base_url + path
 
         url = URL(url)
@@ -291,14 +298,16 @@ class BitmexExchange(AbcExchange):
             trade_log.info("Retry on remain times {}".format(retry_time))
             retry_time -= 1
             if retry_time < 0:
-                trade_log.error("Request with args {}, {}, {}, {}, {}, {} failed with retries".format(path, query, postdict, timeout, verb, max_retry))
+                trade_log.error(
+                    "Request with args {}, {}, {}, {}, {}, {} failed with retries".format(path, query, postdict,
+                                                                                          timeout, verb, max_retry))
                 raise MaxRetryException()
             else:
                 return await self._curl_bitmex(path, query, postdict, timeout, verb, retry_time)
 
         if postdict:
             data = json.dumps(postdict)
-            headers.update({'content-type':"application/json"})
+            headers.update({'content-type': "application/json"})
         else:
             data = ''
 
@@ -308,7 +317,8 @@ class BitmexExchange(AbcExchange):
             timeout = aiohttp.ClientTimeout(total=timeout)
 
         try:
-            resp = await self.session.request(method=verb, url=str(url), proxy=proxy, headers=headers, data=data, ssl=self._ssl, timeout=timeout)
+            resp = await self.session.request(method=verb, url=str(url), proxy=proxy, headers=headers, data=data,
+                                              ssl=self._ssl, timeout=timeout)
 
             if resp.status == 401:
                 trade_log.error("API Key or Secret incorrect, please check and restart.")
@@ -321,12 +331,12 @@ class BitmexExchange(AbcExchange):
                     trade_log.error("Order not found: {}".format(postdict['orderID']))
                     return resp
                 trade_log.error("Unable to contact the BitMEX API (404). " +
-                                  "Request: {} \n {}".format(url, postdict) )
+                                "Request: {} \n {}".format(url, postdict))
                 # exit_or_throw()
             elif resp.status == 429:
                 trade_log.error("Ratelimited on current request. Sleeping, then trying again. Try fewer " +
-                                  "order pairs or contact support@bitmex.com to raise your limits. " +
-                                  "Request: {} \n {}".format(url, postdict))
+                                "order pairs or contact support@bitmex.com to raise your limits. " +
+                                "Request: {} \n {}".format(url, postdict))
 
                 # Figure out how long we need to wait.
                 ratelimit_reset = resp.headers['X-RateLimit-Reset']
@@ -339,7 +349,7 @@ class BitmexExchange(AbcExchange):
             # 503 - BitMEX temporary downtime, likely due to a deploy. Try again
             elif resp.status == 503:
                 trade_log.warning("Unable to contact the BitMEX API (503), retrying. " +
-                                    "Request: {} \n {}".format(url, postdict))
+                                  "Request: {} \n {}".format(url, postdict))
                 trade_log.warning("Response header :{}".format(resp.headers))
                 return await retry(max_retry)
             elif resp.status == 400:
@@ -347,12 +357,12 @@ class BitmexExchange(AbcExchange):
                 error = content['error']
                 message = error['message'].lower() if error else ''
 
-                trade_log.error("An error occured, and return {} \n Request: {}, {}".format(content,url, postdict))
+                trade_log.error("An error occured, and return {} \n Request: {}, {}".format(content, url, postdict))
                 if 'insufficient available balance' in message:
-                    trade_log.error('Account out of funds. The message: {}'.format(error["message"]) )
+                    trade_log.error('Account out of funds. The message: {}'.format(error["message"]))
         except asyncio.TimeoutError:
             # Timeout, re-run this request
-            trade_log.warning("Timed out on request: {} ({}), retrying...".format(path,postdict) )
+            trade_log.warning("Timed out on request: {} ({}), retrying...".format(path, postdict))
             return await retry(max_retry)
 
         return resp

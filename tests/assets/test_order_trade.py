@@ -22,16 +22,16 @@
 # SOFTWARE.
 #
 
-from MonkTrader.assets.order import BaseOrder, SIDE, ORDERSTATUS
+from MonkTrader.assets.order import BaseOrder, SIDE, ORDERSTATUS, FutureLimitOrder
 from MonkTrader.assets.trade import Trade
 from ..utils import random_string
-from .mock_resource import instrument
+from .mock_resource import instrument, account
 import pytest
 
 
 def test_buy_order_trade():
     order_id = random_string(6)
-    order = BaseOrder(order_id=order_id, instrument=instrument, quantity=100)
+    order = BaseOrder(account=account, order_id=order_id, instrument=instrument, quantity=100)
 
     assert order.order_id == order_id
     assert order.side == SIDE.BUY
@@ -73,7 +73,7 @@ def test_buy_order_trade():
 
 def test_sell_order_trade():
     order_id = random_string(6)
-    order = BaseOrder(order_id=order_id, instrument=instrument, quantity=-100)
+    order = BaseOrder(account=account, order_id=order_id, instrument=instrument, quantity=-100)
 
     assert order.order_id == order_id
     assert order.side == SIDE.SELL
@@ -111,3 +111,7 @@ def test_sell_order_trade():
     assert trade2.value == -550
     assert trade2.commission == 1.375
     assert trade2.avg_price == 11.0275
+
+
+def test_future_limit_order():
+    pass

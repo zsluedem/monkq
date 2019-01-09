@@ -47,6 +47,7 @@ class BasePosition():
 
     def deal(self, trade: "Trade") -> None:
         """
+        When a position make a trade, the position would be changed by the trade.
         There are 5 conditions
         1. open a position
         2. get more on position
@@ -62,7 +63,8 @@ class BasePosition():
             self.quantity += trade.exec_quantity
         elif self.quantity * trade.exec_quantity > 0:
             # get more on position
-            self.open_price = (trade.avg_price * trade.exec_quantity + self.quantity* self.open_price) / (trade.exec_quantity + self.quantity)
+            self.open_price = (trade.avg_price * trade.exec_quantity + self.quantity * self.open_price) / (
+                    trade.exec_quantity + self.quantity)
             self.quantity += trade.exec_quantity
         else:
             # 3,4,5 condition
@@ -78,24 +80,38 @@ class BasePosition():
                 self.quantity = 0
                 self.open_price = 0
 
+
 @dataclasses.dataclass()
 class FuturePosition(BasePosition):
     instrument = FutureInstrument
     leverage = 1
 
-    isolated: bool = False # isolate or cross position
+    isolated: bool = False  # isolate or cross position
 
     @property
     def direction(self):
+        """
+        position direction.
+        :return:
+        """
         return DIRECTION.LONG if self.quantity >= 0 else DIRECTION.SHORT
 
     @property
     def margin(self) -> float:
+        """
+
+        :return:
+        """
         return
 
     @property
     def maint_margin(self) -> float:
-        return 1/ self.open_price * self.quantity * self.instrument.maint_margin +  1/ self.liq_price
+        """
+        The minimum margin for this position.
+        If the margin for this position is lower than the maint_margin, the position would be liquidated.
+        :return:
+        """
+        return self.open_value * self.instrument.maint_margin
 
     @property
     def liq_price(self) -> float:
@@ -120,11 +136,16 @@ class FuturePosition(BasePosition):
 
     @property
     def market_value(self) -> float:
-        return 1 / self.instrument.last_price * self.quantity
+        return self.instrument.last_price * self.quantity
+
+    @property
+    def open_value(self) -> float:
+        return self.open_price * self.quantity
 
     @property
     def pnl(self) -> float:
         return
+
 
 class PositionManager(defaultdict, Dict[Instrument, BasePosition]):
     def __init__(self, position_cls: Type[BasePosition], account: "BaseAccount"):

@@ -32,7 +32,7 @@ xbt_factor = 100000000
 
 
 class AccountMargin():
-    def __init__(self,walletBalance, marginBalance, availableMargin):
+    def __init__(self, walletBalance, marginBalance, availableMargin):
         self.walletBalance = walletBalance  # 钱包余额
         self.unrealisedPnl = 0  # 未实现盈亏
         self.marginBalance = marginBalance  # 保证金余额
@@ -43,7 +43,6 @@ class AccountMargin():
         self.marginUsedPcnt = 0  # 保证金使用百分比
 
 
-
 class SimulateTrade():
     def __init__(self, price, contract_amount, symbol):
         self.price = price
@@ -52,7 +51,7 @@ class SimulateTrade():
 
     @property
     def value(self):
-        return self.contract_amount/ self.price * xbt_factor
+        return self.contract_amount / self.price * xbt_factor
 
     @property
     def commision(self):
@@ -82,7 +81,7 @@ class SimulateTrade():
         0.01091809
         :return:
         """
-        return self.value * (0.01 + 0.00075*2)
+        return self.value * (0.01 + 0.00075 * 2)
 
 
 class SimulateAccount():
@@ -90,18 +89,16 @@ class SimulateAccount():
     def __init__(self, init_margin, exchange):
         self.init_margin = init_margin
         self.wallet_balance = init_margin
-        self.exchange= exchange
-
+        self.exchange = exchange
 
         self.current_long = list()
         self.current_short = list()
 
-        self.positions:Dict[str, "SimulatePosition"] = {}
+        self.positions: Dict[str, "SimulatePosition"] = {}
 
     @classmethod
     def create_account(cls, init_margin):
         return cls(init_margin)
-
 
     def get_position(self, instrument: "Instrument") -> "SimulatePosition":
         return self.positions.get(instrument.symbol)

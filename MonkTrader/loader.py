@@ -28,11 +28,13 @@ import sys
 from typing import Union, Type
 from MonkTrader.interface import AbcStrategy
 from MonkTrader.exception import StrategyNotFound
+
+
 class StrategyLoader():
     def __init__(self):
         pass
 
-    def load_strategy(self, cls:Type[AbcStrategy]) :
+    def load_strategy(self, cls: Type[AbcStrategy]):
         if issubclass(cls, AbcStrategy):
             return cls
         else:

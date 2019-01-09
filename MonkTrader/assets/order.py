@@ -23,7 +23,8 @@
 #
 from dataclasses import field, dataclass
 import enum
-from MonkTrader.assets.instrument import Instrument
+from MonkTrader.assets.instrument import Instrument, FutureInstrument
+from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.exception import ImpossibleException
 from typing import TYPE_CHECKING, List
 
@@ -44,6 +45,7 @@ class ORDERSTATUS(enum.Enum):
 
 @dataclass()
 class BaseOrder():
+    account: BaseAccount
     order_id: str
     instrument: Instrument
     quantity: float = 0
@@ -68,31 +70,44 @@ class BaseOrder():
 
     def deal(self, trade: "Trade") -> None:
         assert trade not in self.trades
+        assert abs(self.quantity) >= abs(self.traded_quantity + trade.exec_quantity)
         self.traded_quantity += trade.exec_quantity
         self.trades.append(trade)
 
+
+@dataclass()
 class LimitOrder(BaseOrder):
-    price: float
+    price: float = 0
 
     @property
     def order_value(self):
         return self.price * self.quantity
 
+
+@dataclass()
 class MarketOrder(BaseOrder):
     pass
 
 
+@dataclass()
 class StopMarketOrder(BaseOrder):
-    stop_price: float
+    stop_price: float = 0
 
 
+@dataclass()
 class StopLimitOrder(BaseOrder):
-    stop_price: float
+    stop_price: float = 0
 
 
+@dataclass()
 class FutureLimitOrder(LimitOrder):
-    leverage: float =1
+    account: FutureAccount
+    instrument: FutureInstrument
+    leverage: float = 1
+
     @property
     def margin_value(self):
-        return self.order_value / self.leverage
-
+        if self.account.positions[self.instrument].quantity * self.quantity <= 0:
+            return self.order_value / self.leverage * (1 + self.instrument.init_margin + self.instrument.taker_fee)
+        else:
+            return 0

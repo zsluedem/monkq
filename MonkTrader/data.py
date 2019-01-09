@@ -64,6 +64,7 @@ class DataLoader(ABC):
     def load(self):
         self.load_instruments()
 
+
 class DataFeeder():
-    def loaddata(self)-> None:
+    def loaddata(self) -> None:
         pass

@@ -25,8 +25,8 @@ from MonkTrader.assets import AbcExchange
 import datetime
 from dateutil.tz import tzutc
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.assets.account import BaseAccount
-
+from MonkTrader.assets.account import BaseAccount, FutureAccount
+from MonkTrader.assets.positions import PositionManager, FuturePosition, BasePosition
 
 
 class MockExchange(AbcExchange):
@@ -75,40 +75,43 @@ class MockExchange(AbcExchange):
 
 exchange = MockExchange()
 
-account = BaseAccount(exchange)
+account = BaseAccount(exchange=exchange, position_cls=BasePosition)
+
+future_account = FutureAccount(exchange=exchange, position_cls=FuturePosition)
+
 instrument = Instrument(
-    symbol= "TRXH19",
-    listing_date= datetime.datetime(2018,12,12,6,tzinfo=tzutc()),
-    expiry_date= datetime.datetime(2019,3,29,12 ,tzinfo=tzutc()),
-    underlying= "TRX",
-    quote_currency= "XBT",
-    lot_size= 1,
-    tick_size= 1e-8,
-    maker_fee= -0.0005,
-    taker_fee= 0.0025,
-    exchange= exchange
+    symbol="TRXH19",
+    listing_date=datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc()),
+    expiry_date=datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc()),
+    underlying="TRX",
+    quote_currency="XBT",
+    lot_size=1,
+    tick_size=1e-8,
+    maker_fee=-0.0005,
+    taker_fee=0.0025,
+    exchange=exchange
 )
 
 future_instrument = FutureInstrument(
-    symbol= "TRXH19",
-    root_symbol= "TRX",
+    symbol="TRXH19",
+    root_symbol="TRX",
 
-    listing_date= datetime.datetime(2018,12,12,6,tzinfo=tzutc()),
-    expiry_date= datetime.datetime(2019,3,29,12 ,tzinfo=tzutc()),
-    underlying= "TRX",
-    quote_currency= "XBT",
-    lot_size= 1,
-    tick_size= 1e-8,
-    maker_fee= -0.0005,
-    taker_fee= 0.0025,
-    exchange= exchange,
+    listing_date=datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc()),
+    expiry_date=datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc()),
+    underlying="TRX",
+    quote_currency="XBT",
+    lot_size=1,
+    tick_size=1e-8,
+    maker_fee=-0.0005,
+    taker_fee=0.0025,
+    exchange=exchange,
 
-    init_margin= 0.05,
-    maint_margin= 0.025,
-    settlement_fee= 0,
-    settle_currency= "XBt",
-    front_date= datetime.datetime(2019,2,22,12,tzinfo=tzutc()),
-    settle_date= datetime.datetime(2019,3,29,12,tzinfo=tzutc()),
-    reference_symbol= ".TRXXBT30M",
-    deleverage= True,
+    init_margin=0.05,
+    maint_margin=0.025,
+    settlement_fee=0,
+    settle_currency="XBt",
+    front_date=datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc()),
+    settle_date=datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc()),
+    reference_symbol=".TRXXBT30M",
+    deleverage=True,
 )

@@ -30,8 +30,10 @@ from MonkTrader.exception import MonkException
 
 INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
 
+
 @dataclasses.dataclass(frozen=True)
 class Instrument():
+    exchange: AbcExchange
     symbol: Optional[str] = None
 
     listing_date: Optional[datetime.datetime] = None
@@ -46,10 +48,8 @@ class Instrument():
     maker_fee: float = 0
     taker_fee: float = 0
 
-    exchange: Optional[AbcExchange] = None
-
     @classmethod
-    def create(cls: Type[INSTRUMENT], key_map: dict, values: dict, exchange:AbcExchange) -> INSTRUMENT:
+    def create(cls: Type[INSTRUMENT], key_map: dict, values: dict, exchange: AbcExchange) -> INSTRUMENT:
         annotation_dict = {}
         for mro in cls.__mro__[::-1]:
             if mro is object:
@@ -63,20 +63,21 @@ class Instrument():
             annotate = annotation_dict.get(key_map_value)
             if annotate is None:
                 continue
-            elif annotate ==  Optional[datetime.datetime]:
+            elif annotate == Optional[datetime.datetime]:
                 if not isinstance(v, datetime.datetime):
                     v = parse(v) if v is not None else v
             init_values.update({key_map.get(k): v})
         init_values.update({'exchange': exchange})
-        return cls(**init_values) # type: ignore
+        return cls(**init_values)  # type: ignore
 
     @property
     def state(self):
         return
 
     @property
-    def last_price(self):
+    def last_price(self) -> float:
         return self.exchange.get_last_price(self)
+
 
 @dataclasses.dataclass(frozen=True)
 class FutureInstrument(Instrument):
@@ -110,4 +111,3 @@ class PerpetualInstrument(FutureInstrument):
     @property
     def funding_rate(self) -> float:
         return 0
-

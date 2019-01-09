@@ -30,6 +30,7 @@ class MonkException(BaseException):
 class MaxRetryException(MonkException):
     pass
 
+
 class RateLimitException(MonkException):
     def __init__(self, ratelimit_reset):
         self.ratelimit_reset = ratelimit_reset
@@ -38,17 +39,22 @@ class RateLimitException(MonkException):
 class BacktestTimeException(MonkException):
     pass
 
+
 class StrategyNotFound(MonkException):
     pass
+
 
 class DataDownloadException(MonkException):
     pass
 
+
 class AuthException(MonkException):
     pass
 
+
 class LoadDataException(MonkException):
     pass
+
 
 class ImpossibleException(MonkException):
     pass

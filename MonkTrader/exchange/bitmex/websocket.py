@@ -115,7 +115,8 @@ class BitmexWebsocket():
         while 1:
             if time.time() - self._last_comm_time > INTERVAL_FACTOR:
                 trade_log.debug(
-                    'No communication during {} seconds. Send ping signal to keep connection open'.format(INTERVAL_FACTOR))
+                    'No communication during {} seconds. Send ping signal to keep connection open'.format(
+                        INTERVAL_FACTOR))
                 await self._ws.ping()
                 self._last_comm_time = time.time()
             await asyncio.sleep(INTERVAL_FACTOR)
@@ -132,18 +133,18 @@ class BitmexWebsocket():
                 if decode_message.get('table') == 'execution':
                     start = time.time()
                     await self.caller.on_trade(message=decode_message)
-                    trade_log.debug('User on_trade process time: {}'.format(round(time.time()- start, 7)))
+                    trade_log.debug('User on_trade process time: {}'.format(round(time.time() - start, 7)))
                 else:
                     start = time.time()
                     await self.caller.tick(message=decode_message)
-                    trade_log.debug('User tick process time: {}'.format(round(time.time()- start, 7)))
+                    trade_log.debug('User tick process time: {}'.format(round(time.time() - start, 7)))
 
     @timestamp_update
     async def subscribe(self, topic, symbol=''):
         await self._ws.send_json({'op': 'subscribe', "args": [':'.join((topic, symbol))]})
 
     @timestamp_update
-    async def subscribe_multiple(self, topics:list):
+    async def subscribe_multiple(self, topics: list):
         await self._ws.send_json({'op': 'subscribe', "args": topics})
 
     @timestamp_update
@@ -344,6 +345,6 @@ class BitmexWebsocket():
                             self._data[table].remove(item)
                 else:
                     raise Exception("Unknown action: %s" % action)
-            trade_log.debug("Tick data process time: {}".format(round(time.time()- start, 7)))
+            trade_log.debug("Tick data process time: {}".format(round(time.time() - start, 7)))
         except:
             trade_log.error(traceback.format_exc())

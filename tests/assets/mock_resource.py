@@ -25,6 +25,7 @@ from MonkTrader.assets import AbcExchange
 import datetime
 from dateutil.tz import tzutc
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
+from MonkTrader.assets.account import BaseAccount
 
 
 
@@ -68,8 +69,13 @@ class MockExchange(AbcExchange):
     def setup(self):
         pass
 
+    def get_last_price(self, instrument) -> float:
+        return
+
+
 exchange = MockExchange()
 
+account = BaseAccount(exchange)
 instrument = Instrument(
     symbol= "TRXH19",
     listing_date= datetime.datetime(2018,12,12,6,tzinfo=tzutc()),

@@ -74,6 +74,9 @@ class Instrument():
     def state(self):
         return
 
+    @property
+    def last_price(self):
+        return self.exchange.get_last_price(self)
 
 @dataclasses.dataclass(frozen=True)
 class FutureInstrument(Instrument):

@@ -32,12 +32,11 @@ class BaseAccount():
 
 
 class FutureAccount(BaseAccount):
+    positions: PositionManager
     wallet_balance: float = 0
-    positions: PositionManager = PositionManager()
-
     @property
     def position_balance(self) -> float:
-        return
+        return sum([position.margin_value for intrument, position in self.positions.items()])
 
     @property
     def order_margin(self) -> float:

@@ -30,29 +30,45 @@ import datetime
 from aiohttp.helpers import sentinel
 
 from yarl import URL
-from MonkTrader.config import CONF
 import ssl
-from MonkTrader.exchange.bitmex import BitmexWebsocket
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
-from MonkTrader.exchange.bitmex import Order
 from MonkTrader.logger import trade_log
-from MonkTrader.exchange.bitmex import MaxRetryException, RateLimitException
+from MonkTrader.exception import MaxRetryException, RateLimitException
+from MonkTrader.assets import AbcExchange
+from MonkTrader.exception import AuthException
+from MonkTrader.config import settings
+from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
+from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
+from MonkTrader.tradecounter import TradeCounter
 from typing import List
 
 def authentication_required(fn):
     """Annotation for methods that require auth."""
 
     def wrapped(self, *args, **kwargs):
-        if not (CONF.API_KEY):
-            msg = "You must be authenticated to use this method"
-            raise Exception(msg)
+        if not (self.API_KEY):
+            raise AuthException("You must be authenticated to use this method")
         else:
             return fn(self, *args, **kwargs)
 
     return wrapped
 
 
-class BitmexExchange():
+class BitmexSimulateExchange(AbcExchange):
+    def __init__(self):
+        self.dataloader = BitmexDataloader(self)
+        self.trade_counter = TradeCounter(self)
+
+    def setup(self):
+        self.dataloader.load()
+
+    def get_last_price(self, instrument) -> float:
+        pass
+
+    def _load_instruments(self):
+        pass
+
+class BitmexExchange(AbcExchange):
     def __init__(self, base_url: str, loop: asyncio.AbstractEventLoop, orderIDPrefix: str, caller):
         self._loop = loop
         self.base_url = base_url
@@ -62,11 +78,12 @@ class BitmexExchange():
         # self._trace_config.on_request_end.append(self._end_request)
 
         # used only for testing
-        if CONF.SSL_PATH:
+        if settings.SSL_PATH:
             self._ssl = ssl.create_default_context()
-            self._ssl.load_verify_locations(CONF.SSL_PATH)
+            self._ssl.load_verify_locations(settings.SSL_PATH)
         else:
             self._ssl = None
+
         self._connector = aiohttp.TCPConnector(keepalive_timeout=90)
         self.session = aiohttp.ClientSession(trace_configs=[self._trace_config], loop=self._loop, connector=self._connector)
         self.caller = caller
@@ -76,6 +93,70 @@ class BitmexExchange():
     async def setup(self):
         await self.ws.setup()
 
+    async def available_instruments(self):
+        resp = await self._curl_bitmex(path='instrument/active', verb='GET')
+        return await resp.json()
+
+    @authentication_required
+    async def cancel(self, orderID):
+        """Cancel an existing order."""
+        path = "order"
+        postdict = {
+            'orderID': orderID,
+        }
+        resp = await self._curl_bitmex(path=path, postdict=postdict, verb="DELETE")
+        return await resp.json()
+
+    @authentication_required
+    async def cancel_order(self):
+        pass
+
+    @authentication_required
+    def open_orders(self):
+        """Get open orders."""
+        return self.ws.open_orders()
+
+    async def place_limit_order(self):
+        raise NotImplementedError()
+
+    async def place_market_order(self):
+        raise NotImplementedError()
+
+    async def place_stop_limit_order(self):
+        raise NotImplementedError()
+
+    async def place_stop_market_order(self):
+        raise NotImplementedError()
+
+    def funds(self):
+        return self.ws.funds()
+
+    def get_account(self):
+        raise NotImplementedError()
+
+    @property
+    def order_book(self):
+        return
+
+    @property
+    def exchange_info(self):
+        return
+
+    @authentication_required
+    async def withdraw(self, amount, fee, address):
+        path = "user/requestWithdrawal"
+        postdict = {
+            'amount': amount,
+            'fee': fee,
+            'currency': 'XBt',
+            'address': address
+        }
+        resp = await self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+        return await resp.json()
+
+    def deposit(self):
+        pass
+
     async def subscribe(self, topic:str, symbol:str=''):
         await self.ws.subscribe(topic, symbol)
 
@@ -84,9 +165,6 @@ class BitmexExchange():
 
     async def unsubscribe(self, topic:str, symbol:str=''):
         await self.ws.unsubscribe(topic, symbol)
-
-    def funds(self):
-        return self.ws.funds()
 
     def ticker_data(self, symbol=None):
         """Get ticker data."""
@@ -99,16 +177,6 @@ class BitmexExchange():
     def recent_trades(self):
         """Get recent trades."""
         return self.ws.recent_trades()
-
-    @authentication_required
-    def position(self, symbol):
-        """Get your open position."""
-        return self.ws.positions.get(symbol)
-
-    @authentication_required
-    def open_orders(self):
-        """Get open orders."""
-        return self.ws.open_orders()
 
     async def recent_klines(self, symbol:str, frequency:str, count:int):
         path = 'trade/bucketed'
@@ -124,7 +192,7 @@ class BitmexExchange():
         query = {}
         if filter is not None:
             query['filter'] = json.dumps(filter)
-        resp = self._curl_bitmex(path='instrument', query=query, verb='GET')
+        resp = await self._curl_bitmex(path='instrument', query=query, verb='GET')
         return await resp.json()
 
     @authentication_required
@@ -147,11 +215,6 @@ class BitmexExchange():
         }
         resp = self._curl_bitmex(path=path, postdict=postdict, verb="POST")
         return await resp.json()
-
-    @authentication_required
-    async def place_order(self,order:Order):
-        """Place an order."""
-        return await self._curl_bitmex(path="order", postdict=order.to_postdict(), verb="POST")
 
     @authentication_required
     async def place_quick_order(self, order:dict, max_retry=5):
@@ -185,28 +248,6 @@ class BitmexExchange():
         return [o for o in orders if str(o['clOrdID']).startswith(self.orderIDPrefix)]
 
     @authentication_required
-    async def cancel(self, orderID):
-        """Cancel an existing order."""
-        path = "order"
-        postdict = {
-            'orderID': orderID,
-        }
-        resp = await self._curl_bitmex(path=path, postdict=postdict, verb="DELETE")
-        return await resp.json()
-
-    @authentication_required
-    async def withdraw(self, amount, fee, address):
-        path = "user/requestWithdrawal"
-        postdict = {
-            'amount': amount,
-            'fee': fee,
-            'currency': 'XBt',
-            'address': address
-        }
-        resp = await self._curl_bitmex(path=path, postdict=postdict, verb="POST")
-        return await resp.json()
-
-    @authentication_required
     async def user(self):
         path = 'user'
         resp = await self._curl_bitmex(path, verb="GET")
@@ -220,7 +261,7 @@ class BitmexExchange():
     async def close_position(self, symbol, max_retry=5):
         return await self._curl_bitmex(path='order', postdict={'execInst':"Close", "symbol":symbol}, verb="POST", max_retry=max_retry)
 
-    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=sentinel, verb=None, max_retry=5) -> aiohttp.ClientResponse:
+    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=sentinel, verb=None, max_retry=5) ->  aiohttp.ClientResponse:
         url = self.base_url + path
 
         url = URL(url)
@@ -239,8 +280,8 @@ class BitmexExchange():
         if query:
             url = url.with_query(query)
 
-        if CONF.HTTP_PROXY:
-            proxy = CONF.HTTP_PROXY
+        if settings.HTTP_PROXY:
+            proxy = settings.HTTP_PROXY
         else:
             proxy = None
 

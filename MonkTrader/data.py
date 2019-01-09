@@ -61,6 +61,9 @@ class DataLoader(ABC):
     def load_instruments(self):
         raise NotImplementedError()
 
+    def load(self):
+        self.load_instruments()
+
 class DataFeeder():
     def loaddata(self)-> None:
         pass

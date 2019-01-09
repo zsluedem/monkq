@@ -8,4 +8,4 @@ mpl_finance
 pytest
 pytest-mypy
 typeshed
-mongomock
+pytest-aiohttp

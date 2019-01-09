@@ -21,82 +21,52 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from abc import ABC, abstractmethod, abstractclassmethod, abstractstaticmethod
+from abc import ABC, abstractmethod
 import datetime
 
-from typing import Generator
+from typing import Generator, List
 
-
-class AbcInstrument(ABC):
-    pass
-
-
-class AbcAccount(ABC):
-    pass
-
-
-class AbcPosition(ABC):
-    pass
-
-
-class AbcPositions(ABC):
-    @abstractmethod
-    def get(self, instrument: AbcInstrument) -> AbcPosition:
-        raise NotImplementedError
-
-
-class AbcOrder(ABC):
-    pass
-
-
-class AbcTrade(ABC):
-    pass
-
-
-class AbcExchange(ABC):
-    @abstractmethod
-    def get_account(self) -> AbcAccount:
-        raise NotImplementedError
-
-    @abstractmethod
-    def init(self):
-        raise NotImplementedError
+from MonkTrader.assets import AbcExchange
 
 
 class AbcContext(ABC):
     @abstractmethod
-    def get_exchange(self) -> AbcExchange:
-        raise NotImplementedError
+    def get_exchange(self, exchange_name: str) -> AbcExchange:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def available_exchanges(self) -> List[AbcExchange]:
+        raise NotImplementedError()
 
 class AbcRunner(ABC):
     @abstractmethod
     def setup(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def run(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class Ticker(ABC):
     @abstractmethod
     def timer(self) -> Generator[datetime.datetime, None, None]:
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class AbcStrategy():
     @abstractmethod
     async def setup(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     async def on_trade(self, message):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     async def tick(self, message):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     async def handle_bar(self):
-        raise NotImplementedError
+        raise NotImplementedError()

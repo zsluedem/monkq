@@ -25,16 +25,16 @@ from MonkTrader.assets.positions import PositionManager, BasePosition, FuturePos
 from MonkTrader.assets.order import BaseOrder
 from MonkTrader.assets.trade import Trade
 from ..utils import random_string
-from .mock_resource import instrument
+from .mock_resource import instrument, future_instrument, account
 
 
 def test_position_manager():
-    position_manager = PositionManager(BasePosition)
+    position_manager = PositionManager(BasePosition, account)
     assert isinstance(position_manager[instrument], BasePosition)
 
 
 def test_empty_position_deal():
-    position = BasePosition(instrument=instrument)
+    position = BasePosition(instrument=instrument, account=account)
     order = BaseOrder(order_id=random_string(6), instrument=instrument,quantity=80)
     # open a position
     trade1 = Trade(order=order, exec_price=10, exec_quantity=30, trade_id=random_string(6))
@@ -116,13 +116,6 @@ def test_empty_position_deal():
     assert position.open_price == 0
 
 
-def test_long_position_deal():
-    pass
-
-
-def test_short_position_deal():
-    pass
-
-
 def test_future_position():
-    pass
+    position = FuturePosition(instrument=future_instrument, account=account)
+

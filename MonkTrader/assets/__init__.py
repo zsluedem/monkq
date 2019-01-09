@@ -22,7 +22,9 @@
 # SOFTWARE.
 #
 from abc import ABC, abstractmethod, abstractproperty
+from typing import TypeVar
 
+INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
 
 class AbcInstrument(ABC):
     pass
@@ -51,6 +53,10 @@ class AbcTrade(ABC):
 
 
 class AbcExchange(ABC):
+    @abstractmethod
+    def get_last_price(self, instrument: INSTRUMENT) -> float:
+        raise NotImplementedError()
+
     @abstractmethod
     def withdraw(self):
         raise NotImplementedError()

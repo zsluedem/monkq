@@ -21,7 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import dataclasses
+from dataclasses import dataclass
 from typing import Dict
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
 from collections import defaultdict
@@ -38,7 +38,7 @@ class DIRECTION(Enum):
     SHORT = 2
 
 
-@dataclasses.dataclass()
+@dataclass()
 class BasePosition():
     instrument: Instrument
     account: "BaseAccount"
@@ -80,9 +80,41 @@ class BasePosition():
                 self.quantity = 0
                 self.open_price = 0
 
+@dataclass()
+class FutureBasePosition(BasePosition):
+    @property
+    def market_value(self) -> float:
+        return self.instrument.last_price * self.quantity
 
-@dataclasses.dataclass()
+    @property
+    def open_value(self) -> float:
+        return self.open_price * self.quantity
+
+    @property
+    def unrealised_pnl(self) -> float:
+        return self.market_value - self.open_value - self.instrument.last_price * self.instrument.taker_fee
+
+@dataclass()
+class CrossPositionMixin(BasePosition):
+    pass
+
+
+@dataclass()
+class IsolatedPositionMixin(BasePosition):
+    leverage = 1
+
+
+@dataclass()
 class FuturePosition(BasePosition):
+    """
+    There are two kinds of future position in Bitmex, Cross position and isolated position.
+
+    This position support to change from one to another.
+
+    1. Cross position would use all the available margin in the account to support the position.
+        cross position doesn't support setting the attr `leverage`.
+    2.
+    """
     instrument = FutureInstrument
     leverage = 1
 
@@ -102,6 +134,10 @@ class FuturePosition(BasePosition):
 
         :return:
         """
+        return
+
+    @property
+    def init_margin(self) -> float:
         return
 
     @property
@@ -133,18 +169,6 @@ class FuturePosition(BasePosition):
         above is the perpetual contract liq price calculate way
         """
         return 0
-
-    @property
-    def market_value(self) -> float:
-        return self.instrument.last_price * self.quantity
-
-    @property
-    def open_value(self) -> float:
-        return self.open_price * self.quantity
-
-    @property
-    def pnl(self) -> float:
-        return
 
 
 class PositionManager(defaultdict, Dict[Instrument, BasePosition]):

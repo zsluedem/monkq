@@ -88,7 +88,7 @@ def future_account(exchange):
     yield FutureAccount(exchange=exchange, position_cls=FuturePosition)
 
 @pytest.fixture()
-def instrument():
+def instrument(exchange):
     yield Instrument(
     symbol="TRXH19",
     listing_date=datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc()),
@@ -103,7 +103,7 @@ def instrument():
 )
 
 @pytest.fixture()
-def future_instrument():
+def future_instrument(exchange):
     yield FutureInstrument(
     symbol="TRXH19",
     root_symbol="TRX",
@@ -118,8 +118,8 @@ def future_instrument():
     taker_fee=0.0025,
     exchange=exchange,
 
-    init_margin=0.05,
-    maint_margin=0.025,
+    init_margin_rate=0.05,
+    maint_margin_rate=0.025,
     settlement_fee=0,
     settle_currency="XBt",
     front_date=datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc()),

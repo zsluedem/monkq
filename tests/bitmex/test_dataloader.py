@@ -56,8 +56,8 @@ def test_bitmex_dataloader(mock_exchange):
         assert XBT7D_D95.taker_fee == 0
         assert XBT7D_D95.exchange == mock_exchange
         assert XBT7D_D95.root_symbol == 'XBT'
-        assert XBT7D_D95.init_margin == 1
-        assert XBT7D_D95.maint_margin == 0
+        assert XBT7D_D95.init_margin_rate == 1
+        assert XBT7D_D95.maint_margin_rate == 0
         assert XBT7D_D95.settlement_fee == 0
         assert XBT7D_D95.settle_currency == "XBt"
         assert XBT7D_D95.settle_date == datetime.datetime(2019,1,4,12,tzinfo=tzutc())
@@ -80,8 +80,8 @@ def test_bitmex_dataloader(mock_exchange):
         assert XBT7D_U105.taker_fee == 0
         assert XBT7D_U105.exchange == mock_exchange
         assert XBT7D_U105.root_symbol == 'XBT'
-        assert XBT7D_U105.init_margin == 1
-        assert XBT7D_U105.maint_margin == 0
+        assert XBT7D_U105.init_margin_rate == 1
+        assert XBT7D_U105.maint_margin_rate == 0
         assert XBT7D_U105.settlement_fee == 0
         assert XBT7D_U105.settle_currency == "XBt"
         assert XBT7D_U105.settle_date == datetime.datetime(2019,1,4,12,tzinfo=tzutc())
@@ -105,8 +105,8 @@ def test_bitmex_dataloader(mock_exchange):
         assert XBTUSD.taker_fee == 0.00075
         assert XBTUSD.exchange == mock_exchange
         assert XBTUSD.root_symbol == 'XBT'
-        assert XBTUSD.init_margin == 0.01
-        assert XBTUSD.maint_margin == 0.005
+        assert XBTUSD.init_margin_rate == 0.01
+        assert XBTUSD.maint_margin_rate == 0.005
         assert XBTUSD.settlement_fee == 0
         assert XBTUSD.settle_currency == "XBt"
         assert XBTUSD.settle_date == None
@@ -129,8 +129,8 @@ def test_bitmex_dataloader(mock_exchange):
         assert TRXH19.taker_fee == 0.0025
         assert TRXH19.exchange == mock_exchange
         assert TRXH19.root_symbol == 'TRX'
-        assert TRXH19.init_margin == 0.05
-        assert TRXH19.maint_margin == 0.025
+        assert TRXH19.init_margin_rate == 0.05
+        assert TRXH19.maint_margin_rate == 0.025
         assert TRXH19.settlement_fee == 0
         assert TRXH19.settle_currency == "XBt"
         assert TRXH19.settle_date == datetime.datetime(2019,3,29,12,tzinfo=tzutc())

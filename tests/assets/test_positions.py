@@ -21,23 +21,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.assets.positions import PositionManager, BasePosition, FuturePosition
+from MonkTrader.assets.positions import PositionManager, BasePosition, FutureBasePosition, FuturePosition
 from MonkTrader.assets.order import BaseOrder
 from MonkTrader.assets.trade import Trade
 from ..utils import random_string
-from .mock_resource import instrument, future_instrument, account
 
 
-def test_position_manager():
-    position_manager = PositionManager(BasePosition, account)
+def test_position_manager(instrument, base_account):
+    position_manager = PositionManager(BasePosition, base_account)
     position = position_manager[instrument]
     assert isinstance(position, BasePosition)
     assert position is position_manager[instrument]
 
 
-def test_empty_position_deal():
-    position = BasePosition(instrument=instrument, account=account)
-    order = BaseOrder(account=account, order_id=random_string(6), instrument=instrument,quantity=80)
+def test_empty_position_deal(instrument, base_account):
+    position = BasePosition(instrument=instrument, account=base_account)
+    order = BaseOrder(account=base_account, order_id=random_string(6), instrument=instrument, quantity=80)
     # open a position
     trade1 = Trade(order=order, exec_price=10, exec_quantity=30, trade_id=random_string(6))
     position.deal(trade1)
@@ -52,7 +51,7 @@ def test_empty_position_deal():
     assert position.open_price == new_open_price
 
     # sell part of the position
-    order2 = BaseOrder(account=account,order_id=random_string(6), instrument=instrument,quantity=-180)
+    order2 = BaseOrder(account=base_account, order_id=random_string(6), instrument=instrument, quantity=-180)
     trade3 = Trade(order=order2, exec_price=15, exec_quantity=-40, trade_id=random_string(6))
     position.deal(trade3)
     assert position.quantity == 40
@@ -71,14 +70,14 @@ def test_empty_position_deal():
     assert position.open_price == (-20* trade4.avg_price + trade5.exec_quantity* trade5.avg_price)/(-20+ trade5.exec_quantity)
 
     # close a position
-    order3 = BaseOrder(account=account,order_id=random_string(6), instrument=instrument,quantity=100)
+    order3 = BaseOrder(account=base_account, order_id=random_string(6), instrument=instrument, quantity=100)
     trade6 = Trade(order=order3, exec_price=12, exec_quantity=100, trade_id=random_string(6))
     position.deal(trade6)
     assert position.quantity == 0
     assert position.open_price == 0
 
     # open a position
-    order4 =BaseOrder(account=account,order_id=random_string(6), instrument=instrument,quantity=-80)
+    order4 =BaseOrder(account=base_account, order_id=random_string(6), instrument=instrument, quantity=-80)
     trade7 = Trade(order=order4, exec_price=13, exec_quantity=-30, trade_id=random_string(6))
     position.deal(trade7)
     assert position.quantity == -30
@@ -92,7 +91,7 @@ def test_empty_position_deal():
     assert position.open_price == new_open_price2
 
     # sell part of the position
-    order5 = BaseOrder(account=account,order_id=random_string(6), instrument=instrument,quantity=180)
+    order5 = BaseOrder(account=base_account, order_id=random_string(6), instrument=instrument, quantity=180)
     trade9 = Trade(order=order5, exec_price=10, exec_quantity=40, trade_id=random_string(6))
     position.deal(trade9)
     assert position.quantity ==  -40
@@ -111,13 +110,13 @@ def test_empty_position_deal():
     assert position.open_price == (20 * trade10.avg_price + trade11.avg_price * trade11.exec_quantity) / (trade11.exec_quantity + 20)
 
     # close a position
-    order6 = BaseOrder(account=account,order_id=random_string(6), instrument=instrument,quantity=-100)
+    order6 = BaseOrder(account=base_account, order_id=random_string(6), instrument=instrument, quantity=-100)
     trade12 = Trade(order=order6, exec_price=15, exec_quantity=-100, trade_id=random_string(6))
     position.deal(trade12)
     assert position.quantity == 0
     assert position.open_price == 0
 
 
-def test_future_position():
-    position = FuturePosition(instrument=future_instrument, account=account)
+def test_future_base_position(future_instrument, future_account):
+    position = FutureBasePosition(instrument=future_instrument, account=future_account)
 

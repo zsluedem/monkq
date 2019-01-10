@@ -23,12 +23,4 @@
 #
 import pytest
 
-from tests.assets.mock_resource import MockExchange
 
-
-@pytest.fixture
-def mock_exchange():
-    try:
-        yield MockExchange()
-    finally:
-        pass

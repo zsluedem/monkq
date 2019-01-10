@@ -486,7 +486,7 @@ test_future_instrument_keymap = {
 }
 
 
-def test_instrument(mock_exchange):
+def test_instrument(exchange):
     instrument = Instrument.create(test_instrument_keymap, {
         'symbol': 'RHOC',
         'listing': '2018-12-28T12:00:00.000Z',
@@ -497,7 +497,7 @@ def test_instrument(mock_exchange):
         'tickSize': .00001,
         'makerFee': .005,
         'takerFee': .005,
-    }, mock_exchange)
+    }, exchange)
 
     assert instrument.symbol == "RHOC"
     assert instrument.listing_date == datetime.datetime(2018,12,28,12,tzinfo=tzutc())
@@ -508,11 +508,11 @@ def test_instrument(mock_exchange):
     assert instrument.tick_size == 0.00001
     assert instrument.maker_fee == 0.005
     assert instrument.taker_fee == 0.005
-    assert instrument.exchange == mock_exchange
+    assert instrument.exchange == exchange
 
 
-def test_future_instrument(mock_exchange):
-    instrument = FutureInstrument.create(test_future_instrument_keymap, future_raw_date, mock_exchange)
+def test_future_instrument(exchange):
+    instrument = FutureInstrument.create(test_future_instrument_keymap, future_raw_date, exchange)
     assert instrument.symbol == "TRXH19"
     assert instrument.listing_date == datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc())
     assert instrument.expiry_date == datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc())
@@ -532,7 +532,7 @@ def test_future_instrument(mock_exchange):
     assert instrument.front_date == datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc())
     assert instrument.reference_symbol == '.TRXXBT30M'
     assert instrument.deleverage == True
-    assert instrument.exchange == mock_exchange
+    assert instrument.exchange == exchange
 
 # test_upside_instrument_keymap = {
 #

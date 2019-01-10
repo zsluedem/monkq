@@ -27,6 +27,8 @@ from dateutil.tz import tzutc
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
 from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.assets.positions import PositionManager, FuturePosition, BasePosition
+import pytest
+
 
 
 class MockExchange(AbcExchange):
@@ -72,14 +74,22 @@ class MockExchange(AbcExchange):
     def get_last_price(self, instrument) -> float:
         return
 
+@pytest.fixture()
+def exchange():
+    yield MockExchange()
 
-exchange = MockExchange()
 
-account = BaseAccount(exchange=exchange, position_cls=BasePosition)
+@pytest.fixture()
+def base_account(exchange):
+    yield BaseAccount(exchange=exchange, position_cls=BasePosition)
 
-future_account = FutureAccount(exchange=exchange, position_cls=FuturePosition)
+@pytest.fixture()
+def future_account(exchange):
+    yield FutureAccount(exchange=exchange, position_cls=FuturePosition)
 
-instrument = Instrument(
+@pytest.fixture()
+def instrument():
+    yield Instrument(
     symbol="TRXH19",
     listing_date=datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc()),
     expiry_date=datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc()),
@@ -92,7 +102,9 @@ instrument = Instrument(
     exchange=exchange
 )
 
-future_instrument = FutureInstrument(
+@pytest.fixture()
+def future_instrument():
+    yield FutureInstrument(
     symbol="TRXH19",
     root_symbol="TRX",
 
@@ -115,3 +127,4 @@ future_instrument = FutureInstrument(
     reference_symbol=".TRXXBT30M",
     deleverage=True,
 )
+

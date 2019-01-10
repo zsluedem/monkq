@@ -24,7 +24,6 @@
 import os
 import sys
 import warnings
-from MonkTrader.utils.version import PY36
 from typing import Set
 
 import lazy_object_proxy

@@ -156,13 +156,13 @@ class FutureBasePosition(BasePosition):
             # (self.open_value - self.maint_margin) / (1-self.instrument.maint_margin-self.instrument.taker_fee - funding_rate) / self.quantity
             # don't consider the funding situation yet
             return (self.open_value - self.maint_margin) / (
-                    1 - self.instrument.maint_margin_rate - self.instrument.taker_fee) / self.quantity
+                    1 - self.instrument.maint_margin_rate - self.instrument.taker_fee) / abs(self.quantity)
         else:
             # if have funding rate
             # (self.open_value + self.maint_margin) / (1+self.instrument.maint_margin+self.instrument.taker_fee + funding_rate) / self.quantity
             # don't consider the funding situation yet
             return (self.open_value + self.maint_margin) / (
-                    1 + self.instrument.maint_margin_rate + self.instrument.taker_fee) / self.quantity
+                    1 + self.instrument.maint_margin_rate + self.instrument.taker_fee) / abs(self.quantity)
 
     @property
     def bankruptcy_price(self) -> float:
@@ -176,9 +176,9 @@ class FutureBasePosition(BasePosition):
         """
         # same as liq_price without considering the funding rate
         if self.direction == DIRECTION.LONG:
-            return (self.open_value - self.maint_margin) / (1 - self.instrument.taker_fee) / self.quantity
+            return (self.open_value - self.maint_margin) / (1 - self.instrument.taker_fee) / abs(self.quantity)
         else:
-            return (self.open_value + self.maint_margin) / (1 + self.instrument.taker_fee) / self.quantity
+            return (self.open_value + self.maint_margin) / (1 + self.instrument.taker_fee) / abs(self.quantity)
 
 
 @dataclass()
@@ -202,7 +202,13 @@ class IsolatedPosition(FutureBasePosition):
 
     @maint_margin.setter
     def maint_margin(self, value: float):
-        if value >= self.account.available_balance or value < self.open_init_margin:
+        """
+        LONG position choose open_init_margin would be safer because it is bigger.
+        SHORT position choose last_init_margin would be safer because it is bigger.
+        :param value:
+        :return:
+        """
+        if value >= self.account.available_balance or value < self.last_init_margin:
             raise MarginNotEnough()
         else:
             self._maint_margin = value
@@ -220,6 +226,7 @@ class IsolatedPosition(FutureBasePosition):
         This method set the leverage base on the last value
         :return:
         """
+        assert leverage >=1
         maint_margin = self.market_value / leverage
         self.set_maint_margin(maint_margin)
 

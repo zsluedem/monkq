@@ -21,13 +21,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.assets.positions import PositionManager, BasePosition, FutureBasePosition, FuturePosition, DIRECTION, IsolatedPosition, CrossPosition
+from MonkTrader.assets.positions import PositionManager, BasePosition, FutureBasePosition, FuturePosition, DIRECTION, \
+    IsolatedPosition, CrossPosition
 from MonkTrader.assets.order import BaseOrder
 from MonkTrader.assets.trade import Trade
 from MonkTrader.exception import MarginNotEnough
-from unittest.mock import  MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 from ..utils import random_string
 import pytest
+
 
 def test_position_manager(instrument, base_account):
     position_manager = PositionManager(BasePosition, base_account)
@@ -49,7 +51,7 @@ def test_empty_position_deal(instrument, base_account):
     trade2 = Trade(order=order, exec_price=13, exec_quantity=50, trade_id=random_string(6))
     position.deal(trade2)
     new_open_price = (trade1.avg_price * trade1.exec_quantity + trade2.avg_price * trade2.exec_quantity) / (
-                trade1.exec_quantity + trade2.exec_quantity)
+            trade1.exec_quantity + trade2.exec_quantity)
     assert position.quantity == 80
     assert position.open_price == new_open_price
 
@@ -71,7 +73,7 @@ def test_empty_position_deal(instrument, base_account):
     position.deal(trade5)
     assert position.quantity == -100
     assert position.open_price == (-20 * trade4.avg_price + trade5.exec_quantity * trade5.avg_price) / (
-                -20 + trade5.exec_quantity)
+            -20 + trade5.exec_quantity)
 
     # close a position
     order3 = BaseOrder(account=base_account, order_id=random_string(6), instrument=instrument, quantity=100)
@@ -91,7 +93,7 @@ def test_empty_position_deal(instrument, base_account):
     trade8 = Trade(order=order4, exec_price=15, exec_quantity=-50, trade_id=random_string(6))
     position.deal(trade8)
     new_open_price2 = (trade7.avg_price * trade7.exec_quantity + trade8.avg_price * trade8.exec_quantity) / (
-                trade7.exec_quantity + trade8.exec_quantity)
+            trade7.exec_quantity + trade8.exec_quantity)
     assert position.quantity == -80
     assert position.open_price == new_open_price2
 
@@ -113,7 +115,7 @@ def test_empty_position_deal(instrument, base_account):
     position.deal(trade11)
     assert position.quantity == 100
     assert position.open_price == (20 * trade10.avg_price + trade11.avg_price * trade11.exec_quantity) / (
-                trade11.exec_quantity + 20)
+            trade11.exec_quantity + 20)
 
     # close a position
     order6 = BaseOrder(account=base_account, order_id=random_string(6), instrument=instrument, quantity=-100)
@@ -184,6 +186,7 @@ def test_cross_position(exchange, future_instrument, future_account):
 
     # position = IsolatedPosition()
 
+
 def test_isolated_position(exchange, future_instrument, future_account):
     exchange.get_last_price = MagicMock(return_value=10)
     assert future_instrument.last_price == 10
@@ -198,7 +201,7 @@ def test_isolated_position(exchange, future_instrument, future_account):
     position.open_price = 11
     position.quantity = 1000
     position.maint_margin = 800
-    assert position.leverage ==  12.5
+    assert position.leverage == 12.5
     assert position.liq_price == pytest.approx(10.4884, 0.0001)
     assert position.position_margin == 800
     assert position.bankruptcy_price == pytest.approx(10.2255, 0.0001)
@@ -212,6 +215,7 @@ def test_isolated_position(exchange, future_instrument, future_account):
         position.maint_margin = 400
 
     with pytest.raises(MarginNotEnough):
+        # more than the available margin
         position.set_leverage(2)
 
     future_account.available_balance = 10000
@@ -222,11 +226,41 @@ def test_isolated_position(exchange, future_instrument, future_account):
     assert position.leverage == 5
     assert position.liq_price == pytest.approx(9.2544, 0.0001)
     assert position.position_margin == 2000
-    assert position.bankruptcy_price ==pytest.approx(9.0225, 0.0001)
+    assert position.bankruptcy_price == pytest.approx(9.0225, 0.0001)
 
     # short
+    future_account.available_balance = 10000
     exchange.get_last_price = MagicMock(return_value=11)
     assert future_instrument.last_price == 11
+    position.maint_margin = 1000
     position.open_price = 9
     position.quantity = -600
+    assert position.liq_price == pytest.approx(10.3811, 0.0001)
+    assert position.position_margin == 1000
+    assert position.bankruptcy_price == pytest.approx(10.6401, 0.0001)
+    assert position.leverage == 6.6
     # position.maint_margin =
+    with pytest.raises(MarginNotEnough):
+        # more than the available margin
+        position.maint_margin = 11000
+
+    with pytest.raises(MarginNotEnough):
+        # less than the init margin
+        position.maint_margin = 100
+
+    with pytest.raises(MarginNotEnough):
+        future_account.available_balance = 3000
+        position.set_leverage(2)
+
+    future_account.available_balance = 10000
+    exchange.get_last_price = MagicMock(return_value=11)
+    assert future_instrument.last_price == 11
+    position.open_price = 10.5
+    position.quantity = -800
+
+    position.set_leverage(4)
+    assert position.maint_margin == 2200
+    assert position.leverage == 4
+    assert position.position_margin == 2200
+    assert position.liq_price == pytest.approx(12.8953, 0.0001)
+    assert position.bankruptcy_price == pytest.approx(13.2169, 0.0001)

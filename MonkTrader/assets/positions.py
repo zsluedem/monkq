@@ -24,7 +24,7 @@
 from dataclasses import dataclass
 from typing import Dict
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.exception import MarginNotEnough
+from MonkTrader.exception import MarginNotEnoughException, MarginException
 from collections import defaultdict
 from typing import TYPE_CHECKING, Type
 from enum import Enum
@@ -185,7 +185,15 @@ class FutureBasePosition(BasePosition):
 class CrossPosition(FutureBasePosition):
     @property
     def maint_margin(self):
-        return self.account.available_balance + self.position_margin + self.account.unrealised_pnl
+        return self.account.available_balance + self.open_init_margin
+
+    @maint_margin.setter
+    def maint_margin(self, value: float) -> None:
+        raise MarginException("You can not set the margin in cross position")
+
+    @property
+    def leverage(self):
+        raise MarginException("Cross position doesn't support to see position leverage")
 
     @property
     def position_margin(self):
@@ -209,7 +217,7 @@ class IsolatedPosition(FutureBasePosition):
         :return:
         """
         if value >= self.account.available_balance or value < self.last_init_margin:
-            raise MarginNotEnough()
+            raise MarginNotEnoughException()
         else:
             self._maint_margin = value
 
@@ -221,17 +229,18 @@ class IsolatedPosition(FutureBasePosition):
     def leverage(self):
         return self.market_value / self.maint_margin
 
-    def set_leverage(self, leverage:float) -> None:
+    def set_leverage(self, leverage: float) -> None:
         """
         This method set the leverage base on the last value
         :return:
         """
-        assert leverage >=1
+        assert leverage >= 1
         maint_margin = self.market_value / leverage
         self.set_maint_margin(maint_margin)
 
     def set_maint_margin(self, value: float) -> None:
         self.maint_margin = value
+
 
 @dataclass()
 class FuturePosition(BasePosition):
@@ -247,7 +256,6 @@ class FuturePosition(BasePosition):
     leverage = 1
 
     isolated: bool = False  # isolate or cross position
-
 
 
 class PositionManager(defaultdict, Dict[Instrument, BasePosition]):

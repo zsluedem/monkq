@@ -52,7 +52,7 @@ class FutureAccount(BaseAccount):
 
     @property
     def unrealised_pnl(self) -> float:
-        return
+        return 0
 
     @property
     def margin_balance(self):

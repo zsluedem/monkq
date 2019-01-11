@@ -24,13 +24,14 @@
 from dataclasses import dataclass
 from typing import Dict
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
+from MonkTrader.exception import MarginNotEnough
 from collections import defaultdict
 from typing import TYPE_CHECKING, Type
 from enum import Enum
 
 if TYPE_CHECKING:
     from MonkTrader.assets.trade import Trade
-    from MonkTrader.assets.account import BaseAccount
+    from MonkTrader.assets.account import BaseAccount, FutureAccount
 
 
 class DIRECTION(Enum):
@@ -80,29 +81,157 @@ class BasePosition():
                 self.quantity = 0
                 self.open_price = 0
 
+
 @dataclass()
 class FutureBasePosition(BasePosition):
+    instrument: FutureInstrument
+    account: "FutureAccount"
+
+    @property
+    def direction(self):
+        """
+        position direction.
+        :return:
+        """
+        return DIRECTION.LONG if self.quantity >= 0 else DIRECTION.SHORT
+
     @property
     def market_value(self) -> float:
-        return self.instrument.last_price * self.quantity
+        return self.instrument.last_price * abs(self.quantity)
 
     @property
     def open_value(self) -> float:
-        return self.open_price * self.quantity
+        return self.open_price * abs(self.quantity)
 
     @property
     def unrealised_pnl(self) -> float:
-        return self.market_value - self.open_value - self.instrument.last_price * self.instrument.taker_fee
+        """
+        unrealised_pnl including the exit commission fee.
+        :return:
+        """
+        if self.direction == DIRECTION.LONG:
+            return self.market_value - self.open_value - self.market_value * self.instrument.taker_fee
+        else:
+            return self.open_value - self.market_value - self.market_value * self.instrument.taker_fee
+
+    @property
+    def min_open_maint_margin(self) -> float:
+        """
+        The minimum margin for this position.
+        If the margin for this position is lower than the maint_margin, the position would be liquidated.
+        :return:
+        """
+        return self.open_value * self.instrument.maint_margin_rate
+
+    @property
+    def open_init_margin(self) -> float:
+        return self.open_value * self.instrument.init_margin_rate
+
+    @property
+    def min_last_maint_margin(self) -> float:
+        return self.market_value * self.instrument.maint_margin_rate
+
+    @property
+    def last_init_margin(self) -> float:
+        return self.market_value * self.instrument.init_margin_rate
+
+    @property
+    def maint_margin(self) -> float:
+        raise NotImplementedError()
+
+    @property
+    def liq_price(self) -> float:
+        """
+        liquidated price, if the position reach to this price , the position would be liquidated.
+        The liq price need the maint_margin to be implemented.
+
+        The equation would be like :
+
+        open_value - liq_value = maintain_margin - minimum_maintain_margin - commission_taker_fee- funding_fee
+
+        :return:
+        """
+        if self.direction == DIRECTION.LONG:
+            # if have funding rate
+            # (self.open_value - self.maint_margin) / (1-self.instrument.maint_margin-self.instrument.taker_fee - funding_rate) / self.quantity
+            # don't consider the funding situation yet
+            return (self.open_value - self.maint_margin) / (
+                    1 - self.instrument.maint_margin_rate - self.instrument.taker_fee) / abs(self.quantity)
+        else:
+            # if have funding rate
+            # (self.open_value + self.maint_margin) / (1+self.instrument.maint_margin+self.instrument.taker_fee + funding_rate) / self.quantity
+            # don't consider the funding situation yet
+            return (self.open_value + self.maint_margin) / (
+                    1 + self.instrument.maint_margin_rate + self.instrument.taker_fee) / abs(self.quantity)
+
+    @property
+    def bankruptcy_price(self) -> float:
+        """
+        bankcruptcy price, if the position reach to this price , no margin would be left
+        The equation would be like :
+
+        open_value - liq_value = maintain_margin - commission_taker_fee- funding_fee
+
+        :return:
+        """
+        # same as liq_price without considering the funding rate
+        if self.direction == DIRECTION.LONG:
+            return (self.open_value - self.maint_margin) / (1 - self.instrument.taker_fee) / abs(self.quantity)
+        else:
+            return (self.open_value + self.maint_margin) / (1 + self.instrument.taker_fee) / abs(self.quantity)
+
 
 @dataclass()
-class CrossPositionMixin(BasePosition):
-    pass
+class CrossPosition(FutureBasePosition):
+    @property
+    def maint_margin(self):
+        return self.account.available_balance + self.position_margin + self.account.unrealised_pnl
+
+    @property
+    def position_margin(self):
+        return self.market_value * (self.instrument.init_margin_rate + self.instrument.taker_fee)
 
 
 @dataclass()
-class IsolatedPositionMixin(BasePosition):
-    leverage = 1
+class IsolatedPosition(FutureBasePosition):
+    _maint_margin: float = 0
 
+    @property
+    def maint_margin(self) -> float:
+        return self._maint_margin
+
+    @maint_margin.setter
+    def maint_margin(self, value: float) -> None:
+        """
+        LONG position choose open_init_margin would be safer because it is bigger.
+        SHORT position choose last_init_margin would be safer because it is bigger.
+        :param value:
+        :return:
+        """
+        if value >= self.account.available_balance or value < self.last_init_margin:
+            raise MarginNotEnough()
+        else:
+            self._maint_margin = value
+
+    @property
+    def position_margin(self):
+        return self.maint_margin
+
+    @property
+    def leverage(self):
+        return self.market_value / self.maint_margin
+
+    def set_leverage(self, leverage:float) -> None:
+        """
+        This method set the leverage base on the last value
+        :return:
+        """
+        assert leverage >=1
+        maint_margin = self.market_value / leverage
+        self.set_maint_margin(maint_margin)
+
+    def set_maint_margin(self, value: float) -> None:
+        self.maint_margin = value
 
 @dataclass()
 class FuturePosition(BasePosition):
@@ -115,60 +244,10 @@ class FuturePosition(BasePosition):
         cross position doesn't support setting the attr `leverage`.
     2.
     """
-    instrument = FutureInstrument
     leverage = 1
 
     isolated: bool = False  # isolate or cross position
 
-    @property
-    def direction(self):
-        """
-        position direction.
-        :return:
-        """
-        return DIRECTION.LONG if self.quantity >= 0 else DIRECTION.SHORT
-
-    @property
-    def margin(self) -> float:
-        """
-
-        :return:
-        """
-        return
-
-    @property
-    def init_margin(self) -> float:
-        return
-
-    @property
-    def maint_margin(self) -> float:
-        """
-        The minimum margin for this position.
-        If the margin for this position is lower than the maint_margin, the position would be liquidated.
-        :return:
-        """
-        return self.open_value * self.instrument.maint_margin
-
-    @property
-    def liq_price(self) -> float:
-        """if self.isolated:
-            if self.direction == DIRECTION.LONG:
-                funding_rate = self.funding_rate if self.funding_rate > 0 else 0
-                return self.open_price / (1 + 1 / self.leverage - self.instrument.maintMargin - funding_rate)
-            else:
-                funding_rate = self.funding_rate if self.funding_rate < 0 else 0
-                return self.open_price / (1 - 1 / self.leverage + self.instrument.maintMargin - funding_rate)
-        else:
-            if self.direction == DIRECTION.LONG:
-                funding_rate = self.funding_rate if self.funding_rate > 0 else 0
-                return 1/ (1 / self.open_price * (1 - self.instrument.maint_margin - funding_rate) + self.account.wallet_balance / XBtUnit / abs(self.quantity))
-            else:
-                funding_rate = self.funding_rate if self.funding_rate < 0 else 0
-                return 1/ (1 / self.open_price * (1 + self.instrument.maint_margin - funding_rate) - self.account.wallet_balance / XBtUnit / abs(self.quantity))
-
-        above is the perpetual contract liq price calculate way
-        """
-        return 0
 
 
 class PositionManager(defaultdict, Dict[Instrument, BasePosition]):

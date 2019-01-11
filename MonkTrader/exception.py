@@ -58,3 +58,6 @@ class LoadDataException(MonkException):
 
 class ImpossibleException(MonkException):
     pass
+
+class MarginNotEnough(MonkException):
+    pass

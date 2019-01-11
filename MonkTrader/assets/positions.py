@@ -136,7 +136,7 @@ class FutureBasePosition(BasePosition):
         return self.market_value * self.instrument.init_margin_rate
 
     @property
-    def maint_margin(self):
+    def maint_margin(self) -> float:
         raise NotImplementedError()
 
     @property
@@ -197,11 +197,11 @@ class IsolatedPosition(FutureBasePosition):
     _maint_margin: float = 0
 
     @property
-    def maint_margin(self):
+    def maint_margin(self) -> float:
         return self._maint_margin
 
     @maint_margin.setter
-    def maint_margin(self, value: float):
+    def maint_margin(self, value: float) -> None:
         """
         LONG position choose open_init_margin would be safer because it is bigger.
         SHORT position choose last_init_margin would be safer because it is bigger.
@@ -221,7 +221,7 @@ class IsolatedPosition(FutureBasePosition):
     def leverage(self):
         return self.market_value / self.maint_margin
 
-    def set_leverage(self, leverage:float):
+    def set_leverage(self, leverage:float) -> None:
         """
         This method set the leverage base on the last value
         :return:
@@ -230,7 +230,7 @@ class IsolatedPosition(FutureBasePosition):
         maint_margin = self.market_value / leverage
         self.set_maint_margin(maint_margin)
 
-    def set_maint_margin(self, value: float):
+    def set_maint_margin(self, value: float) -> None:
         self.maint_margin = value
 
 @dataclass()

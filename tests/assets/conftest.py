@@ -28,7 +28,9 @@ from MonkTrader.assets.instrument import Instrument, FutureInstrument
 from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.assets.positions import PositionManager, FuturePosition, BasePosition
 import pytest
+from typing import TypeVar
 
+INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
 
 
 class MockExchange(AbcExchange):
@@ -71,8 +73,8 @@ class MockExchange(AbcExchange):
     def setup(self):
         pass
 
-    def get_last_price(self, instrument) -> float:
-        return
+    def get_last_price(self, instrument:INSTRUMENT) -> float:
+        return 0
 
 @pytest.fixture()
 def exchange():

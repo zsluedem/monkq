@@ -113,10 +113,14 @@ class FutureLimitOrder(LimitOrder):
         3. close a position and reduce position
         4. close a position and open a opposite position
         """
+        position = self.account.positions[self.instrument]
+        if position.isolated:
+            leverage = position.leverage
+        else:
+            leverage = 1
         if self.account.positions[self.instrument].quantity * self.quantity >= 0:
             # open a position  or get more on a position
-            ret = self.order_value / self.account.positions[self.instrument].leverage * (
-                    1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
+            ret = self.order_value / leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
         elif abs(self.account.positions[self.instrument].quantity) >= abs(self.quantity):
             # close a position and reduce position
             ret = 0
@@ -124,6 +128,5 @@ class FutureLimitOrder(LimitOrder):
             # close a position and open a opposite position
             ret = self.order_value / self.quantity * \
                   abs(self.account.positions[self.instrument].quantity + self.quantity) / \
-                  self.account.positions[self.instrument].leverage * (
-                          1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
+                  leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
         return abs(ret)

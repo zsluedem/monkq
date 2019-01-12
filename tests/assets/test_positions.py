@@ -334,10 +334,14 @@ def test_cross_isolated_position(exchange, future_instrument, future_account):
     position.maint_margin = 9000
     assert position.isolated == True
     assert position.is_isolated == True
+    assert position.liq_price == pytest.approx(15.9383, 0.0001)
+    assert position.bankruptcy_price == pytest.approx(15.5388, 0.0001)
 
     position.set_cross()
     assert position.isolated == False
     assert position.is_isolated == False
+    assert position.liq_price == pytest.approx(14.3958, 0.0001)
+    assert position.bankruptcy_price == pytest.approx(14.0351, 0.0001)
 
     position.set_maint_margin(9000)
     assert position.isolated == True

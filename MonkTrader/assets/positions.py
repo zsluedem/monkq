@@ -270,33 +270,33 @@ class FutureCrossIsolatePosition(IsolatedPosition, CrossPosition):
     @property
     def maint_margin(self) -> float:
         if self.isolated:
-            return IsolatedPosition.maint_margin.fget(self)
+            return IsolatedPosition.maint_margin.fget(self) # type: ignore
         else:
-            return CrossPosition.maint_margin.fget(self)
+            return CrossPosition.maint_margin.fget(self) # type: ignore
 
     @maint_margin.setter
     def maint_margin(self, value: float) -> None:
-        IsolatedPosition.maint_margin.fset(self, value)
+        IsolatedPosition.maint_margin.fset(self, value) # type: ignore
         self.isolated = True
 
     @property
     def position_margin(self):
         if self.isolated:
-            return IsolatedPosition.position_margin.fget(self)
+            return IsolatedPosition.position_margin.fget(self) # type: ignore
         else:
-            return CrossPosition.position_margin.fget(self)
+            return CrossPosition.position_margin.fget(self) # type: ignore
 
     @property
     def leverage(self):
         if self.isolated:
-            return IsolatedPosition.leverage.fget(self)
+            return IsolatedPosition.leverage.fget(self) # type: ignore
         else:
-            return CrossPosition.leverage.fget(self)
+            return CrossPosition.leverage.fget(self) # type: ignore
 
-    def set_leverage(self, leverage: float):
+    def set_leverage(self, leverage: float) -> None:
         super(FutureCrossIsolatePosition, self).set_leverage(leverage)
 
-    def set_maint_margin(self, value: float):
+    def set_maint_margin(self, value: float) -> None:
         super(FutureCrossIsolatePosition, self).set_maint_margin(value)
 
     def set_cross(self):

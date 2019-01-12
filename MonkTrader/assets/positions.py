@@ -183,6 +183,14 @@ class FutureBasePosition(BasePosition):
 
 @dataclass()
 class CrossPosition(FutureBasePosition):
+    """
+    Cross position use all the available margin in the account to ensure the position.If your account doesn't get enough
+    margin for the position.You whole account may be liquidated and you lost all your money.It would be good to use cross
+    position if you hedge your position.
+
+    Cross position doesn't support setting up the margin. All the position margin cross position is going to take if based
+    on the init margin ,the market value and the account available balance.
+    """
     @property
     def maint_margin(self):
         return self.account.available_balance + self.open_init_margin
@@ -202,6 +210,13 @@ class CrossPosition(FutureBasePosition):
 
 @dataclass()
 class IsolatedPosition(FutureBasePosition):
+    """
+    Isolated position would take a fixed margin to ensure the position. If the position reach to the liq price, only the
+    margin you assigned would be lost. This kind of position can help you allocate your position more wisely to ensure
+    that you don't lose all your money.
+
+    You can set the mainain margin by yourself or set the leverage based on you market value.
+    """
     _maint_margin: float = 0
 
     @property
@@ -243,20 +258,57 @@ class IsolatedPosition(FutureBasePosition):
 
 
 @dataclass()
-class FuturePosition(BasePosition):
+class FutureCrossIsolatePosition(IsolatedPosition, CrossPosition):
     """
     There are two kinds of future position in Bitmex, Cross position and isolated position.
 
     This position support to change from one to another.
-
-    1. Cross position would use all the available margin in the account to support the position.
-        cross position doesn't support setting the attr `leverage`.
-    2.
     """
-    leverage = 1
 
     isolated: bool = False  # isolate or cross position
+    
+    @property
+    def maint_margin(self) -> float:
+        if self.isolated:
+            return IsolatedPosition.maint_margin.fget(self) # type: ignore
+        else:
+            return CrossPosition.maint_margin.fget(self) # type: ignore
 
+    @maint_margin.setter
+    def maint_margin(self, value: float) -> None:
+        IsolatedPosition.maint_margin.fset(self, value) # type: ignore
+        self.isolated = True
+
+    @property
+    def position_margin(self):
+        if self.isolated:
+            return IsolatedPosition.position_margin.fget(self) # type: ignore
+        else:
+            return CrossPosition.position_margin.fget(self) # type: ignore
+
+    @property
+    def leverage(self):
+        if self.isolated:
+            return IsolatedPosition.leverage.fget(self) # type: ignore
+        else:
+            return CrossPosition.leverage.fget(self) # type: ignore
+
+    def set_leverage(self, leverage: float) -> None:
+        super(FutureCrossIsolatePosition, self).set_leverage(leverage)
+
+    def set_maint_margin(self, value: float) -> None:
+        super(FutureCrossIsolatePosition, self).set_maint_margin(value)
+
+    def set_cross(self):
+        self.isolated = False
+
+    @property
+    def is_isolated(self):
+        return self.isolated
+
+@dataclass()
+class FuturePosition(FutureCrossIsolatePosition):
+    pass
 
 class PositionManager(defaultdict, Dict[Instrument, BasePosition]):
     def __init__(self, position_cls: Type[BasePosition], account: "BaseAccount"):

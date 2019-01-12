@@ -21,8 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.assets.positions import PositionManager, BasePosition, FutureBasePosition, FuturePosition, DIRECTION, \
-    IsolatedPosition, CrossPosition
+from MonkTrader.assets.positions import PositionManager, BasePosition, FutureBasePosition, DIRECTION, \
+    FutureCrossIsolatePosition, IsolatedPosition, CrossPosition
 from MonkTrader.assets.order import BaseOrder
 from MonkTrader.assets.trade import Trade
 from MonkTrader.exception import MarginNotEnoughException, MarginException
@@ -183,7 +183,7 @@ def test_cross_position(exchange, future_instrument, future_account):
     future_account = MagicMock(future_account)
     future_account.available_balance = 10000
 
-    position = CrossPosition(instrument=future_instrument, account = future_account)
+    position = CrossPosition(instrument=future_instrument, account=future_account)
     # long
     position.open_price = 20
     position.quantity = 2000
@@ -287,3 +287,62 @@ def test_isolated_position(exchange, future_instrument, future_account):
     assert position.position_margin == 2200
     assert position.liq_price == pytest.approx(12.8953, 0.0001)
     assert position.bankruptcy_price == pytest.approx(13.2169, 0.0001)
+
+
+def test_cross_isolated_position(exchange, future_instrument, future_account):
+    exchange.get_last_price = MagicMock(return_value=18)
+    assert future_instrument.last_price == 18
+
+    future_account = MagicMock(future_account)
+    future_account.available_balance = 10000
+    assert future_account.available_balance == 10000
+
+    position = FutureCrossIsolatePosition(instrument=future_instrument, account=future_account)
+    position.open_price = 20
+    position.quantity = 2000
+    assert position.isolated == False
+    assert position.is_isolated == False
+    assert position.liq_price == pytest.approx(14.3958, 0.0001)
+    assert position.bankruptcy_price == pytest.approx(14.0351, 0.0001)
+    assert position.maint_margin == 12000
+    assert position.position_margin == pytest.approx(1890)
+    with pytest.raises(MarginException):
+        position.leverage
+    with pytest.raises(MarginException):
+        position.maint_margin = 100
+
+    with pytest.raises(MarginNotEnoughException):
+        position.set_leverage(3)
+    assert position.isolated == False
+    with pytest.raises(MarginNotEnoughException):
+        position.set_maint_margin(300)
+    assert position.isolated == False
+
+    position.set_leverage(4)
+    assert position.isolated == True
+    assert position.is_isolated == True
+    assert position.maint_margin == 9000
+    assert position.liq_price == pytest.approx(15.9383, 0.0001)
+    assert position.bankruptcy_price == pytest.approx(15.5388, 0.0001)
+    assert position.position_margin == 9000
+    assert position.leverage == 4
+
+    position.set_cross()
+    assert position.isolated == False
+    assert position.is_isolated == False
+
+    position.maint_margin = 9000
+    assert position.isolated == True
+    assert position.is_isolated == True
+    assert position.liq_price == pytest.approx(15.9383, 0.0001)
+    assert position.bankruptcy_price == pytest.approx(15.5388, 0.0001)
+
+    position.set_cross()
+    assert position.isolated == False
+    assert position.is_isolated == False
+    assert position.liq_price == pytest.approx(14.3958, 0.0001)
+    assert position.bankruptcy_price == pytest.approx(14.0351, 0.0001)
+
+    position.set_maint_margin(9000)
+    assert position.isolated == True
+    assert position.is_isolated == True

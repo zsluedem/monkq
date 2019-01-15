@@ -24,7 +24,7 @@
 from dataclasses import dataclass, field
 from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.trade import Trade
-from MonkTrader.assets.positions import PositionManager, BasePosition, FuturePosition
+from MonkTrader.assets.positions import PositionManager, BasePosition, FuturePosition, POSITION_EFFECT, DIRECTION
 from typing import Optional, Type
 
 
@@ -47,16 +47,21 @@ class FutureAccount(BaseAccount):
     position_cls: Type[FuturePosition]
 
     @property
-    def position_balance(self) -> float:
-        return sum([position.position_margin for intrument, position in self.positions.items()])
+    def position_margin(self) -> float:
+        return sum([position.position_margin for instrument, position in self.positions.items()])
 
+    # TODO
     @property
     def order_margin(self) -> float:
+        """
+        Not that simple
+        :return:
+        """
         return sum([order.order_margin for order in self.exchange.open_orders()])
 
     @property
     def unrealised_pnl(self) -> float:
-        return sum([position.unrealised_pnl for intrument, position in self.positions.items()])
+        return sum([position.unrealised_pnl for instrument, position in self.positions.items()])
 
     @property
     def margin_balance(self):
@@ -64,18 +69,27 @@ class FutureAccount(BaseAccount):
 
     @property
     def available_balance(self):
-        return self.margin_balance - self.order_margin - self.position_balance
+        return self.margin_balance - self.order_margin - self.position_margin
 
     def deal(self, trade: Trade) -> None:
-        """
-        There two kinds of situation here for the account to deal a trade.
-        It depends on whether the position type is Cross position or Isolated Position.
-        1. Cross Position
-
-        2. Isolated Position
-
-        """
         position = self.positions[trade.instrument]
-        self.positions[trade.instrument].deal(trade)
+        position_effect = position.position_effect(trade)
+
+        if position_effect == POSITION_EFFECT.OPEN or position_effect == POSITION_EFFECT.GET_MORE:
+            pass
+        else:
+            if position_effect == POSITION_EFFECT.CLOSE or position_effect == POSITION_EFFECT.CLOSE_PART:
+                profit_quantity = abs(trade.exec_quantity)
+            elif abs(position.quantity)>= abs(trade.exec_quantity):
+                profit_quantity = abs(trade.exec_quantity)
+            else:
+                profit_quantity = abs(position.quantity)
+
+            if position.direction == DIRECTION.LONG:
+                profit = trade.exec_price * profit_quantity - position.open_price * profit_quantity
+            else:
+                profit = position.open_price * profit_quantity - trade.exec_price * profit_quantity
+            self.wallet_balance += profit
 
         self.wallet_balance -= trade.commission
+        position.deal(trade)

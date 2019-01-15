@@ -138,7 +138,7 @@ def test_empty_position_deal(instrument, base_account):
 
 
 def test_future_base_position(exchange, future_instrument, future_account):
-    exchange.get_last_price = MagicMock(return_value=10)
+    exchange.get_last_price.return_value = 10
     assert exchange == future_instrument.exchange
     assert future_instrument.last_price == 10
     position = FutureBasePosition(instrument=future_instrument, account=future_account)
@@ -189,7 +189,7 @@ def test_future_base_position(exchange, future_instrument, future_account):
 
 
 def test_cross_position(exchange, future_instrument, future_account):
-    exchange.get_last_price = MagicMock(return_value=18)
+    exchange.get_last_price.return_value = 18
     assert future_instrument.last_price == 18
 
     future_account = MagicMock(future_account)
@@ -223,7 +223,7 @@ def test_cross_position(exchange, future_instrument, future_account):
 
 
 def test_isolated_position(exchange, future_instrument, future_account):
-    exchange.get_last_price = MagicMock(return_value=10)
+    exchange.get_last_price.return_value = 10
     assert future_instrument.last_price == 10
 
     future_account = MagicMock(future_account)
@@ -265,7 +265,8 @@ def test_isolated_position(exchange, future_instrument, future_account):
 
     # short
     future_account.available_balance = 10000
-    exchange.get_last_price = MagicMock(return_value=11)
+    exchange.get_last_price.return_value = 11
+
     assert future_instrument.last_price == 11
     position.maint_margin = 1000
     position.open_price = 9
@@ -288,7 +289,7 @@ def test_isolated_position(exchange, future_instrument, future_account):
         position.set_leverage(2)
 
     future_account.available_balance = 10000
-    exchange.get_last_price = MagicMock(return_value=11)
+    exchange.get_last_price.return_value = 11
     assert future_instrument.last_price == 11
     position.open_price = 10.5
     position.quantity = -800
@@ -302,7 +303,7 @@ def test_isolated_position(exchange, future_instrument, future_account):
 
 
 def test_cross_isolated_position(exchange, future_instrument, future_account):
-    exchange.get_last_price = MagicMock(return_value=18)
+    exchange.get_last_price.return_value = 18
     assert future_instrument.last_price == 18
 
     future_account = MagicMock(future_account)

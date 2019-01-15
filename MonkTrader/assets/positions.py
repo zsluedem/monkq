@@ -306,9 +306,7 @@ class FutureCrossIsolatePosition(IsolatedPosition, CrossPosition):
     def is_isolated(self):
         return self.isolated
 
-@dataclass()
-class FuturePosition(FutureCrossIsolatePosition):
-    pass
+FuturePosition = FutureCrossIsolatePosition
 
 class PositionManager(defaultdict, Dict[Instrument, BasePosition]):
     def __init__(self, position_cls: Type[BasePosition], account: "BaseAccount"):

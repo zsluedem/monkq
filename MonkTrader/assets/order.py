@@ -24,11 +24,11 @@
 from dataclasses import field, dataclass
 import enum
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.exception import ImpossibleException
 from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
+    from MonkTrader.assets.account import BaseAccount, FutureAccount
     from MonkTrader.assets.trade import Trade
 
 
@@ -45,7 +45,7 @@ class ORDERSTATUS(enum.Enum):
 
 @dataclass()
 class BaseOrder():
-    account: BaseAccount
+    account: "BaseAccount"
     order_id: str
     instrument: Instrument
     quantity: float = 0
@@ -83,6 +83,11 @@ class LimitOrder(BaseOrder):
     def order_value(self):
         return self.price * self.quantity
 
+    @property
+    def remain_quantity(self):
+        return self.quantity - self.traded_quantity
+
+
 
 @dataclass()
 class MarketOrder(BaseOrder):
@@ -101,11 +106,11 @@ class StopLimitOrder(BaseOrder):
 
 @dataclass()
 class FutureLimitOrder(LimitOrder):
-    account: FutureAccount
+    account: "FutureAccount"
     instrument: FutureInstrument
 
     @property
-    def margin_value(self):
+    def order_margin(self):
         """
         It is related with the position
         1. open a position
@@ -120,13 +125,13 @@ class FutureLimitOrder(LimitOrder):
             leverage = 1
         if self.account.positions[self.instrument].quantity * self.quantity >= 0:
             # open a position  or get more on a position
-            ret = self.order_value / leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
+            ret = self.remain_quantity* self.price / leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
         elif abs(self.account.positions[self.instrument].quantity) >= abs(self.quantity):
             # close a position and reduce position
             ret = 0
         else:
             # close a position and open a opposite position
             ret = self.order_value / self.quantity * \
-                  abs(self.account.positions[self.instrument].quantity + self.quantity) / \
+                  abs(self.account.positions[self.instrument].quantity + self.remain_quantity) / \
                   leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
         return abs(ret)

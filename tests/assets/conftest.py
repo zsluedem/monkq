@@ -27,58 +27,16 @@ from dateutil.tz import tzutc
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
 from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.assets.positions import PositionManager, FuturePosition, BasePosition
+from unittest.mock import MagicMock
 import pytest
 from typing import TypeVar
 
 INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
 
 
-class MockExchange(AbcExchange):
-    def withdraw(self):
-        pass
-
-    def deposit(self):
-        pass
-
-    def exchange_info(self):
-        pass
-
-    def order_book(self):
-        pass
-
-    def get_account(self):
-        pass
-
-    def place_limit_order(self):
-        pass
-
-    def place_market_order(self):
-        pass
-
-    def place_stop_limit_order(self):
-        pass
-
-    def place_stop_market_order(self):
-        pass
-
-    def open_orders(self):
-        pass
-
-    def cancel_order(self):
-        pass
-
-    def available_instruments(self):
-        pass
-
-    def setup(self):
-        pass
-
-    def get_last_price(self, instrument:INSTRUMENT) -> float:
-        return 0
-
 @pytest.fixture()
 def exchange():
-    yield MockExchange()
+    yield MagicMock(AbcExchange)
 
 
 @pytest.fixture()
@@ -130,3 +88,28 @@ def future_instrument(exchange):
     deleverage=True,
 )
 
+@pytest.fixture()
+def future_instrument2(exchange):
+    yield FutureInstrument(
+    symbol="XBTUSD",
+    root_symbol="XBT",
+
+    listing_date=datetime.datetime(2016, 5, 4, 12, tzinfo=tzutc()),
+    expiry_date=None,
+    underlying="XBT",
+    quote_currency="USD",
+    lot_size=1,
+    tick_size=0.5,
+    maker_fee=-0.00025,
+    taker_fee=0.00075,
+    exchange=exchange,
+
+    init_margin_rate=0.01,
+    maint_margin_rate=0.005,
+    settlement_fee=0,
+    settle_currency="XBt",
+    front_date=datetime.datetime(2016, 5, 4, 12, tzinfo=tzutc()),
+    settle_date=None,
+    reference_symbol=".BXBT",
+    deleverage=True,
+)

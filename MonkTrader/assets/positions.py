@@ -38,6 +38,12 @@ class DIRECTION(Enum):
     LONG = 1
     SHORT = 2
 
+class POSITION_EFFECT(Enum):
+    OPEN = 1
+    CLOSE = 2
+    GET_MORE = 3
+    CLOSE_PART = 4
+    CLOSE_AND_OPEN = 5
 
 @dataclass()
 class BasePosition():
@@ -45,6 +51,25 @@ class BasePosition():
     account: "BaseAccount"
     quantity: float = 0
     open_price: float = 0
+
+    def position_effect(self, trade:"Trade") -> POSITION_EFFECT:
+        if self.quantity == 0:
+            # open a position
+            return POSITION_EFFECT.OPEN
+        elif self.quantity * trade.exec_quantity > 0:
+            # get more on position
+            return POSITION_EFFECT.GET_MORE
+        else:
+            # 3,4,5 condition
+            if abs(self.quantity) - abs(trade.exec_quantity) > 0:
+                # sell part of the position
+                return POSITION_EFFECT.CLOSE_PART
+            elif abs(self.quantity) - abs(trade.exec_quantity) < 0:
+                # close a position and open a opposite position
+                return POSITION_EFFECT.CLOSE_AND_OPEN
+            else:
+                # close position
+                return POSITION_EFFECT.CLOSE
 
     def deal(self, trade: "Trade") -> None:
         """
@@ -58,21 +83,22 @@ class BasePosition():
         :param trade:
         :return:
         """
-        if self.quantity == 0:
+        position_effect = self.position_effect(trade)
+        if position_effect == POSITION_EFFECT.OPEN:
             # open a position
             self.open_price += trade.avg_price
             self.quantity += trade.exec_quantity
-        elif self.quantity * trade.exec_quantity > 0:
+        elif position_effect == POSITION_EFFECT.GET_MORE:
             # get more on position
             self.open_price = (trade.avg_price * trade.exec_quantity + self.quantity * self.open_price) / (
                     trade.exec_quantity + self.quantity)
             self.quantity += trade.exec_quantity
         else:
             # 3,4,5 condition
-            if abs(self.quantity) - abs(trade.exec_quantity) > 0:
+            if position_effect == POSITION_EFFECT.CLOSE_PART:
                 # sell part of the position
                 self.quantity += trade.exec_quantity
-            elif abs(self.quantity) - abs(trade.exec_quantity) < 0:
+            elif position_effect == POSITION_EFFECT.CLOSE_AND_OPEN:
                 # close a position and open a opposite position
                 self.quantity += trade.exec_quantity
                 self.open_price = trade.avg_price

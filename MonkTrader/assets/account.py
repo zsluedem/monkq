@@ -38,8 +38,9 @@ class BaseAccount():
     def __post_init__(self):
         self.positions = PositionManager(self.position_cls, self)
 
-    def deal(self, trade: Trade):
+    def deal(self, trade: Trade) -> None:
         raise NotImplementedError()
+
 
 @dataclass()
 class FutureAccount(BaseAccount):
@@ -65,7 +66,7 @@ class FutureAccount(BaseAccount):
     def available_balance(self):
         return self.margin_balance - self.order_margin - self.position_balance
 
-    def deal(self, trade: Trade):
+    def deal(self, trade: Trade) -> None:
         """
         There two kinds of situation here for the account to deal a trade.
         It depends on whether the position type is Cross position or Isolated Position.
@@ -74,7 +75,7 @@ class FutureAccount(BaseAccount):
         2. Isolated Position
 
         """
-        position  = self.positions[trade.instrument]
+        position = self.positions[trade.instrument]
         self.positions[trade.instrument].deal(trade)
 
         self.wallet_balance -= trade.commission

@@ -86,11 +86,11 @@ class BasePosition():
         position_effect = self.position_effect(trade)
         if position_effect == POSITION_EFFECT.OPEN:
             # open a position
-            self.open_price += trade.avg_price
+            self.open_price += trade.exec_price
             self.quantity += trade.exec_quantity
         elif position_effect == POSITION_EFFECT.GET_MORE:
             # get more on position
-            self.open_price = (trade.avg_price * trade.exec_quantity + self.quantity * self.open_price) / (
+            self.open_price = (trade.exec_price * trade.exec_quantity + self.quantity * self.open_price) / (
                     trade.exec_quantity + self.quantity)
             self.quantity += trade.exec_quantity
         else:
@@ -101,7 +101,7 @@ class BasePosition():
             elif position_effect == POSITION_EFFECT.CLOSE_AND_OPEN:
                 # close a position and open a opposite position
                 self.quantity += trade.exec_quantity
-                self.open_price = trade.avg_price
+                self.open_price = trade.exec_price
             else:
                 # close position
                 self.quantity = 0

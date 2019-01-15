@@ -23,6 +23,7 @@
 #
 from dataclasses import dataclass, field
 from MonkTrader.assets import AbcExchange
+from MonkTrader.assets.trade import Trade
 from MonkTrader.assets.positions import PositionManager, BasePosition, FuturePosition
 from typing import Optional, Type
 
@@ -32,27 +33,30 @@ class BaseAccount():
     exchange: AbcExchange
     position_cls: Type[BasePosition]
     positions: PositionManager = field(init=False)
+    wallet_balance: float = 0
 
     def __post_init__(self):
         self.positions = PositionManager(self.position_cls, self)
+
+    def deal(self, trade: Trade) -> None:
+        raise NotImplementedError()
 
 
 @dataclass()
 class FutureAccount(BaseAccount):
     position_cls: Type[FuturePosition]
-    wallet_balance: float = 0
 
     @property
     def position_balance(self) -> float:
-        return sum([position.margin_value for intrument, position in self.positions.items()])
+        return sum([position.position_margin for intrument, position in self.positions.items()])
 
     @property
     def order_margin(self) -> float:
-        return sum([order.margin_value for order in self.exchange.open_orders()])
+        return sum([order.order_margin for order in self.exchange.open_orders()])
 
     @property
     def unrealised_pnl(self) -> float:
-        return 0
+        return sum([position.unrealised_pnl for intrument, position in self.positions.items()])
 
     @property
     def margin_balance(self):
@@ -61,3 +65,17 @@ class FutureAccount(BaseAccount):
     @property
     def available_balance(self):
         return self.margin_balance - self.order_margin - self.position_balance
+
+    def deal(self, trade: Trade) -> None:
+        """
+        There two kinds of situation here for the account to deal a trade.
+        It depends on whether the position type is Cross position or Isolated Position.
+        1. Cross Position
+
+        2. Isolated Position
+
+        """
+        position = self.positions[trade.instrument]
+        self.positions[trade.instrument].deal(trade)
+
+        self.wallet_balance -= trade.commission

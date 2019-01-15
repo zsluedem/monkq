@@ -56,9 +56,10 @@ class Trade():
     def commission(self) -> float:
         return abs(self.value) * self.instrument.taker_fee
 
-    @property
-    def avg_price(self) -> float:
-        # not (abs(self.value) + self.commission) / (self.exec_quantity)
-        # because this one is faster. It is the same result
-        return (self.value + self.commission) / self.exec_quantity if self.side == SIDE.BUY \
-            else (self.value - self.commission) / self.exec_quantity
+    # stupid mistake
+    # @property
+    # def avg_price(self) -> float:
+    #     # not (abs(self.value) + self.commission) / (self.exec_quantity)
+    #     # because this one is faster. It is the same result
+    #     return (self.value + self.commission) / self.exec_quantity if self.side == SIDE.BUY \
+    #         else (self.value - self.commission) / self.exec_quantity

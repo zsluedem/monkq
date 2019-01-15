@@ -61,14 +61,12 @@ def test_buy_order_trade(base_account, instrument):
     assert trade1.exec_price == 10
     assert trade1.value == 500
     assert trade1.commission == 1.25
-    assert trade1.avg_price == 10.025
 
     assert trade2.order_id == order_id
     assert trade2.side == SIDE.BUY
     assert trade2.exec_price == 11
     assert trade2.value == 550
     assert trade2.commission == 1.375
-    assert trade2.avg_price == 11.0275
 
 
 def test_sell_order_trade(base_account, instrument):
@@ -103,14 +101,12 @@ def test_sell_order_trade(base_account, instrument):
     assert trade1.exec_price == 10
     assert trade1.value == -500
     assert trade1.commission == 1.25
-    assert trade1.avg_price == 10.025
 
     assert trade2.order_id == order_id
     assert trade2.side == SIDE.SELL
     assert trade2.exec_price == 11
     assert trade2.value == -550
     assert trade2.commission == 1.375
-    assert trade2.avg_price == 11.0275
 
 
 def test_future_limit_order(future_instrument, future_account):

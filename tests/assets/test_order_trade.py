@@ -118,13 +118,15 @@ def test_future_limit_order(future_instrument, future_account):
     assert order1.order_value == 1100
     assert order1.order_status == ORDERSTATUS.NOT_TRADED
     assert order1.remain_quantity == 100
+    assert order1.remain_value == 1100
 
-    trade1 = Trade(order=order1, exec_price=10, exec_quantity=50, trade_id=random_string(6))
+    trade1 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6))
     order1.deal(trade1)
     assert order1.traded_quantity == 50
     assert order1.order_status == ORDERSTATUS.PARTLY_TRADED
     assert order1.remain_quantity == 50
     assert order1.order_value == 1100
+    assert order1.remain_value == 550
 
     with pytest.raises(AssertionError):
         order1.deal(trade1)
@@ -134,6 +136,8 @@ def test_future_limit_order(future_instrument, future_account):
     assert order1.traded_quantity == 100
     assert order1.remain_quantity == 0
     assert order1.order_status == ORDERSTATUS.FULL_TRADED
+    assert order1.remain_value == 0
+
     assert trade1 in order1.trades
     assert trade2 in order1.trades
 
@@ -147,6 +151,7 @@ def test_future_limit_order(future_instrument, future_account):
     assert order2.order_value == 1300
     assert order2.order_status == ORDERSTATUS.NOT_TRADED
     assert order2.remain_quantity == -100
+    assert order2.remain_value == 1300
 
     trade3 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
     order2.deal(trade3)
@@ -154,6 +159,7 @@ def test_future_limit_order(future_instrument, future_account):
     assert order2.order_status == ORDERSTATUS.PARTLY_TRADED
     assert order2.remain_quantity == -50
     assert order2.order_value == 1300
+    assert order2.remain_value == 650
 
     with pytest.raises(AssertionError):
         order2.deal(trade3)
@@ -164,3 +170,4 @@ def test_future_limit_order(future_instrument, future_account):
     assert order2.order_status == ORDERSTATUS.FULL_TRADED
     assert order2.remain_quantity == 0
     assert order2.order_value == 1300
+    assert order2.remain_value == 0

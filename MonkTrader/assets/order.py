@@ -87,6 +87,9 @@ class LimitOrder(BaseOrder):
     def remain_quantity(self):
         return self.quantity - self.traded_quantity
 
+    @property
+    def remain_value(self):
+        return self.price * abs(self.remain_quantity)
 
 
 @dataclass()

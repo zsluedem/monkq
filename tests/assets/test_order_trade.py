@@ -108,83 +108,21 @@ def test_sell_order_trade(base_account, instrument):
     assert trade2.value == -550
     assert trade2.commission == 1.375
 
-
 def test_future_limit_order(future_instrument, future_account):
-    future_account = MagicMock(future_account)
-    position = MagicMock()
-    position = future_account.positions.__getitem__.return_value = position
-    position.quantity = 0
-    position.leverage = 5
     order1 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
                               quantity=100, price=11)
-    assert order1.order_margin == 231.55  # open a position, 100 * 11 /5 * (1+ 0.05 + 0.0025)
+    assert order1.price == 11
+    assert order1.quantity == 100
+    assert order1.traded_quantity == 0
+    assert order1.side == SIDE.BUY
+    assert order1.order_value == 1100
+    assert order1.remain_quantity == 100
 
-    position.quantity = 100
     order2 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=100, price=11)
-    assert order2.order_margin == 231.55  # get more on a position 100 * 11 /5 * (1+ 0.05 + 0.0025)
-
-    position.quantity = 200
-    order3 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=-200, price=11)
-    assert order3.order_margin == 0  # reduce position does't require the margin
-
-    position.quantity = 100
-    order4 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=-100, price=11)
-    assert order4.order_margin == 0  # close position does't require the margin
-
-    position.quantity = 200
-    order5 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=-300, price=12)
-    assert order5.order_margin == 252.6  # close position and open a opposite position 100 * 12 /5 * (1+ 0.05+ 0.0025)
-
-    position.quantity = 0
-    position.leverage = 3
-    order6 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=-300, price=12)
-    assert order6.order_margin == 1263.0  # open a position, 300 * 12 /3 * (1+ 0.05 + 0.0025)
-
-    position.quantity = -300
-    order7 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=-100, price=12)
-    assert order7.order_margin == 421.0  # open a position, 300 * 12 /3 * (1+ 0.05 + 0.0025)
-
-    position.quantity = -400
-    order8 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=200, price=12)
-    assert order8.order_margin == 0  # reduce position does't require the margin
-
-    position.quantity = -200
-    order9 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=200, price=12)
-    assert order9.order_margin == 0  # close position does't require the margin
-
-    position.quantity = -200
-    order10 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                               quantity=300, price=12)
-    assert order10.order_margin == 421.0  # close position and open a opposite position 100 * 12 /3 * (1+ 0.05+ 0.0025)
-
-    # test order partly traded
-    position.quantity = 0
-    position.leverage = 5
-    # open a position
-    order11 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                               quantity=300, price=12)
-    order11.traded_quantity = 200
-    assert order11.order_margin == 252.6  # (300-200) * 12 / 5*(1+0.05+0.0025)
-
-    position.quantity = 200
-    # close a position
-    order11 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                               quantity=-200, price=12)
-    order11.traded_quantity = -100
-    assert order11.order_margin == 0
-
-    # close a position and open a opposite position
-    position.quantity = 200
-    order11 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                               quantity=-400, price=12)
-    assert order11.order_margin == 505.2
-    order11.traded_quantity = -300
-    assert order11.order_margin == 252.6  # ()
+                              quantity=-100, price=13)
+    assert order2.price == 13
+    assert order2.quantity == -100
+    assert order2.traded_quantity == 0
+    assert order2.side == SIDE.SELL
+    assert order2.order_value == 1100
+    assert order2.remain_quantity == -100

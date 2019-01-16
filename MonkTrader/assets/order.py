@@ -81,7 +81,7 @@ class LimitOrder(BaseOrder):
 
     @property
     def order_value(self):
-        return self.price * self.quantity
+        return self.price * abs(self.quantity)
 
     @property
     def remain_quantity(self):
@@ -109,29 +109,29 @@ class FutureLimitOrder(LimitOrder):
     account: "FutureAccount"
     instrument: FutureInstrument
 
-    @property
-    def order_margin(self):
-        """
-        It is related with the position
-        1. open a position
-        2. get more on a position
-        3. close a position and reduce position
-        4. close a position and open a opposite position
-        """
-        position = self.account.positions[self.instrument]
-        if position.isolated:
-            leverage = position.leverage
-        else:
-            leverage = 1
-        if self.account.positions[self.instrument].quantity * self.quantity >= 0:
-            # open a position  or get more on a position
-            ret = self.remain_quantity* self.price / leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
-        elif abs(self.account.positions[self.instrument].quantity) >= abs(self.quantity):
-            # close a position and reduce position
-            ret = 0
-        else:
-            # close a position and open a opposite position
-            ret = self.order_value / self.quantity * \
-                  abs(self.account.positions[self.instrument].quantity + self.remain_quantity) / \
-                  leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
-        return abs(ret)
+    # @property
+    # def order_margin(self):
+    #     """
+    #     It is related with the position
+    #     1. open a position
+    #     2. get more on a position
+    #     3. close a position and reduce position
+    #     4. close a position and open a opposite position
+    #     """
+    #     position = self.account.positions[self.instrument]
+    #     if position.isolated:
+    #         leverage = position.leverage
+    #     else:
+    #         leverage = 1
+    #     if self.account.positions[self.instrument].quantity * self.quantity >= 0:
+    #         # open a position  or get more on a position
+    #         ret = self.remain_quantity* self.price / leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
+    #     elif abs(self.account.positions[self.instrument].quantity) >= abs(self.quantity):
+    #         # close a position and reduce position
+    #         ret = 0
+    #     else:
+    #         # close a position and open a opposite position
+    #         ret = self.order_value / self.quantity * \
+    #               abs(self.account.positions[self.instrument].quantity + self.remain_quantity) / \
+    #               leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
+    #     return abs(ret)

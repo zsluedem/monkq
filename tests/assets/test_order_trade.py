@@ -124,5 +124,5 @@ def test_future_limit_order(future_instrument, future_account):
     assert order2.quantity == -100
     assert order2.traded_quantity == 0
     assert order2.side == SIDE.SELL
-    assert order2.order_value == 1100
+    assert order2.order_value == 1300
     assert order2.remain_quantity == -100

@@ -81,7 +81,7 @@ class LimitOrder(BaseOrder):
 
     @property
     def order_value(self):
-        return self.price * self.quantity
+        return self.price * abs(self.quantity)
 
     @property
     def remain_quantity(self):

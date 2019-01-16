@@ -116,13 +116,51 @@ def test_future_limit_order(future_instrument, future_account):
     assert order1.traded_quantity == 0
     assert order1.side == SIDE.BUY
     assert order1.order_value == 1100
+    assert order1.order_status == ORDERSTATUS.NOT_TRADED
     assert order1.remain_quantity == 100
+
+    trade1 = Trade(order=order1, exec_price=10, exec_quantity=50, trade_id=random_string(6))
+    order1.deal(trade1)
+    assert order1.traded_quantity == 50
+    assert order1.order_status == ORDERSTATUS.PARTLY_TRADED
+    assert order1.remain_quantity == 50
+    assert order1.order_value == 1100
+
+    with pytest.raises(AssertionError):
+        order1.deal(trade1)
+
+    trade2 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6))
+    order1.deal(trade2)
+    assert order1.traded_quantity == 100
+    assert order1.remain_quantity == 0
+    assert order1.order_status == ORDERSTATUS.FULL_TRADED
+    assert trade1 in order1.trades
+    assert trade2 in order1.trades
 
     order2 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
                               quantity=-100, price=13)
+
     assert order2.price == 13
     assert order2.quantity == -100
     assert order2.traded_quantity == 0
     assert order2.side == SIDE.SELL
     assert order2.order_value == 1300
+    assert order2.order_status == ORDERSTATUS.NOT_TRADED
     assert order2.remain_quantity == -100
+
+    trade3 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
+    order2.deal(trade3)
+    assert order2.traded_quantity == -50
+    assert order2.order_status == ORDERSTATUS.PARTLY_TRADED
+    assert order2.remain_quantity == -50
+    assert order2.order_value == 1300
+
+    with pytest.raises(AssertionError):
+        order2.deal(trade3)
+
+    trade4 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
+    order2.deal(trade4)
+    assert order2.traded_quantity == -100
+    assert order2.order_status == ORDERSTATUS.FULL_TRADED
+    assert order2.remain_quantity == 0
+    assert order2.order_value == 1300

@@ -319,7 +319,6 @@ def test_future_account_order_margin_multiple_instruments(exchange, future_instr
     open_orders.extend([untraded_order3, untraded_order1, untraded_order2])
     assert account.order_margin ==66.385
 
-@pytest.mark.xfail
 def test_future_accoutn_order_margin_leverage(exchange, future_instrument):
     open_orders: List[FutureLimitOrder] = []
     exchange.open_orders.return_value = open_orders
@@ -327,13 +326,21 @@ def test_future_accoutn_order_margin_leverage(exchange, future_instrument):
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
 
+    order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                              quantity=100, price=11)
+    open_orders.append(order1)
+    assert account.order_margin == 60.5
+    trade1 = Trade(order=order1, exec_price=11, exec_quantity=100, trade_id=random_string(6))
+    account.deal(trade1)
+    open_orders.remove(order1)
+
     position = account.positions[future_instrument]
     position.set_leverage(5)
 
     untraded_order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                                        quantity=100, price=5)
     untraded_order2 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
-                                       quantity=-100, price=20)
+                                       quantity=-200, price=20)
 
     open_orders.extend([untraded_order1, untraded_order2])
     assert account.order_margin == pytest.approx(410)

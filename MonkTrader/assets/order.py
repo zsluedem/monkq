@@ -22,25 +22,14 @@
 # SOFTWARE.
 #
 from dataclasses import field, dataclass
-import enum
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
+from MonkTrader.assets.variable import SIDE, ORDER_STATUS, DIRECTION
 from MonkTrader.exception import ImpossibleException
 from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from MonkTrader.assets.account import BaseAccount, FutureAccount
     from MonkTrader.assets.trade import Trade
-
-
-class SIDE(enum.Enum):
-    BUY = 1
-    SELL = 2
-
-
-class ORDERSTATUS(enum.Enum):
-    NOT_TRADED = 1
-    FULL_TRADED = 2
-    PARTLY_TRADED = 3
 
 
 @dataclass()
@@ -53,13 +42,13 @@ class BaseOrder():
     trades: List["Trade"] = field(default_factory=list)
 
     @property
-    def order_status(self) -> ORDERSTATUS:
+    def order_status(self) -> ORDER_STATUS:
         if self.traded_quantity == 0:
-            return ORDERSTATUS.NOT_TRADED
+            return ORDER_STATUS.NOT_TRADED
         elif self.traded_quantity == self.quantity:
-            return ORDERSTATUS.FULL_TRADED
+            return ORDER_STATUS.FULL_TRADED
         elif abs(self.traded_quantity) < abs(self.quantity):
-            return ORDERSTATUS.PARTLY_TRADED
+            return ORDER_STATUS.PARTLY_TRADED
         else:
             raise ImpossibleException(
                 "order quantity: {}, traded quantity: {}".format(self.quantity, self.traded_quantity))
@@ -74,6 +63,10 @@ class BaseOrder():
         self.traded_quantity += trade.exec_quantity
         self.trades.append(trade)
 
+    @property
+    def remain_quantity(self):
+        return self.quantity - self.traded_quantity
+
 
 @dataclass()
 class LimitOrder(BaseOrder):
@@ -83,9 +76,6 @@ class LimitOrder(BaseOrder):
     def order_value(self):
         return self.price * abs(self.quantity)
 
-    @property
-    def remain_quantity(self):
-        return self.quantity - self.traded_quantity
 
     @property
     def remain_value(self):
@@ -111,6 +101,10 @@ class StopLimitOrder(BaseOrder):
 class FutureLimitOrder(LimitOrder):
     account: "FutureAccount"
     instrument: FutureInstrument
+
+    @property
+    def direction(self):
+        return DIRECTION.LONG if self.quantity > 0 else DIRECTION.SHORT
 
     # @property
     # def order_margin(self):

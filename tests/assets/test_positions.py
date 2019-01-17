@@ -21,8 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.assets.positions import PositionManager, BasePosition, FutureBasePosition, DIRECTION, \
-    FutureCrossIsolatePosition, IsolatedPosition, CrossPosition, POSITION_EFFECT
+from MonkTrader.assets.positions import PositionManager, BasePosition, FutureBasePosition, FutureCrossIsolatePosition, IsolatedPosition, CrossPosition
+from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
 from MonkTrader.assets.order import BaseOrder
 from MonkTrader.assets.trade import Trade
 from MonkTrader.exception import MarginNotEnoughException, MarginException

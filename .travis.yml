@@ -15,7 +15,10 @@ install:
   - pip install .
   - pip install -r requirements_dev.txt
 
-script: pytest tests
+script: pytest --cov=MonkTrader --mypy tests
+
+after_success:
+  - codecov
 
 git:
   depth: 3

@@ -10,3 +10,4 @@ pytest-mypy
 typeshed
 pytest-aiohttp
 mypy==0.650
+pytest-cov

@@ -24,26 +24,15 @@
 from dataclasses import dataclass
 from typing import Dict
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
+from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
 from MonkTrader.exception import MarginNotEnoughException, MarginException
 from collections import defaultdict
 from typing import TYPE_CHECKING, Type
-from enum import Enum
 
 if TYPE_CHECKING:
     from MonkTrader.assets.trade import Trade
     from MonkTrader.assets.account import BaseAccount, FutureAccount
 
-
-class DIRECTION(Enum):
-    LONG = 1
-    SHORT = 2
-
-class POSITION_EFFECT(Enum):
-    OPEN = 1
-    CLOSE = 2
-    GET_MORE = 3
-    CLOSE_PART = 4
-    CLOSE_AND_OPEN = 5
 
 @dataclass()
 class BasePosition():

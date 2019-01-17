@@ -22,7 +22,8 @@
 # SOFTWARE.
 #
 
-from MonkTrader.assets.order import BaseOrder, SIDE, ORDERSTATUS, FutureLimitOrder
+from MonkTrader.assets.order import BaseOrder, FutureLimitOrder
+from MonkTrader.assets.variable import SIDE, ORDER_STATUS
 from MonkTrader.assets.trade import Trade
 from ..utils import random_string
 from unittest.mock import MagicMock
@@ -36,12 +37,12 @@ def test_buy_order_trade(base_account, instrument):
     assert order.order_id == order_id
     assert order.side == SIDE.BUY
     assert order.quantity == 100
-    assert order.order_status == ORDERSTATUS.NOT_TRADED
+    assert order.order_status == ORDER_STATUS.NOT_TRADED
 
     trade1 = Trade(order=order, exec_price=10, exec_quantity=50, trade_id=random_string(6))
     order.deal(trade1)
     assert order.traded_quantity == 50
-    assert order.order_status == ORDERSTATUS.PARTLY_TRADED
+    assert order.order_status == ORDER_STATUS.PARTLY_TRADED
 
     with pytest.raises(AssertionError):
         order.deal(trade1)
@@ -51,7 +52,7 @@ def test_buy_order_trade(base_account, instrument):
     order.deal(trade2)
 
     assert order.traded_quantity == 100
-    assert order.order_status == ORDERSTATUS.FULL_TRADED
+    assert order.order_status == ORDER_STATUS.FULL_TRADED
 
     assert trade1 in order.trades
     assert trade2 in order.trades
@@ -76,12 +77,12 @@ def test_sell_order_trade(base_account, instrument):
     assert order.order_id == order_id
     assert order.side == SIDE.SELL
     assert order.quantity == -100
-    assert order.order_status == ORDERSTATUS.NOT_TRADED
+    assert order.order_status == ORDER_STATUS.NOT_TRADED
 
     trade1 = Trade(order=order, exec_price=10, exec_quantity=-50, trade_id=random_string(6))
     order.deal(trade1)
     assert order.traded_quantity == -50
-    assert order.order_status == ORDERSTATUS.PARTLY_TRADED
+    assert order.order_status == ORDER_STATUS.PARTLY_TRADED
 
     with pytest.raises(AssertionError):
         order.deal(trade1)
@@ -91,7 +92,7 @@ def test_sell_order_trade(base_account, instrument):
     order.deal(trade2)
 
     assert order.traded_quantity == -100
-    assert order.order_status == ORDERSTATUS.FULL_TRADED
+    assert order.order_status == ORDER_STATUS.FULL_TRADED
 
     assert trade1 in order.trades
     assert trade2 in order.trades
@@ -116,15 +117,17 @@ def test_future_limit_order(future_instrument, future_account):
     assert order1.traded_quantity == 0
     assert order1.side == SIDE.BUY
     assert order1.order_value == 1100
-    assert order1.order_status == ORDERSTATUS.NOT_TRADED
+    assert order1.order_status == ORDER_STATUS.NOT_TRADED
     assert order1.remain_quantity == 100
+    assert order1.remain_value == 1100
 
-    trade1 = Trade(order=order1, exec_price=10, exec_quantity=50, trade_id=random_string(6))
+    trade1 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6))
     order1.deal(trade1)
     assert order1.traded_quantity == 50
-    assert order1.order_status == ORDERSTATUS.PARTLY_TRADED
+    assert order1.order_status == ORDER_STATUS.PARTLY_TRADED
     assert order1.remain_quantity == 50
     assert order1.order_value == 1100
+    assert order1.remain_value == 550
 
     with pytest.raises(AssertionError):
         order1.deal(trade1)
@@ -133,7 +136,9 @@ def test_future_limit_order(future_instrument, future_account):
     order1.deal(trade2)
     assert order1.traded_quantity == 100
     assert order1.remain_quantity == 0
-    assert order1.order_status == ORDERSTATUS.FULL_TRADED
+    assert order1.order_status == ORDER_STATUS.FULL_TRADED
+    assert order1.remain_value == 0
+
     assert trade1 in order1.trades
     assert trade2 in order1.trades
 
@@ -145,15 +150,17 @@ def test_future_limit_order(future_instrument, future_account):
     assert order2.traded_quantity == 0
     assert order2.side == SIDE.SELL
     assert order2.order_value == 1300
-    assert order2.order_status == ORDERSTATUS.NOT_TRADED
+    assert order2.order_status == ORDER_STATUS.NOT_TRADED
     assert order2.remain_quantity == -100
+    assert order2.remain_value == 1300
 
     trade3 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
     order2.deal(trade3)
     assert order2.traded_quantity == -50
-    assert order2.order_status == ORDERSTATUS.PARTLY_TRADED
+    assert order2.order_status == ORDER_STATUS.PARTLY_TRADED
     assert order2.remain_quantity == -50
     assert order2.order_value == 1300
+    assert order2.remain_value == 650
 
     with pytest.raises(AssertionError):
         order2.deal(trade3)
@@ -161,6 +168,7 @@ def test_future_limit_order(future_instrument, future_account):
     trade4 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
     order2.deal(trade4)
     assert order2.traded_quantity == -100
-    assert order2.order_status == ORDERSTATUS.FULL_TRADED
+    assert order2.order_status == ORDER_STATUS.FULL_TRADED
     assert order2.remain_quantity == 0
     assert order2.order_value == 1300
+    assert order2.remain_value == 0

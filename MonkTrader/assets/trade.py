@@ -23,7 +23,8 @@
 #
 import dataclasses
 from typing import TYPE_CHECKING
-from MonkTrader.assets.order import BaseOrder, SIDE
+from MonkTrader.assets.order import BaseOrder
+from MonkTrader.assets.variable import SIDE
 
 if TYPE_CHECKING:
     from MonkTrader.assets.instrument import Instrument

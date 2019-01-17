@@ -29,8 +29,9 @@ from MonkTrader.assets.order import FutureLimitOrder
 import pytest
 from typing import List
 
+
 @pytest.mark.xfail
-def test_future_account(exchange, future_instrument, future_instrument2):
+def test_future_account_deal(exchange, future_instrument):
     open_orders: List[FutureLimitOrder] = []
     exchange.open_orders.return_value = open_orders
     exchange.get_last_price.return_value = 10
@@ -43,12 +44,11 @@ def test_future_account(exchange, future_instrument, future_instrument2):
     assert account.margin_balance == 10000
     assert account.available_balance == 10000
 
-
     # open a position
     order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                               quantity=100, price=11)
     open_orders.append(order1)
-    # assert account.order_margin == order1.order_margin
+    assert account.order_margin == 60.5
     trade1 = Trade(order=order1, exec_price=11, exec_quantity=100, trade_id=random_string(6))
     account.deal(trade1)
     open_orders.remove(order1)
@@ -64,7 +64,7 @@ def test_future_account(exchange, future_instrument, future_instrument2):
     order2 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                               quantity=200, price=10.5)
     open_orders.append(order2)
-    # assert account.order_margin == order2.order_margin
+    assert account.order_margin == 115.5
     trade2 = Trade(order=order2, exec_price=10.5, exec_quantity=200, trade_id=random_string(6))
     account.deal(trade2)
     open_orders.remove(order2)
@@ -88,15 +88,15 @@ def test_future_account(exchange, future_instrument, future_instrument2):
     assert account.wallet_balance == pytest.approx(9922.8333, 0.0001)
     assert account.position_margin == pytest.approx(105, 0.0001)
     assert account.order_margin == 0
-    assert account.unrealised_pnl == pytest.approx( -138.3333, 0.0001)
+    assert account.unrealised_pnl == pytest.approx(-138.3333, 0.0001)
     assert account.margin_balance == pytest.approx(9784.5000, 0.0001)
-    assert account.available_balance == pytest.approx( 9679.5000, 0.0001)
+    assert account.available_balance == pytest.approx(9679.5000, 0.0001)
 
     # close and open
     order4 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                               quantity=-300, price=11)
     open_orders.append(order4)
-    # assert account.order_margin == order4.order_margin
+    assert account.order_margin == 60.5
     trade4 = Trade(order=order4, exec_price=11, exec_quantity=-300, trade_id=random_string(6))
     account.deal(trade4)
     open_orders.remove(order4)
@@ -112,7 +112,7 @@ def test_future_account(exchange, future_instrument, future_instrument2):
     order5 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                               quantity=-100, price=10.5)
     open_orders.append(order5)
-    # assert account.order_margin == 0
+    assert account.order_margin == 57.75
     trade5 = Trade(order=order5, exec_price=10.5, exec_quantity=-100, trade_id=random_string(6))
     account.deal(trade5)
     open_orders.remove(order5)
@@ -128,7 +128,7 @@ def test_future_account(exchange, future_instrument, future_instrument2):
     order6 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                               quantity=300, price=10.5)
     open_orders.append(order6)
-    # assert account.order_margin == 0
+    assert account.order_margin == 57.75
     trade6 = Trade(order=order6, exec_price=10.5, exec_quantity=300, trade_id=random_string(6))
     account.deal(trade6)
     open_orders.remove(order6)
@@ -144,7 +144,7 @@ def test_future_account(exchange, future_instrument, future_instrument2):
     order7 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                               quantity=-100, price=9)
     open_orders.append(order7)
-    # assert account.order_margin == 0
+    assert account.order_margin == 0
     trade7 = Trade(order=order7, exec_price=9, exec_quantity=-100, trade_id=random_string(6))
     account.deal(trade7)
     open_orders.remove(order7)
@@ -160,7 +160,7 @@ def test_future_account(exchange, future_instrument, future_instrument2):
     order8 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                               quantity=-150, price=11)
     open_orders.append(order8)
-    # assert account.order_margin == 0
+    assert account.order_margin == 90.75
     trade8 = Trade(order=order8, exec_price=11, exec_quantity=-150, trade_id=random_string(6))
     account.deal(trade8)
     open_orders.remove(order8)
@@ -175,7 +175,7 @@ def test_future_account(exchange, future_instrument, future_instrument2):
     order9 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                               quantity=150, price=11)
     open_orders.append(order9)
-    # assert account.order_margin == 0
+    assert account.order_margin == 0
     trade9 = Trade(order=order9, exec_price=11, exec_quantity=150, trade_id=random_string(6))
     account.deal(trade9)
     open_orders.remove(order9)
@@ -187,13 +187,128 @@ def test_future_account(exchange, future_instrument, future_instrument2):
     assert account.margin_balance == pytest.approx(9860.2513, 0.0001)
     assert account.available_balance == pytest.approx(9860.2513, 0.0001)
 
-    # test the order margin of the account when the account have two different direction orders
-    # TODO
+
+@pytest.xfail
+def test_future_account_order_margin_two_direction(exchange, future_instrument):
+    open_orders: List[FutureLimitOrder] = []
+    exchange.open_orders.return_value = open_orders
+    exchange.get_last_price.return_value = 10
+
+    account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
     untraded_order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
-                              quantity=100, price=5)
+                                       quantity=100, price=5)
     untraded_order2 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                                        quantity=-100, price=20)
+    open_orders.extend([untraded_order1, untraded_order2])
+    assert account.order_margin == 110.0
+    untraded_order3 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=100, price=5)
+    open_orders.append(untraded_order3)
+    assert account.order_margin == 110.0
+    untraded_order4 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=100, price=16)
+    open_orders.append(untraded_order4)
+    assert account.order_margin == 143
 
+    open_orders.clear()
+
+
+@pytest.xfail
+def test_future_account_order_margin_long_position(exchange, future_instrument):
+    open_orders: List[FutureLimitOrder] = []
+    exchange.open_orders.return_value = open_orders
+    exchange.get_last_price.return_value = 10
+
+    account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
+
+    order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                              quantity=100, price=11)
+    open_orders.append(order1)
+    assert account.order_margin == 60.5
+    trade1 = Trade(order=order1, exec_price=11, exec_quantity=100, trade_id=random_string(6))
+    account.deal(trade1)
+    open_orders.remove(order1)
+
+    untraded_order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=100, price=9)
+    untraded_order2 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=-90, price=11)
+    open_orders.extend([untraded_order1, untraded_order2])
+    assert account.order_margin == 49.5
+    untraded_order3 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=-100, price=12)
+    open_orders.append(untraded_order3)
+    assert account.order_margin == 59.4
+    untraded_order4 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=100, price=10)
+    open_orders.append(untraded_order4)
+    assert account.order_margin == 104.5
+
+    untraded_order5 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=-50, price=19)
+    open_orders.append(untraded_order5)
+    assert account.order_margin == 111.65
+
+    trade2 = Trade(untraded_order2, exec_price=11,  exec_quantity=-30, trade_id=random_string(6))
+    untraded_order3.deal(trade2)
+    account.deal(trade2)
+    assert account.order_margin == 104.5
+
+
+    untraded_order6 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=-100, price=20)
+    open_orders.append(untraded_order6)
+    assert account.order_margin == 177.1
+
+@pytest.xfail
+def test_future_account_order_margin_short_position(exchange, future_instrument):
+    open_orders: List[FutureLimitOrder] = []
+    exchange.open_orders.return_value = open_orders
+    exchange.get_last_price.return_value = 10
+
+    account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
+
+    order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                              quantity=-100, price=11)
+    open_orders.append(order1)
+    assert account.order_margin == 60.5
+    trade1 = Trade(order=order1, exec_price=11, exec_quantity=100, trade_id=random_string(6))
+    account.deal(trade1)
+    open_orders.remove(order1)
+
+    untraded_order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=100, price=9)
+    untraded_order2 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=-90, price=11)
+    open_orders.extend([untraded_order1, untraded_order2])
+    assert account.order_margin == 54.45
+    untraded_order3 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=100, price=12)
+    open_orders.append(untraded_order3)
+    assert account.order_margin == 66.0
+    untraded_order4 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=-100, price=10)
+    open_orders.append(untraded_order4)
+    assert account.order_margin == 109.45
+
+    untraded_order5 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=50, price=19)
+    open_orders.append(untraded_order5)
+    assert account.order_margin == 118.25
+
+    trade2 = Trade(untraded_order2, exec_price=11,  exec_quantity=-30, trade_id=random_string(6))
+    untraded_order3.deal(trade2)
+    account.deal(trade2)
+    assert account.order_margin == 98.45
+
+
+    untraded_order6 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                                       quantity=100, price=20)
+    open_orders.append(untraded_order6)
+    assert account.order_margin == 208.45
+
+@pytest.xfail
+def test_future_account_position_margin(exchange, future_instrument):
     # test the position margin of the account when the account have two different positions
     # TODO
     assert False

@@ -28,13 +28,13 @@ from MonkTrader.assets import AbcExchange
 from typing import Optional, TypeVar, Type, Dict, Union
 from MonkTrader.exception import MonkException
 
-INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
+T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 
 
 @dataclasses.dataclass(frozen=True)
 class Instrument():
     exchange: AbcExchange
-    symbol: Optional[str] = None
+    symbol: str
 
     listing_date: Optional[datetime.datetime] = None
     expiry_date: Optional[datetime.datetime] = None
@@ -49,7 +49,7 @@ class Instrument():
     taker_fee: float = 0
 
     @classmethod
-    def create(cls: Type[INSTRUMENT], key_map: dict, values: dict, exchange: AbcExchange) -> INSTRUMENT:
+    def create(cls: Type[T_INSTRUMENT], key_map: dict, values: dict, exchange: AbcExchange) -> T_INSTRUMENT:
         annotation_dict = {}
         for mro in cls.__mro__[::-1]:
             if mro is object:
@@ -71,7 +71,7 @@ class Instrument():
         return cls(**init_values)  # type: ignore
 
     @property
-    def state(self):
+    def state(self) -> None:
         return
 
     @property

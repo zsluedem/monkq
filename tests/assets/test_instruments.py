@@ -24,6 +24,9 @@
 import datetime
 from dateutil.tz import tzutc
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
+from MonkTrader.assets import AbcExchange
+from typing import TypeVar
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")
 
 up_raw_data = {
     "symbol": "XBT7D_U105",
@@ -486,7 +489,7 @@ test_future_instrument_keymap = {
 }
 
 
-def test_instrument(exchange):
+def test_instrument(exchange: T_EXCHANGE) -> None:
     instrument = Instrument.create(test_instrument_keymap, {
         'symbol': 'RHOC',
         'listing': '2018-12-28T12:00:00.000Z',
@@ -511,7 +514,7 @@ def test_instrument(exchange):
     assert instrument.exchange == exchange
 
 
-def test_future_instrument(exchange):
+def test_future_instrument(exchange: T_EXCHANGE) -> None:
     instrument = FutureInstrument.create(test_future_instrument_keymap, future_raw_date, exchange)
     assert instrument.symbol == "TRXH19"
     assert instrument.listing_date == datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc())

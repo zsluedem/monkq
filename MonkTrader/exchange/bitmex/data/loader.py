@@ -70,12 +70,12 @@ class BitmexDataloader(DataLoader):
         'FFWCSX': PerpetualInstrument,  # perpetual  futures contracts
     }
 
-    def __init__(self, exchange: AbcExchange):
+    def __init__(self, exchange: AbcExchange) -> None:
         self.data_dir = settings.DATA_DIR
         self.instruments: Dict[str, Instrument] = dict()
         self.exchange = exchange
 
-    def load_instruments(self):
+    def load_instruments(self) -> None:
         instruments_file = os.path.join(self.data_dir, INSTRUMENT_FILENAME)
         with open(instruments_file) as f:
             instruments_raw = json.load(f)

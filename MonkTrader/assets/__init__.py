@@ -22,12 +22,14 @@
 # SOFTWARE.
 #
 from abc import ABC, abstractmethod, abstractproperty
-from typing import TypeVar, TYPE_CHECKING
+from typing import TypeVar, TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from MonkTrader.assets.instrument import Instrument
+    from MonkTrader.assets.order import BaseOrder
 
-INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
+T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
+T_ORDER = TypeVar("T_ORDER", bound="BaseOrder")
 
 
 class AbcInstrument(ABC):
@@ -58,23 +60,23 @@ class AbcTrade(ABC):
 
 class AbcExchange(ABC):
     @abstractmethod
-    def get_last_price(self, instrument: INSTRUMENT) -> float:
+    def get_last_price(self, instrument: T_INSTRUMENT) -> float:
         raise NotImplementedError()
 
     @abstractmethod
-    def withdraw(self):
+    def withdraw(self) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def deposit(self):
+    def deposit(self) -> None:
         raise NotImplementedError()
 
     @abstractproperty
-    def exchange_info(self):
+    def exchange_info(self) -> None:
         raise NotImplementedError()
 
     @abstractproperty
-    def order_book(self):
+    def order_book(self) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -82,33 +84,33 @@ class AbcExchange(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def place_limit_order(self):
+    def place_limit_order(self) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def place_market_order(self):
+    def place_market_order(self) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def place_stop_limit_order(self):
+    def place_stop_limit_order(self) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def place_stop_market_order(self):
+    def place_stop_market_order(self) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def open_orders(self):
+    def open_orders(self) -> List[T_ORDER]:
         raise NotImplementedError()
 
     @abstractmethod
-    def cancel_order(self):
+    def cancel_order(self) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def available_instruments(self):
+    def available_instruments(self) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def setup(self):
+    def setup(self) -> None:
         raise NotImplementedError()

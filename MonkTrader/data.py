@@ -35,7 +35,7 @@ class Point(ABC):
 
 
 class ProcessPoints(Iterator[Point]):
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Point]:
         raise NotImplementedError
 
 
@@ -58,10 +58,10 @@ class DataDownloader(ABC):
 
 class DataLoader(ABC):
     @abstractmethod
-    def load_instruments(self):
+    def load_instruments(self) -> None:
         raise NotImplementedError()
 
-    def load(self):
+    def load(self) -> None:
         self.load_instruments()
 
 

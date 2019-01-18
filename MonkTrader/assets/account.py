@@ -62,7 +62,7 @@ class FutureAccount(BaseAccount):
         :return:
         """
         d: Dict[FutureInstrument, List[FutureLimitOrder]] = defaultdict(list)
-        for order in self.exchange.open_orders():
+        for order in self.exchange.open_orders(): # type: ignore
             d[order.instrument].append(order)
         return sum([self._order_margin(instrument, orders) for instrument, orders in d.items()])
 

@@ -24,7 +24,7 @@
 from abc import ABC, abstractmethod
 import datetime
 
-from typing import Generator, List
+from typing import Generator, List, Any
 
 from MonkTrader.assets import AbcExchange
 
@@ -41,11 +41,11 @@ class AbcContext(ABC):
 
 class AbcRunner(ABC):
     @abstractmethod
-    def setup(self):
+    def setup(self) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def run(self):
+    def run(self) -> None:
         raise NotImplementedError()
 
 
@@ -57,17 +57,17 @@ class Ticker(ABC):
 
 class AbcStrategy():
     @abstractmethod
-    async def setup(self):
+    async def setup(self) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    async def on_trade(self, message):
+    async def on_trade(self, message: Any) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    async def tick(self, message):
+    async def tick(self, message: Any) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    async def handle_bar(self):
+    async def handle_bar(self) -> None:
         raise NotImplementedError()

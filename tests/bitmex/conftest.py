@@ -27,9 +27,9 @@ import pymongo
 
 
 @pytest.yield_fixture(scope="function")
-def bitmex_mongo():
+def mongo_cli() -> pymongo.MongoClient:
     cli = pymongo.MongoClient()
-    yield cli.bitmex
+    yield cli
 
     cli.drop_database('bitmex')
 

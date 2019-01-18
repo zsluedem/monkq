@@ -27,10 +27,16 @@ from MonkTrader.assets.trade import Trade
 from ..utils import random_string
 from MonkTrader.assets.order import FutureLimitOrder
 import pytest
-from typing import List
+from unittest.mock import MagicMock
+from typing import List, TypeVar
+from MonkTrader.assets.instrument import Instrument, FutureInstrument
+from MonkTrader.assets import AbcExchange
+
+T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")
 
 
-def test_future_account_deal(exchange, future_instrument):
+def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
     exchange.open_orders.return_value = open_orders
     exchange.get_last_price.return_value = 10
@@ -187,7 +193,7 @@ def test_future_account_deal(exchange, future_instrument):
     assert account.available_balance == pytest.approx(9860.2513, 0.0001)
 
 
-def test_future_account_order_margin_two_direction(exchange, future_instrument):
+def test_future_account_order_margin_two_direction(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
     exchange.open_orders.return_value = open_orders
     exchange.get_last_price.return_value = 10
@@ -211,7 +217,7 @@ def test_future_account_order_margin_two_direction(exchange, future_instrument):
     open_orders.clear()
 
 
-def test_future_account_order_margin_long_position(exchange, future_instrument):
+def test_future_account_order_margin_long_position(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
     exchange.open_orders.return_value = open_orders
     exchange.get_last_price.return_value = 10
@@ -257,7 +263,7 @@ def test_future_account_order_margin_long_position(exchange, future_instrument):
     assert account.order_margin == 214.5
 
 
-def test_future_account_order_margin_short_position(exchange, future_instrument):
+def test_future_account_order_margin_short_position(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
     exchange.open_orders.return_value = open_orders
     exchange.get_last_price.return_value = 10
@@ -303,7 +309,7 @@ def test_future_account_order_margin_short_position(exchange, future_instrument)
     assert account.order_margin == 208.45
 
 
-def test_future_account_order_margin_multiple_instruments(exchange, future_instrument, future_instrument2):
+def test_future_account_order_margin_multiple_instruments(exchange: MagicMock, future_instrument: FutureInstrument, future_instrument2: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
     exchange.open_orders.return_value = open_orders
     exchange.get_last_price.return_value = 10
@@ -320,7 +326,7 @@ def test_future_account_order_margin_multiple_instruments(exchange, future_instr
     assert account.order_margin == 66.385
 
 
-def test_future_accoutn_order_margin_leverage(exchange, future_instrument):
+def test_future_accoutn_order_margin_leverage(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
     exchange.open_orders.return_value = open_orders
     exchange.get_last_price.return_value = 10
@@ -348,7 +354,7 @@ def test_future_accoutn_order_margin_leverage(exchange, future_instrument):
 
 
 @pytest.mark.xfail
-def test_future_account_position_margin(exchange, future_instrument):
+def test_future_account_position_margin(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     # test the position margin of the account when the account have two different positions
     # TODO
     assert False

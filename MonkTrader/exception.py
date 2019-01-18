@@ -32,7 +32,7 @@ class MaxRetryException(MonkException):
 
 
 class RateLimitException(MonkException):
-    def __init__(self, ratelimit_reset):
+    def __init__(self, ratelimit_reset: int) -> None:
         self.ratelimit_reset = ratelimit_reset
 
 

@@ -27,28 +27,29 @@ from dateutil.tz import tzutc
 from MonkTrader.assets.instrument import Instrument, FutureInstrument
 from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.assets.positions import PositionManager, FuturePosition, BasePosition
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 import pytest
-from typing import TypeVar
+from typing import TypeVar, Generator
 
-INSTRUMENT = TypeVar('INSTRUMENT', bound="Instrument")
+T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")
 
 
 @pytest.fixture()
-def exchange():
+def exchange() -> Generator[MagicMock, None, None]:
     yield MagicMock(AbcExchange)
 
 
 @pytest.fixture()
-def base_account(exchange):
+def base_account(exchange: T_EXCHANGE)-> Generator[BaseAccount, None, None]:
     yield BaseAccount(exchange=exchange, position_cls=BasePosition)
 
 @pytest.fixture()
-def future_account(exchange):
+def future_account(exchange: T_EXCHANGE) -> Generator[FutureAccount, None, None]:
     yield FutureAccount(exchange=exchange, position_cls=FuturePosition)
 
 @pytest.fixture()
-def instrument(exchange):
+def instrument(exchange: T_EXCHANGE) -> Generator[Instrument, None, None]:
     yield Instrument(
     symbol="TRXH19",
     listing_date=datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc()),
@@ -63,7 +64,7 @@ def instrument(exchange):
 )
 
 @pytest.fixture()
-def future_instrument(exchange):
+def future_instrument(exchange: T_EXCHANGE) -> Generator[FutureInstrument, None, None]:
     yield FutureInstrument(
     symbol="TRXH19",
     root_symbol="TRX",
@@ -89,7 +90,7 @@ def future_instrument(exchange):
 )
 
 @pytest.fixture()
-def future_instrument2(exchange):
+def future_instrument2(exchange: T_EXCHANGE) -> Generator[FutureInstrument, None, None]:
     yield FutureInstrument(
     symbol="XBTUSD",
     root_symbol="XBT",

@@ -36,7 +36,7 @@ SETTING_FILE = 'settings'
 
 
 class Setting:
-    def __init__(self):
+    def __init__(self) -> None:
         for setting in dir(default_settings):
             if setting.isupper():
                 setattr(self, setting, getattr(default_settings, setting))
@@ -56,11 +56,11 @@ class Setting:
                 setattr(self, setting, setting_value)
                 self._explicit_settings.add(setting)
 
-    def is_overridden(self, setting):
+    def is_overridden(self, setting: str) -> bool:
         return setting in self._explicit_settings
 
 
-def gen_settings():
+def gen_settings() -> Setting:
     # get the current path to import settings
     base = os.getcwd()
     sys.path.insert(0, base)

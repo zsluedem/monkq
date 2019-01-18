@@ -40,7 +40,7 @@ class BaseAccount():
     positions: PositionManager = field(init=False)
     wallet_balance: float = 0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.positions = PositionManager(self.position_cls, self)
 
     def deal(self, trade: Trade) -> None:
@@ -55,7 +55,6 @@ class FutureAccount(BaseAccount):
     def position_margin(self) -> float:
         return sum([position.position_margin for instrument, position in self.positions.items()])
 
-    # TODO
     @property
     def order_margin(self) -> float:
         """
@@ -79,10 +78,10 @@ class FutureAccount(BaseAccount):
             init_rate = 1/ position.leverage
         else:
             init_rate = instrument.init_margin_rate
-        long_value = 0
-        short_value = 0
+        long_value:float = 0.
+        short_value:float = 0.
 
-        opposite_orders = []
+        opposite_orders: List[FutureLimitOrder] = []
         for order in orders:
             if order.side == SIDE.BUY:
                 long_value += order.remain_value
@@ -93,8 +92,8 @@ class FutureAccount(BaseAccount):
 
         opposite_orders = sorted(opposite_orders,key=lambda x:x.price)
 
-        quantity = 0
-        opposite_offset_value = 0
+        quantity:float = 0
+        opposite_offset_value:float = 0
         for order in opposite_orders:
             if position.direction == DIRECTION.LONG:
                 if quantity - order.remain_quantity < position.quantity:
@@ -128,11 +127,11 @@ class FutureAccount(BaseAccount):
         return sum([position.unrealised_pnl for instrument, position in self.positions.items()])
 
     @property
-    def margin_balance(self):
+    def margin_balance(self) -> float:
         return self.wallet_balance + self.unrealised_pnl
 
     @property
-    def available_balance(self):
+    def available_balance(self) -> float:
         return self.margin_balance - self.order_margin - self.position_margin
 
     def deal(self, trade: Trade) -> None:

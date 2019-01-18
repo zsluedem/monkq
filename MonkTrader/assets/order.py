@@ -64,7 +64,7 @@ class BaseOrder():
         self.trades.append(trade)
 
     @property
-    def remain_quantity(self):
+    def remain_quantity(self) -> float:
         return self.quantity - self.traded_quantity
 
 
@@ -73,12 +73,12 @@ class LimitOrder(BaseOrder):
     price: float = 0
 
     @property
-    def order_value(self):
+    def order_value(self) -> float:
         return self.price * abs(self.quantity)
 
 
     @property
-    def remain_value(self):
+    def remain_value(self) -> float:
         return self.price * abs(self.remain_quantity)
 
 
@@ -103,7 +103,7 @@ class FutureLimitOrder(LimitOrder):
     instrument: FutureInstrument
 
     @property
-    def direction(self):
+    def direction(self) -> DIRECTION:
         return DIRECTION.LONG if self.quantity > 0 else DIRECTION.SHORT
 
     # @property

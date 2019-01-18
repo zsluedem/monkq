@@ -21,24 +21,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.assets.positions import PositionManager, BasePosition, FutureBasePosition, FutureCrossIsolatePosition, IsolatedPosition, CrossPosition
+from MonkTrader.assets.positions import PositionManager, BasePosition, FutureBasePosition, FutureCrossIsolatePosition, \
+    IsolatedPosition, CrossPosition
 from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
 from MonkTrader.assets.order import BaseOrder
 from MonkTrader.assets.trade import Trade
+from MonkTrader.assets.instrument import Instrument, FutureInstrument
+from MonkTrader.assets import AbcExchange
+from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.exception import MarginNotEnoughException, MarginException
 from unittest.mock import MagicMock, PropertyMock, patch
 from ..utils import random_string
 import pytest
+from unittest.mock import MagicMock
+from typing import TypeVar
+
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")
 
 
-def test_position_manager(instrument, base_account):
-    position_manager = PositionManager(BasePosition, base_account)
+def test_position_manager(instrument: Instrument, base_account: BaseAccount) -> None:
+    position_manager: PositionManager = PositionManager(BasePosition, base_account)
     position = position_manager[instrument]
     assert isinstance(position, BasePosition)
     assert position is position_manager[instrument]
 
 
-def test_empty_position_deal(instrument, base_account):
+def test_empty_position_deal(instrument: Instrument, base_account: BaseAccount) -> None:
     position = BasePosition(instrument=instrument, account=base_account)
     order = BaseOrder(account=base_account, order_id=random_string(6), instrument=instrument, quantity=80)
     # open a position
@@ -133,7 +141,7 @@ def test_empty_position_deal(instrument, base_account):
     assert position.open_price == 0
 
 
-def test_future_base_position(exchange, future_instrument, future_account):
+def test_future_base_position(exchange: MagicMock, future_instrument: FutureInstrument, future_account: FutureAccount) -> None:
     exchange.get_last_price.return_value = 10
     assert exchange == future_instrument.exchange
     assert future_instrument.last_price == 10
@@ -184,14 +192,14 @@ def test_future_base_position(exchange, future_instrument, future_account):
     assert position.min_last_maint_margin == 25
 
 
-def test_cross_position(exchange, future_instrument, future_account):
+def test_cross_position(exchange: MagicMock, future_instrument:FutureInstrument, future_account:FutureAccount) -> None:
     exchange.get_last_price.return_value = 18
     assert future_instrument.last_price == 18
 
-    future_account = MagicMock(future_account)
-    future_account.available_balance = 10000
+    mock_account = MagicMock(future_account)
+    mock_account.available_balance = 10000
 
-    position = CrossPosition(instrument=future_instrument, account=future_account)
+    position = CrossPosition(instrument=future_instrument, account=mock_account)
     # long
     position.open_price = 20
     position.quantity = 2000
@@ -205,7 +213,7 @@ def test_cross_position(exchange, future_instrument, future_account):
         position.leverage
 
     # short
-    future_account.available_balance = 12000
+    mock_account.available_balance = 12000
     position.open_price = 22
     position.quantity = -1800
     assert position.liq_price == pytest.approx(28.9699, 0.0001)
@@ -218,15 +226,15 @@ def test_cross_position(exchange, future_instrument, future_account):
         position.leverage
 
 
-def test_isolated_position(exchange, future_instrument, future_account):
+def test_isolated_position(exchange: MagicMock, future_instrument: FutureInstrument, future_account:FutureAccount) -> None:
     exchange.get_last_price.return_value = 10
     assert future_instrument.last_price == 10
 
-    future_account = MagicMock(future_account)
-    future_account.available_balance = 1000
-    assert future_account.available_balance == 1000
+    mock_account = MagicMock(future_account)
+    mock_account.available_balance = 1000
+    assert mock_account.available_balance == 1000
 
-    position = IsolatedPosition(instrument=future_instrument, account=future_account)
+    position = IsolatedPosition(instrument=future_instrument, account=mock_account)
 
     # long
     position.open_price = 11
@@ -249,7 +257,7 @@ def test_isolated_position(exchange, future_instrument, future_account):
         # more than the available margin
         position.set_leverage(2)
 
-    future_account.available_balance = 10000
+    mock_account.available_balance = 10000
     position.open_price = 11
     position.quantity = 1000
     position.set_leverage(5)
@@ -260,7 +268,7 @@ def test_isolated_position(exchange, future_instrument, future_account):
     assert position.bankruptcy_price == pytest.approx(9.0225, 0.0001)
 
     # short
-    future_account.available_balance = 10000
+    mock_account.available_balance = 10000
     exchange.get_last_price.return_value = 11
 
     assert future_instrument.last_price == 11
@@ -281,10 +289,10 @@ def test_isolated_position(exchange, future_instrument, future_account):
         position.maint_margin = 100
 
     with pytest.raises(MarginNotEnoughException):
-        future_account.available_balance = 3000
+        mock_account.available_balance = 3000
         position.set_leverage(2)
 
-    future_account.available_balance = 10000
+    mock_account.available_balance = 10000
     exchange.get_last_price.return_value = 11
     assert future_instrument.last_price == 11
     position.open_price = 10.5
@@ -298,15 +306,15 @@ def test_isolated_position(exchange, future_instrument, future_account):
     assert position.bankruptcy_price == pytest.approx(13.2169, 0.0001)
 
 
-def test_cross_isolated_position(exchange, future_instrument, future_account):
+def test_cross_isolated_position(exchange: MagicMock, future_instrument: FutureInstrument, future_account: FutureAccount) -> None:
     exchange.get_last_price.return_value = 18
     assert future_instrument.last_price == 18
 
-    future_account = MagicMock(future_account)
-    future_account.available_balance = 10000
-    assert future_account.available_balance == 10000
+    mock_account = MagicMock(future_account)
+    mock_account.available_balance = 10000
+    assert mock_account.available_balance == 10000
 
-    position = FutureCrossIsolatePosition(instrument=future_instrument, account=future_account)
+    position = FutureCrossIsolatePosition(instrument=future_instrument, account=mock_account)
     position.open_price = 20
     position.quantity = 2000
     assert position.isolated == False

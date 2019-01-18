@@ -27,13 +27,15 @@ from MonkTrader.assets.instrument import Instrument, FutureInstrument
 from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
 from MonkTrader.exception import MarginNotEnoughException, MarginException
 from collections import defaultdict
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Type, TypeVar
 
 if TYPE_CHECKING:
     from MonkTrader.assets.trade import Trade
     from MonkTrader.assets.account import BaseAccount, FutureAccount
 
-
+T_ACCOUNT = TypeVar("T_ACCOUNT", bound="BaseAccount")
+T_POSITION =TypeVar("T_POSITION", bound="BasePosition")
+T_INSTRUMENT = TypeVar("T_INSTRUMENT", bound="Instrument")
 @dataclass()
 class BasePosition():
     instrument: Instrument
@@ -103,7 +105,7 @@ class FutureBasePosition(BasePosition):
     account: "FutureAccount"
 
     @property
-    def direction(self):
+    def direction(self) -> DIRECTION:
         """
         position direction.
         :return:
@@ -207,19 +209,19 @@ class CrossPosition(FutureBasePosition):
     on the init margin ,the market value and the account available balance.
     """
     @property
-    def maint_margin(self):
+    def maint_margin(self) -> float:
         return self.account.available_balance + self.open_init_margin
 
     @maint_margin.setter
-    def maint_margin(self, value: float) -> None:
+    def maint_margin(self, value: float) -> float:
         raise MarginException("You can not set the margin in cross position")
 
     @property
-    def leverage(self):
+    def leverage(self) -> float:
         raise MarginException("Cross position doesn't support to see position leverage")
 
     @property
-    def position_margin(self):
+    def position_margin(self) -> float:
         return self.market_value * (self.instrument.init_margin_rate + self.instrument.taker_fee)
 
 
@@ -252,11 +254,11 @@ class IsolatedPosition(FutureBasePosition):
             self._maint_margin = value
 
     @property
-    def position_margin(self):
+    def position_margin(self) -> float:
         return self.maint_margin
 
     @property
-    def leverage(self):
+    def leverage(self) -> float:
         return self.market_value / self.maint_margin
 
     def set_leverage(self, leverage: float) -> None:
@@ -295,14 +297,14 @@ class FutureCrossIsolatePosition(IsolatedPosition, CrossPosition):
         self.isolated = True
 
     @property
-    def position_margin(self):
+    def position_margin(self) -> float:
         if self.isolated:
             return IsolatedPosition.position_margin.fget(self) # type: ignore
         else:
             return CrossPosition.position_margin.fget(self) # type: ignore
 
     @property
-    def leverage(self):
+    def leverage(self) -> float:
         if self.isolated:
             return IsolatedPosition.leverage.fget(self) # type: ignore
         else:
@@ -314,22 +316,22 @@ class FutureCrossIsolatePosition(IsolatedPosition, CrossPosition):
     def set_maint_margin(self, value: float) -> None:
         super(FutureCrossIsolatePosition, self).set_maint_margin(value)
 
-    def set_cross(self):
+    def set_cross(self) -> None:
         self.isolated = False
 
     @property
-    def is_isolated(self):
+    def is_isolated(self) -> bool:
         return self.isolated
 
 FuturePosition = FutureCrossIsolatePosition
 
-class PositionManager(defaultdict, Dict[Instrument, BasePosition]):
-    def __init__(self, position_cls: Type[BasePosition], account: "BaseAccount"):
+class PositionManager(defaultdict, Dict[T_INSTRUMENT, T_POSITION]):
+    def __init__(self, position_cls: Type[T_POSITION], account: T_ACCOUNT):
         super(PositionManager, self).__init__()
         self.position_cls = position_cls
         self.account = account
 
-    def __missing__(self, key):
+    def __missing__(self, key: T_INSTRUMENT) -> T_POSITION:
         ret = self.position_cls(instrument=key, account=self.account)
         self[key] = ret
         return ret

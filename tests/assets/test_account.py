@@ -353,8 +353,30 @@ def test_future_accoutn_order_margin_leverage(exchange: MagicMock, future_instru
     assert account.order_margin == pytest.approx(410)
 
 
-@pytest.mark.xfail
-def test_future_account_position_margin(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
+def test_future_account_position_margin(exchange: MagicMock, future_instrument: FutureInstrument, future_instrument2: FutureInstrument) -> None:
     # test the position margin of the account when the account have two different positions
-    # TODO
-    assert False
+    open_orders: List[FutureLimitOrder] = []
+    exchange.open_orders.return_value = open_orders
+    exchange.get_last_price.return_value = 10
+
+    account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
+
+    order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
+                              quantity=100, price=11)
+    order2 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument2,
+                              quantity=-200, price=18)
+
+    trade1 = Trade(order=order1, exec_price=11, exec_quantity=100, trade_id=random_string(6))
+    trade2 = Trade(order=order2, exec_price=18, exec_quantity=-200, trade_id=random_string(6))
+
+    account.deal(trade1)
+    account.deal(trade2)
+
+    assert account.position_margin == pytest.approx(74.0)
+
+    position1 = account.positions[future_instrument]
+
+    position1.set_leverage(4)
+
+
+    assert account.position_margin == pytest.approx(271.5)

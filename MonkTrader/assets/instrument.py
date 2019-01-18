@@ -34,7 +34,7 @@ T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 @dataclasses.dataclass(frozen=True)
 class Instrument():
     exchange: AbcExchange
-    symbol: Optional[str] = None
+    symbol: str
 
     listing_date: Optional[datetime.datetime] = None
     expiry_date: Optional[datetime.datetime] = None

@@ -25,7 +25,7 @@
 from aiohttp.test_utils import TestClient, TestServer, loop_context
 import asyncio
 from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket, INTERVAL_FACTOR
-from aiohttp import web, ClientSession, ClientTimeout
+from aiohttp import web, ClientSession, ClientTimeout, WSMsgType
 from ..resource import get_resource_path
 import pytest
 from MonkTrader.interface import AbcStrategy
@@ -88,6 +88,25 @@ async def realtime_handler(request, async_lock, close_lock):
     return ws
 
 
+async def ping_handler(request, close_lock):
+    ws_data = ret_data()
+    ws = web.WebSocketResponse(autoping=False)
+    await close_lock.acquire()
+    await ws.prepare(request)
+    await ws.send_str(next(ws_data))
+
+    await asyncio.sleep(INTERVAL_FACTOR + 3)
+
+    mes = await ws.receive()
+    assert mes.type == WSMsgType.PING
+    await ws.pong()
+    await ws.send_str(next(ws_data))
+    close_lock.release()
+
+    while not ws.closed:
+        await asyncio.sleep(0.2)
+
+
 @pytest.fixture()
 async def async_lock(loop):
     yield asyncio.Lock(loop=loop)
@@ -102,6 +121,14 @@ async def close_lock(loop):
 async def normal_bitmex_server(aiohttp_server, async_lock, close_lock):
     app = web.Application()
     app.router.add_get('/realtime', partial(realtime_handler, async_lock=async_lock, close_lock=close_lock))
+    server = await aiohttp_server(app, port=PORT)
+    yield server
+
+
+@pytest.fixture()
+async def ping_bitmex_server(aiohttp_server, close_lock):
+    app = web.Application()
+    app.router.add_get('/realtime', partial(ping_handler, close_lock=close_lock))
     server = await aiohttp_server(app, port=PORT)
     yield server
 
@@ -176,9 +203,16 @@ async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lo
     await ws.stop()
     await session.close()
 
-@pytest.mark.xfail
-def test_bitmex_websocket_ping():
-    assert False
+
+async def test_bitmex_websocket_ping(ping_bitmex_server, loop, close_lock):
+    session = ClientSession()
+    ws = BitmexWebsocket(C(), loop, session, "ws://127.0.0.1:{}/realtime".format(PORT), API_KEY, API_SECRET)
+
+    await ws.setup()
+    await close_lock.acquire()
+
+    await ws.stop()
+    await session.close()
 
 
 @pytest.mark.xfail

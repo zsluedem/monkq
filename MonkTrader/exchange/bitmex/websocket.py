@@ -30,18 +30,18 @@ import time
 import ssl
 from functools import wraps
 from collections import defaultdict, namedtuple
+from dataclasses import dataclass, field
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
 from MonkTrader.logger import trade_log
-from MonkTrader.config import CONF
 from MonkTrader.interface import AbcStrategy
 
-from typing import Dict, Union
+from typing import Dict, Union, Type
 
 OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
 CURRENCY = 'XBt'
-INTERVAL_FACTOR = 20
+INTERVAL_FACTOR = 30
 
 
 def findItemByKeys(keys: list, table: list, matchData: dict):
@@ -73,20 +73,36 @@ def timestamp_update(func):
     return wrapped
 
 
+@dataclass()
+class BackgroundTask:
+    ping: asyncio.Task = field(init=False)
+    handler: asyncio.Task = field(init=False)
+
+
 class BitmexWebsocket():
     MAX_TABLE_LEN = 200
 
-    def __init__(self, caller: AbcStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession,
-                 ssl: ssl.SSLContext = None):
+    def __init__(self, caller: AbcStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession, ws_url: str,
+                 api_key: str, api_secret: str, ssl: ssl.SSLContext = None, http_proxy=None):
         self._loop = loop
-        self._data = dict()
-        self._keys = dict()
-        self._ws = None
+
+        self._ws: ClientWebSocketResponse = None
         self._ssl = ssl
+        self._ws_url = ws_url
+        self._api_key = api_key
+        self._api_secret = api_secret
+        self._http_proxy = http_proxy
+        self._running = False
+        self.background_task = BackgroundTask()
         self.caller = caller
         self.session: ClientSession = session
-        self.inited = False
-        self._last_comm_time = 0
+        self._last_comm_time = 0  # this is used for a mark point for ping
+
+        # below is used for data store, it depends on what kind of data it subscribe
+
+        # normal data
+        self._data = dict()
+        self._keys = dict()
 
         self.quote_data = defaultdict(dict)
         self.order_book: Dict[str, OrderBook[Dict, Dict]] = defaultdict(lambda: OrderBook(Buy=dict(), Sell=dict()))
@@ -94,50 +110,62 @@ class BitmexWebsocket():
         self.margin: Dict = dict()
 
     async def setup(self):
-        headers = gen_header_dict('GET', "/realtime", '')
-        if CONF.HTTP_PROXY:
-            proxy = CONF.HTTP_PROXY
-        else:
-            proxy = None
+        headers = gen_header_dict(self._api_key, self._api_secret, 'GET', "/realtime", '')
 
-        self._ws = await self.session.ws_connect(CONF.Bitmex_ws_url, headers=headers, proxy=proxy, ssl=self._ssl)
+        self._ws = await self.session.ws_connect(self._ws_url, headers=headers, proxy=self._http_proxy, ssl=self._ssl)
         self._last_comm_time = time.time()
-        self._loop.create_task(self.run())
-        self._loop.create_task(self._ping())
+        self._running = True
+        self.background_task.handler = self._loop.create_task(self._run())
+        self.background_task.ping = self._loop.create_task(self._ping())
 
-    def open_orders(self):
-        orders = self._data['order']
-        # Filter to only open orders (leavesQty > 0) and those that we actually placed
-        return orders
-        # return [o for o in orders if str(o['clOrdID']).startswith(clOrdIDPrefix) and o['leavesQty'] > 0]
+    async def stop(self):
+        self._running = False
+        await self._ws.close()
+        await self.background_task.handler
+        await self.background_task.ping
 
     async def _ping(self):
-        while 1:
-            if time.time() - self._last_comm_time > INTERVAL_FACTOR:
-                trade_log.debug(
-                    'No communication during {} seconds. Send ping signal to keep connection open'.format(
-                        INTERVAL_FACTOR))
-                await self._ws.ping()
-                self._last_comm_time = time.time()
-            await asyncio.sleep(INTERVAL_FACTOR)
+        try:
+            while self._running:
+                if time.time() - self._last_comm_time > INTERVAL_FACTOR:
+                    trade_log.debug(
+                        'No communication during {} seconds. Send ping signal to keep connection open'.format(
+                            INTERVAL_FACTOR))
+                    await self._ws.ping()
+                    self._last_comm_time = time.time()
+                await asyncio.sleep(INTERVAL_FACTOR)
+        except asyncio.CancelledError:
+            trade_log.warning('Your bitmex ping task has been stopped')
 
-    async def run(self):
-        async for message in self._ws:
-            trade_log.debug("Receive message from bitmex:{}".format(message.data))
-            decode_message = json.loads(message.data)
-            self._on_message(decode_message)
+    async def _run(self):
+        try:
+            while self._running:
+                message = await self._ws.receive()
+                trade_log.debug("Receive message from bitmex:{}".format(message.data))
+                if message.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
+                    continue
+                elif message.type == WSMsgType.CLOSED:
+                    break
+                decode_message = json.loads(message.data)
+                self._on_message(decode_message)
 
-            # call strategy method
-            # websocket first package is not a normal package , so we use 'limit' to skip it
-            if decode_message.get('action'):
-                if decode_message.get('table') == 'execution':
-                    start = time.time()
-                    await self.caller.on_trade(message=decode_message)
-                    trade_log.debug('User on_trade process time: {}'.format(round(time.time() - start, 7)))
-                else:
-                    start = time.time()
-                    await self.caller.tick(message=decode_message)
-                    trade_log.debug('User tick process time: {}'.format(round(time.time() - start, 7)))
+                # call strategy method
+                # websocket first package is not a normal package , so we use 'limit' to skip it
+                if decode_message.get('action'):
+                    if decode_message.get('table') == 'execution':
+                        start = time.time()
+                        ret = self.caller.on_trade(message=decode_message)
+                        if asyncio.iscoroutine(ret):
+                            await ret
+                        trade_log.debug('User on_trade process time: {}'.format(round(time.time() - start, 7)))
+                    else:
+                        start = time.time()
+                        ret = self.caller.tick(message=decode_message)
+                        if asyncio.iscoroutine(ret):
+                            await ret
+                        trade_log.debug('User tick process time: {}'.format(round(time.time() - start, 7)))
+        except asyncio.CancelledError:
+            trade_log.warning('Your bitmex handler has been stopped')
 
     @timestamp_update
     async def subscribe(self, topic, symbol=''):
@@ -152,16 +180,22 @@ class BitmexWebsocket():
         args = ":".join((topic, symbol))
         await self._ws.send_json({'op': 'unsubscribe', "args": [args]})
 
+    def orders(self):
+        return self._data['order']
+
     def recent_trades(self):
         return self._data['trade']
-
-    def funds(self):
-        return self._data['margin']
 
     def get_position(self, symbol: str = None):
         if symbol is None:
             return self.positions
         return self.positions[symbol]
+
+    def get_quote(self, symbol: str):
+        return self.quote_data[symbol]
+
+    def get_order_book(self, symbol: str):
+        return self.order_book[symbol]
 
     def error(self, error):
         pass
@@ -172,7 +206,7 @@ class BitmexWebsocket():
         instruments = self._data['instrument']
         matchingInstruments = [i for i in instruments if i['symbol'] == symbol]
         if len(matchingInstruments) == 0:
-            raise Exception("Unable to find instrument or index with symbol: " + symbol)
+            raise Exception('Unable to find instrument or index with symbol: {}'.format(symbol))
         instrument = matchingInstruments[0]
         # Turn the 'tickSize' into 'tickLog' for use in rounding
         # http://stackoverflow.com/a/6190291/832202
@@ -201,12 +235,6 @@ class BitmexWebsocket():
 
         # The instrument has a tickSize. Use it to round values.
         return {k: toNearest(float(v or 0), instrument['tickSize']) for k, v in ticker.items()}
-
-    def get_quote(self, symbol: str):
-        return self.quote_data[symbol]
-
-    def get_order_book(self, symbol: str):
-        return self.order_book[symbol]
 
     @timestamp_update
     def _on_message(self, message: Union[dict, list]):
@@ -251,7 +279,7 @@ class BitmexWebsocket():
                     if message['table'] == "quote":
                         for data in message['data']:
                             self.quote_data[data['symbol']] = data
-                    elif message['table'] == 'orderBookL2':
+                    elif message['table'] == 'orderBookL2_25':
                         for data in message['data']:
                             side_book = getattr(self.order_book[data['symbol']], data['side'])
                             side_book[data['id']] = data
@@ -273,7 +301,7 @@ class BitmexWebsocket():
                     if message['table'] == 'quote':
                         for data in message['data']:
                             self.quote_data[data['symbol']] = data
-                    elif message['table'] == 'orderBookL2':
+                    elif message['table'] == 'orderBookL2_25':
                         for data in message['data']:
                             side_book = getattr(self.order_book[data['symbol']], data['side'])
                             side_book[data['id']] = data
@@ -294,7 +322,7 @@ class BitmexWebsocket():
                 elif action == 'update':
                     trade_log.debug('%s: updating %s' % (table, message['data']))
                     # Locate the item in the collection and update it.
-                    if message['table'] == "orderBookL2":
+                    if message['table'] == "orderBookL2_25":
                         for data in message['data']:
                             side_book = getattr(self.order_book[data['symbol']], data['side'])
                             bar = side_book[data['id']]
@@ -319,10 +347,8 @@ class BitmexWebsocket():
                                 if 'cumQty' in updateData and not is_canceled:
                                     contExecuted = updateData['cumQty'] - item['cumQty']
                                     if contExecuted > 0:
-                                        instrument = self.get_instrument(item['symbol'])
-                                        trade_log.info("Execution: %s %d Contracts of %s at %.*f" %
-                                                       (item['side'], contExecuted, item['symbol'],
-                                                        instrument['tickLog'], item['price']))
+                                        trade_log.info("Execution: {} {} Contracts of at {}".format(
+                                                       item['side'], contExecuted, item['symbol'], item['price']))
 
                             # Update this item.
                             item.update(updateData)
@@ -335,7 +361,7 @@ class BitmexWebsocket():
                     trade_log.debug('%s: deleting %s' % (table, message['data']))
                     # Locate the item in the collection and remove it.
 
-                    if message['table'] == "orderBookL2":
+                    if message['table'] == "orderBookL2_25":
                         for data in message['data']:
                             side_book = getattr(self.order_book[data['symbol']], data['side'])
                             side_book.pop(data['id'])
@@ -348,3 +374,52 @@ class BitmexWebsocket():
             trade_log.debug("Tick data process time: {}".format(round(time.time() - start, 7)))
         except:
             trade_log.error(traceback.format_exc())
+
+
+if __name__ == '__main__':
+    import asyncio
+
+    loop = asyncio.get_event_loop()
+
+
+    class C(AbcStrategy):
+        def setup(self) -> None:
+            pass
+
+        def on_trade(self, message) -> None:
+            pass
+
+        def tick(self, message) -> None:
+            pass
+
+        def handle_bar(self) -> None:
+            pass
+    import aiohttp
+
+    async def run():
+        _connector = aiohttp.TCPConnector(keepalive_timeout=90)
+
+        session = ClientSession(loop=loop, connector=_connector)
+        w = BitmexWebsocket(C(), loop, session, "wss://testnet.bitmex.com/realtime", "",
+                            "", http_proxy="http://127.0.0.1:1087")
+
+        await w.setup()
+        await asyncio.sleep(3)
+        await w.subscribe('quote', 'XBTUSD')
+        await w.subscribe_multiple(
+            ['trade:XBTUSD', "orderBookL2_25:XBTUSD", "position", "margin", "order", "execution", "connected"])
+        await asyncio.sleep(3)
+
+        print('!!!!')
+
+        await asyncio.sleep(60)
+        print('un')
+
+        await w.unsubscribe("orderBookL2_25", "XBTUSD")
+
+        await asyncio.sleep(10)
+
+        await w.stop()
+
+
+    loop.run_until_complete(run())

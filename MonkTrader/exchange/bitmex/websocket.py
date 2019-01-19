@@ -41,7 +41,7 @@ from typing import Dict, Union, Type
 
 OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
 CURRENCY = 'XBt'
-INTERVAL_FACTOR = 30
+INTERVAL_FACTOR = 3
 
 
 def findItemByKeys(keys: list, table: list, matchData: dict):
@@ -92,7 +92,6 @@ class BitmexWebsocket():
         self._api_key = api_key
         self._api_secret = api_secret
         self._http_proxy = http_proxy
-        self._running = False
         self.background_task = BackgroundTask()
         self.caller = caller
         self.session: ClientSession = session
@@ -114,19 +113,18 @@ class BitmexWebsocket():
 
         self._ws = await self.session.ws_connect(self._ws_url, headers=headers, proxy=self._http_proxy, ssl=self._ssl)
         self._last_comm_time = time.time()
-        self._running = True
         self.background_task.handler = self._loop.create_task(self._run())
         self.background_task.ping = self._loop.create_task(self._ping())
 
     async def stop(self):
-        self._running = False
-        await self._ws.close()
+        if not self._ws.closed:
+            await self._ws.close()
         await self.background_task.handler
         await self.background_task.ping
 
     async def _ping(self):
         try:
-            while self._running:
+            while not self._ws.closed:
                 if time.time() - self._last_comm_time > INTERVAL_FACTOR:
                     trade_log.debug(
                         'No communication during {} seconds. Send ping signal to keep connection open'.format(
@@ -139,7 +137,7 @@ class BitmexWebsocket():
 
     async def _run(self):
         try:
-            while self._running:
+            while not self._ws.closed:
                 message = await self._ws.receive()
                 trade_log.debug("Receive message from bitmex:{}".format(message.data))
                 if message.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):

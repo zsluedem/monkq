@@ -173,6 +173,9 @@ async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lo
     assert orders[-1]['leavesQty'] == 20
     assert orders[-1]['cumQty'] == 0
 
+    await ws.stop()
+    await session.close()
+
 @pytest.mark.xfail
 def test_bitmex_websocket_ping():
     assert False

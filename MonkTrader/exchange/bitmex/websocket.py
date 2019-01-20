@@ -31,10 +31,10 @@ import ssl
 from functools import wraps
 from collections import defaultdict, namedtuple
 from dataclasses import dataclass, field
+from logbook import Logger
 
 from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
-from MonkTrader.logger import trade_log
 from MonkTrader.interface import AbcStrategy
 
 from typing import Dict, Union, Type
@@ -43,6 +43,7 @@ OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
 CURRENCY = 'XBt'
 INTERVAL_FACTOR = 3
 
+logger = Logger("exchange.bitmex.websocket")
 
 def findItemByKeys(keys: list, table: list, matchData: dict):
     for item in table:
@@ -126,20 +127,20 @@ class BitmexWebsocket():
         try:
             while not self._ws.closed:
                 if time.time() - self._last_comm_time > INTERVAL_FACTOR:
-                    trade_log.debug(
+                    logger.debug(
                         'No communication during {} seconds. Send ping signal to keep connection open'.format(
                             INTERVAL_FACTOR))
                     await self._ws.ping()
                     self._last_comm_time = time.time()
                 await asyncio.sleep(INTERVAL_FACTOR)
         except asyncio.CancelledError:
-            trade_log.warning('Your bitmex ping task has been stopped')
+            logger.warning('Your bitmex ping task has been stopped')
 
     async def _run(self):
         try:
             while not self._ws.closed:
                 message = await self._ws.receive()
-                trade_log.debug("Receive message from bitmex:{}".format(message.data))
+                logger.debug("Receive message from bitmex:{}".format(message.data))
                 if message.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
                     continue
                 elif message.type == WSMsgType.CLOSED:
@@ -155,15 +156,15 @@ class BitmexWebsocket():
                         ret = self.caller.on_trade(message=decode_message)
                         if asyncio.iscoroutine(ret):
                             await ret
-                        trade_log.debug('User on_trade process time: {}'.format(round(time.time() - start, 7)))
+                        logger.debug('User on_trade process time: {}'.format(round(time.time() - start, 7)))
                     else:
                         start = time.time()
                         ret = self.caller.tick(message=decode_message)
                         if asyncio.iscoroutine(ret):
                             await ret
-                        trade_log.debug('User tick process time: {}'.format(round(time.time() - start, 7)))
+                        logger.debug('User tick process time: {}'.format(round(time.time() - start, 7)))
         except asyncio.CancelledError:
-            trade_log.warning('Your bitmex handler has been stopped')
+            logger.warning('Your bitmex handler has been stopped')
 
     @timestamp_update
     async def subscribe(self, topic, symbol=''):
@@ -184,9 +185,7 @@ class BitmexWebsocket():
     def recent_trades(self):
         return self._data['trade']
 
-    def get_position(self, symbol: str = None):
-        if symbol is None:
-            return self.positions
+    def get_position(self, symbol: str):
         return self.positions[symbol]
 
     def get_quote(self, symbol: str):
@@ -244,13 +243,13 @@ class BitmexWebsocket():
         try:
             if 'subscribe' in message:
                 if message['success']:
-                    trade_log.debug("Subscribed to %s." % message['subscribe'])
+                    logger.debug("Subscribed to %s." % message['subscribe'])
                 else:
                     self.error("Unable to subscribe to %s. Error: \"%s\" Please check and restart." %
                                (message['request']['args'][0], message['error']))
             elif 'unsubscribe' in message:
                 if message['success']:
-                    trade_log.debug("Unsubscribed to %s." % message['unsubscribe'])
+                    logger.debug("Unsubscribed to %s." % message['unsubscribe'])
                 else:
                     self.error("Unable to unsubscribe to %s. Error: \"%s\" Please check and restart." %
                                (message['request']['args'][0], message['error']))
@@ -273,7 +272,7 @@ class BitmexWebsocket():
                 # 'update'  - update row
                 # 'delete'  - delete row
                 if action == 'partial':
-                    trade_log.debug("%s: partial" % table)
+                    logger.debug("%s: partial" % table)
                     if message['table'] == "quote":
                         for data in message['data']:
                             self.quote_data[data['symbol']] = data
@@ -295,7 +294,7 @@ class BitmexWebsocket():
                         # an item. We use it for updates.
                         self._keys[table] = message['keys']
                 elif action == 'insert':
-                    trade_log.debug('%s: inserting %s' % (table, message['data']))
+                    logger.debug('%s: inserting %s' % (table, message['data']))
                     if message['table'] == 'quote':
                         for data in message['data']:
                             self.quote_data[data['symbol']] = data
@@ -318,7 +317,7 @@ class BitmexWebsocket():
                             self._data[table] = self._data[table][(BitmexWebsocket.MAX_TABLE_LEN // 2):]
 
                 elif action == 'update':
-                    trade_log.debug('%s: updating %s' % (table, message['data']))
+                    logger.debug('%s: updating %s' % (table, message['data']))
                     # Locate the item in the collection and update it.
                     if message['table'] == "orderBookL2_25":
                         for data in message['data']:
@@ -345,7 +344,7 @@ class BitmexWebsocket():
                                 if 'cumQty' in updateData and not is_canceled:
                                     contExecuted = updateData['cumQty'] - item['cumQty']
                                     if contExecuted > 0:
-                                        trade_log.info("Execution: {} {} Contracts of at {}".format(
+                                        logger.info("Execution: {} {} Contracts of at {}".format(
                                                        item['side'], contExecuted, item['symbol'], item['price']))
 
                             # Update this item.
@@ -356,7 +355,7 @@ class BitmexWebsocket():
                                 self._data[table].remove(item)
 
                 elif action == 'delete':
-                    trade_log.debug('%s: deleting %s' % (table, message['data']))
+                    logger.debug('%s: deleting %s' % (table, message['data']))
                     # Locate the item in the collection and remove it.
 
                     if message['table'] == "orderBookL2_25":
@@ -369,8 +368,8 @@ class BitmexWebsocket():
                             self._data[table].remove(item)
                 else:
                     raise Exception("Unknown action: %s" % action)
-            trade_log.debug("Tick data process time: {}".format(round(time.time() - start, 7)))
+            logger.debug("Tick data process time: {}".format(round(time.time() - start, 7)))
         except:
-            trade_log.error(traceback.format_exc())
+            logger.error(traceback.format_exc())
 
 

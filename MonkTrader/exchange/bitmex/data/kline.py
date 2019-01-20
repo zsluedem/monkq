@@ -30,6 +30,7 @@ import json
 import datetime
 import time
 import warnings
+from logbook import Logger
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from requests.exceptions import ConnectTimeout
@@ -38,9 +39,11 @@ from urllib.parse import urljoin
 from MonkTrader.const import CHINA_WARNING, CHINA_CONNECT_TIMEOUT, MAX_HISTORY
 from MonkTrader.exchange.bitmex.const import Bitmex_api_url
 
-from MonkTrader.logger import console_log
+from MonkTrader.logger import logger
 
 from typing import List
+
+logger = Logger("exchange.bitmex.data")
 
 
 def fetch_bitmex_symbols(active: bool = False):
@@ -108,9 +111,9 @@ def save_kline(db_cli: pymongo.MongoClient, frequency: str, active: bool = True)
     end = datetime.datetime.now(tzutc()) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
 
     for index, symbol_info in enumerate(symbol_list):
-        console_log.info('The {} of Total {}'.format
+        logger.info('The {} of Total {}'.format
                          (symbol_info['symbol'], len(symbol_list)))
-        console_log.info('DOWNLOAD PROGRESS {} '.format(str(
+        logger.info('DOWNLOAD PROGRESS {} '.format(str(
             float(index / len(symbol_list) * 100))[0:4] + '%')
                          )
         ref = col.find({"symbol": symbol_info['symbol']}).sort("timestamp", -1)
@@ -118,18 +121,18 @@ def save_kline(db_cli: pymongo.MongoClient, frequency: str, active: bool = True)
         if ref.count() > 0:
             start_stamp = ref.next()['timestamp'] / 1000
             start_time = datetime.datetime.fromtimestamp(start_stamp + 1, tz=tzutc())
-            console_log.info('UPDATE_SYMBOL {} Trying updating {} from {} to {}'.format(
+            logger.info('UPDATE_SYMBOL {} Trying updating {} from {} to {}'.format(
                 frequency, symbol_info['symbol'], start_time, end))
         else:
             start_time = symbol_info.get('listing', "2018-01-01T00:00:00Z")
             start_time = parse(start_time)
-            console_log.info('NEW_SYMBOL {} Trying downloading {} from {} to {}'.format(
+            logger.info('NEW_SYMBOL {} Trying downloading {} from {} to {}'.format(
                 frequency, symbol_info['symbol'], start_time, end))
 
         data = fetch_bitmex_kline(symbol_info['symbol'],
                                   start_time, end, frequency)
         if data is None:
-            console_log.info('SYMBOL {} from {} to {} has no data'.format(
+            logger.info('SYMBOL {} from {} to {} has no data'.format(
                 symbol_info['symbol'], start_time, end))
             continue
         data = to_json(data)
@@ -140,13 +143,13 @@ def save_symbols_mongo(db_cli: pymongo.MongoClient, active: bool):
     symbols = fetch_bitmex_symbols(active)
     col = db_cli.bitmex.symbols
     if col.find().count() == len(symbols):
-        console_log.info("SYMBOLS are already existed and no more to update")
+        logger.info("SYMBOLS are already existed and no more to update")
     else:
-        console_log.info("Delete the original symbols collections")
+        logger.info("Delete the original symbols collections")
         db_cli.bitmex.drop_collection("symbols")
-        console_log.info("Downloading the new symbols")
+        logger.info("Downloading the new symbols")
         col.insert_many(symbols)
-        console_log.info("Symbols download is done! Thank you man!")
+        logger.info("Symbols download is done! Thank you man!")
 
 
 def save_symbols_json(active: bool, dst_path: str):

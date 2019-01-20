@@ -185,6 +185,7 @@ async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lo
     assert position['markPrice'] == 3617.52
     assert position['liquidationPrice'] == 3304.5
 
+
     order_book = ws.get_order_book("XBTUSD")
     assert order_book.Buy[15599637950]['side'] == "Buy"
     assert order_book.Buy[15599637950]['size'] == 1342

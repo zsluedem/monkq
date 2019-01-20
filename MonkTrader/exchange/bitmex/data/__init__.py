@@ -29,13 +29,14 @@ import pymongo
 from dateutil.tz import tzutc
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, DAILY
+from logbook import Logger
 
 from MonkTrader.config import settings
 from MonkTrader.data import Point, ProcessPoints, DataDownloader
 from MonkTrader.exchange.bitmex.data.download import QuoteZipFileStream, TarStreamRequest, QuoteMongoStream, \
     TradeZipFileStream, TradeMongoStream, SymbolsStreamRequest, START_DATE
-from MonkTrader.logger import console_log
 
+logger = Logger('exchange.bitmex.data')
 
 class DatePoint(Point):
     def __init__(self, date: datetime.datetime):
@@ -73,7 +74,7 @@ class BitMexProcessPoints(ProcessPoints):
 
 class BitMexDownloader(DataDownloader):
     def __init__(self, kind: str, mode: str, dst_dir: str):
-        console_log.info('Start downloading the data')
+        logger.info('Start downloading the data')
         self.mode = mode
         self.kind = kind
         self.dst_dir = dst_dir
@@ -121,7 +122,7 @@ class BitMexDownloader(DataDownloader):
                 item = cur.next()
                 self.start = item['timestamp'] + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
             except StopIteration:
-                console_log.info(
+                logger.info(
                     'There is no data in the database. We are going to self.star download data from scratch')
                 self.start = START_DATE
         elif mode == 'csv':
@@ -145,8 +146,8 @@ class BitMexDownloader(DataDownloader):
         return BitMexProcessPoints(self.start, self.end)
 
     def download_one_point(self, point: DatePoint) -> None:
-        console_log.info('Downloading {} data on {}'.format(self.kind, point.value.isoformat()))
+        logger.info('Downloading {} data on {}'.format(self.kind, point.value.isoformat()))
         qstream = self.Streamer(date=point.value, url=self.link.format(point.value.strftime("%Y%m%d")),
                                 dst_dir=self.dst_dir)
         qstream.process()
-        console_log.info('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat()))
+        logger.info('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat()))

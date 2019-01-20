@@ -29,14 +29,16 @@ import csv
 import pymongo
 import os
 import shutil
+from logbook import Logger
 
-from MonkTrader.logger import console_log
 from MonkTrader.config import settings
 from MonkTrader.utils import CsvFileDefaultDict, assure_dir, CsvZipDefaultDict
 from MonkTrader.exception import DataDownloadException
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
 from typing import Generator
+
+logger  =Logger('exchange.bitmex.data')
 
 START_DATE = datetime.datetime(2014, 11, 22)  # bitmex open date
 
@@ -89,11 +91,11 @@ class RawStreamRequest(StreamRequest):
                     f.write(chunk)
         except Exception as e:
             self.rollback()
-            console_log.exception("Exception #{}# happened when process {} {}".format(e, self.url, self.dst_file))
+            logger.exception("Exception #{}# happened when process {} {}".format(e, self.url, self.dst_file))
             raise DataDownloadException()
 
     def rollback(self):
-        console_log.info("Remove the not complete file {}".format(self.dst_file))
+        logger.info("Remove the not complete file {}".format(self.dst_file))
         os.remove(self.dst_file)
 
 
@@ -165,7 +167,7 @@ class _CsvStreamRequest(StreamRequest):
                 self.process_chunk()
         except BaseException as e:
             self.rollback()
-            console_log.exception("Exception {} happened when process {} data".format(e, self.date))
+            logger.exception("Exception {} happened when process {} data".format(e, self.date))
             raise DataDownloadException()
         self.cleanup()
 
@@ -209,7 +211,7 @@ class MongoStream(_CsvStreamRequest):
     def rollback(self):
         col = self._cli['bitmex'][self.collection_name]
         result = col.delete_many({'timestamp': {"$gte": self.date}})
-        console_log.info("Rollback result: {}".format(result.raw_result))
+        logger.info("Rollback result: {}".format(result.raw_result))
 
 
 class QuoteMongoStream(MongoStream):
@@ -282,7 +284,7 @@ class _FileStream(_CsvStreamRequest):
         return row
 
     def rollback(self):
-        console_log.info("Rollback : Remove the not complete dir {}".format(self.dst_dir))
+        logger.info("Rollback : Remove the not complete dir {}".format(self.dst_dir))
         self.csv_file_writers.close()
         shutil.rmtree(self.dst_dir)
 

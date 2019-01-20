@@ -41,9 +41,10 @@ from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.tradecounter import TradeCounter
 from typing import List
-
+from .log import logger_group
 
 logger = Logger('exchange.bitmex.exchange')
+logger_group.add_logger(logger)
 
 def authentication_required(fn):
     """Annotation for methods that require auth."""

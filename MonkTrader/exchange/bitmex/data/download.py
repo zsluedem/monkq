@@ -37,8 +37,10 @@ from MonkTrader.exception import DataDownloadException
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
 from typing import Generator
+from ..log import logger_group
 
 logger  =Logger('exchange.bitmex.data')
+logger_group.add_logger(logger)
 
 START_DATE = datetime.datetime(2014, 11, 22)  # bitmex open date
 

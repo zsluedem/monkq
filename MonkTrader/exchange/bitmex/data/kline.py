@@ -39,11 +39,11 @@ from urllib.parse import urljoin
 from MonkTrader.const import CHINA_WARNING, CHINA_CONNECT_TIMEOUT, MAX_HISTORY
 from MonkTrader.exchange.bitmex.const import Bitmex_api_url
 
-from MonkTrader.logger import logger
-
 from typing import List
+from ..log import logger_group
 
 logger = Logger("exchange.bitmex.data")
+logger_group.add_logger(logger)
 
 
 def fetch_bitmex_symbols(active: bool = False):

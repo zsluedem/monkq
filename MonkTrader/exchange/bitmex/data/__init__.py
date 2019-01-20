@@ -36,7 +36,9 @@ from MonkTrader.data import Point, ProcessPoints, DataDownloader
 from MonkTrader.exchange.bitmex.data.download import QuoteZipFileStream, TarStreamRequest, QuoteMongoStream, \
     TradeZipFileStream, TradeMongoStream, SymbolsStreamRequest, START_DATE
 
+from ..log import logger_group
 logger = Logger('exchange.bitmex.data')
+logger_group.add_logger(logger)
 
 class DatePoint(Point):
     def __init__(self, date: datetime.datetime):

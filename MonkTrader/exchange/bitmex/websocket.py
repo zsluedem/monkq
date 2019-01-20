@@ -38,12 +38,14 @@ from MonkTrader.exchange.bitmex.auth import gen_header_dict
 from MonkTrader.interface import AbcStrategy
 
 from typing import Dict, Union, Type
+from .log import logger_group
 
 OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
 CURRENCY = 'XBt'
 INTERVAL_FACTOR = 3
 
 logger = Logger("exchange.bitmex.websocket")
+logger_group.add_logger(logger)
 
 def findItemByKeys(keys: list, table: list, matchData: dict):
     for item in table:

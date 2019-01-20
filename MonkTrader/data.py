@@ -25,8 +25,10 @@
 from typing import Any, Iterator
 from MonkTrader.exception import DataDownloadException
 from abc import ABC, abstractproperty, abstractmethod
-from MonkTrader.logger import console_log
 
+from logbook import Logger
+
+logger = Logger('data')
 
 class Point(ABC):
     @abstractproperty
@@ -53,7 +55,7 @@ class DataDownloader(ABC):
             for point in self.process_point():
                 self.download_one_point(point)
         except DataDownloadException:
-            console_log.info('some exception occured when you download data at point {}. Check!!'.format(point.value))
+            logger.info('some exception occured when you download data at point {}. Check!!'.format(point.value))
 
 
 class DataLoader(ABC):

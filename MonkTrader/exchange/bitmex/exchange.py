@@ -31,8 +31,8 @@ from aiohttp.helpers import sentinel
 
 from yarl import URL
 import ssl
+from logbook import Logger
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
-from MonkTrader.logger import trade_log
 from MonkTrader.exception import MaxRetryException, RateLimitException
 from MonkTrader.assets import AbcExchange
 from MonkTrader.exception import AuthException
@@ -41,7 +41,10 @@ from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.tradecounter import TradeCounter
 from typing import List
+from .log import logger_group
 
+logger = Logger('exchange.bitmex.exchange')
+logger_group.add_logger(logger)
 
 def authentication_required(fn):
     """Annotation for methods that require auth."""
@@ -295,10 +298,10 @@ class BitmexExchange(AbcExchange):
         headers = {}
 
         async def retry(retry_time):
-            trade_log.info("Retry on remain times {}".format(retry_time))
+            logger.info("Retry on remain times {}".format(retry_time))
             retry_time -= 1
             if retry_time < 0:
-                trade_log.error(
+                logger.error(
                     "Request with args {}, {}, {}, {}, {}, {} failed with retries".format(path, query, postdict,
                                                                                           timeout, verb, max_retry))
                 raise MaxRetryException()
@@ -321,20 +324,20 @@ class BitmexExchange(AbcExchange):
                                               ssl=self._ssl, timeout=timeout)
 
             if resp.status == 401:
-                trade_log.error("API Key or Secret incorrect, please check and restart.")
-                trade_log.error("Error: " + await resp.text())
+                logger.error("API Key or Secret incorrect, please check and restart.")
+                logger.error("Error: " + await resp.text())
                 if postdict:
-                    trade_log.error(postdict)
+                    logger.error(postdict)
                 exit(1)
             elif resp.status == 404:
                 if verb == 'DELETE':
-                    trade_log.error("Order not found: {}".format(postdict['orderID']))
+                    logger.error("Order not found: {}".format(postdict['orderID']))
                     return resp
-                trade_log.error("Unable to contact the BitMEX API (404). " +
+                logger.error("Unable to contact the BitMEX API (404). " +
                                 "Request: {} \n {}".format(url, postdict))
                 # exit_or_throw()
             elif resp.status == 429:
-                trade_log.error("Ratelimited on current request. Sleeping, then trying again. Try fewer " +
+                logger.error("Ratelimited on current request. Sleeping, then trying again. Try fewer " +
                                 "order pairs or contact support@bitmex.com to raise your limits. " +
                                 "Request: {} \n {}".format(url, postdict))
 
@@ -343,26 +346,26 @@ class BitmexExchange(AbcExchange):
                 to_sleep = int(ratelimit_reset) - int(time.time())
                 reset_str = datetime.datetime.fromtimestamp(int(ratelimit_reset)).strftime('%X')
 
-                trade_log.error("Your ratelimit will reset at {}. Sleeping for {} seconds.".format(reset_str, to_sleep))
+                logger.error("Your ratelimit will reset at {}. Sleeping for {} seconds.".format(reset_str, to_sleep))
                 raise RateLimitException(ratelimit_reset)
 
             # 503 - BitMEX temporary downtime, likely due to a deploy. Try again
             elif resp.status == 503:
-                trade_log.warning("Unable to contact the BitMEX API (503), retrying. " +
+                logger.warning("Unable to contact the BitMEX API (503), retrying. " +
                                   "Request: {} \n {}".format(url, postdict))
-                trade_log.warning("Response header :{}".format(resp.headers))
+                logger.warning("Response header :{}".format(resp.headers))
                 return await retry(max_retry)
             elif resp.status == 400:
                 content = await resp.json()
                 error = content['error']
                 message = error['message'].lower() if error else ''
 
-                trade_log.error("An error occured, and return {} \n Request: {}, {}".format(content, url, postdict))
+                logger.error("An error occured, and return {} \n Request: {}, {}".format(content, url, postdict))
                 if 'insufficient available balance' in message:
-                    trade_log.error('Account out of funds. The message: {}'.format(error["message"]))
+                    logger.error('Account out of funds. The message: {}'.format(error["message"]))
         except asyncio.TimeoutError:
             # Timeout, re-run this request
-            trade_log.warning("Timed out on request: {} ({}), retrying...".format(path, postdict))
+            logger.warning("Timed out on request: {} ({}), retrying...".format(path, postdict))
             return await retry(max_retry)
 
         return resp

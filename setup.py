@@ -32,6 +32,7 @@ AUTHOR = "WILLQ"
 with open('VERSION') as f:
     VERSION = f.read()
 
+
 def parse_requirements(filename):
     require = []
     with open(filename) as f:
@@ -44,7 +45,6 @@ requirements = parse_requirements("requirements.txt")
 
 with open('description') as f:
     description = f.read()
-
 
 setup(
     name='MonkTrader',

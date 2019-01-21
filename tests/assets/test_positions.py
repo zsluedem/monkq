@@ -22,10 +22,9 @@
 # SOFTWARE.
 #
 from typing import TypeVar
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.order import BaseOrder
@@ -144,7 +143,8 @@ def test_empty_position_deal(instrument: Instrument, base_account: BaseAccount) 
     assert position.open_price == 0
 
 
-def test_future_base_position(exchange: MagicMock, future_instrument: FutureInstrument, future_account: FutureAccount) -> None:
+def test_future_base_position(exchange: MagicMock, future_instrument: FutureInstrument,
+                              future_account: FutureAccount) -> None:
     exchange.get_last_price.return_value = 10
     assert exchange == future_instrument.exchange
     assert future_instrument.last_price == 10
@@ -195,7 +195,8 @@ def test_future_base_position(exchange: MagicMock, future_instrument: FutureInst
     assert position.min_last_maint_margin == 25
 
 
-def test_cross_position(exchange: MagicMock, future_instrument:FutureInstrument, future_account:FutureAccount) -> None:
+def test_cross_position(exchange: MagicMock, future_instrument: FutureInstrument,
+                        future_account: FutureAccount) -> None:
     exchange.get_last_price.return_value = 18
     assert future_instrument.last_price == 18
 
@@ -229,7 +230,8 @@ def test_cross_position(exchange: MagicMock, future_instrument:FutureInstrument,
         position.leverage
 
 
-def test_isolated_position(exchange: MagicMock, future_instrument: FutureInstrument, future_account:FutureAccount) -> None:
+def test_isolated_position(exchange: MagicMock, future_instrument: FutureInstrument,
+                           future_account: FutureAccount) -> None:
     exchange.get_last_price.return_value = 10
     assert future_instrument.last_price == 10
 
@@ -309,7 +311,8 @@ def test_isolated_position(exchange: MagicMock, future_instrument: FutureInstrum
     assert position.bankruptcy_price == pytest.approx(13.2169, 0.0001)
 
 
-def test_cross_isolated_position(exchange: MagicMock, future_instrument: FutureInstrument, future_account: FutureAccount) -> None:
+def test_cross_isolated_position(exchange: MagicMock, future_instrument: FutureInstrument,
+                                 future_account: FutureAccount) -> None:
     exchange.get_last_price.return_value = 18
     assert future_instrument.last_price == 18
 
@@ -320,8 +323,8 @@ def test_cross_isolated_position(exchange: MagicMock, future_instrument: FutureI
     position = FutureCrossIsolatePosition(instrument=future_instrument, account=mock_account)
     position.open_price = 20
     position.quantity = 2000
-    assert position.isolated == False
-    assert position.is_isolated == False
+    assert not position.isolated
+    assert not position.is_isolated
     assert position.liq_price == pytest.approx(14.3958, 0.0001)
     assert position.bankruptcy_price == pytest.approx(14.0351, 0.0001)
     assert position.maint_margin == 12000
@@ -333,14 +336,14 @@ def test_cross_isolated_position(exchange: MagicMock, future_instrument: FutureI
 
     with pytest.raises(MarginNotEnoughException):
         position.set_leverage(3)
-    assert position.isolated == False
+    assert not position.isolated
     with pytest.raises(MarginNotEnoughException):
         position.set_maint_margin(300)
-    assert position.isolated == False
+    assert not position.isolated
 
     position.set_leverage(4)
-    assert position.isolated == True
-    assert position.is_isolated == True
+    assert position.isolated
+    assert position.is_isolated
     assert position.maint_margin == 9000
     assert position.liq_price == pytest.approx(15.9383, 0.0001)
     assert position.bankruptcy_price == pytest.approx(15.5388, 0.0001)
@@ -348,21 +351,21 @@ def test_cross_isolated_position(exchange: MagicMock, future_instrument: FutureI
     assert position.leverage == 4
 
     position.set_cross()
-    assert position.isolated == False
-    assert position.is_isolated == False
+    assert not position.isolated
+    assert not position.is_isolated
 
     position.maint_margin = 9000
-    assert position.isolated == True
-    assert position.is_isolated == True
+    assert position.isolated
+    assert position.is_isolated
     assert position.liq_price == pytest.approx(15.9383, 0.0001)
     assert position.bankruptcy_price == pytest.approx(15.5388, 0.0001)
 
     position.set_cross()
-    assert position.isolated == False
-    assert position.is_isolated == False
+    assert not position.isolated
+    assert not position.is_isolated
     assert position.liq_price == pytest.approx(14.3958, 0.0001)
     assert position.bankruptcy_price == pytest.approx(14.0351, 0.0001)
 
     position.set_maint_margin(9000)
-    assert position.isolated == True
-    assert position.is_isolated == True
+    assert position.isolated
+    assert position.is_isolated

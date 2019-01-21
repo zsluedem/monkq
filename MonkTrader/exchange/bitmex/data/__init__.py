@@ -28,7 +28,6 @@ import pymongo
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import DAILY, rrule
 from logbook import Logger
-
 from MonkTrader.config import settings
 from MonkTrader.data import DataDownloader, Point, ProcessPoints
 from MonkTrader.exchange.bitmex.const import (
@@ -38,6 +37,7 @@ from MonkTrader.exchange.bitmex.data.download import (
     START_DATE, QuoteMongoStream, QuoteZipFileStream, SymbolsStreamRequest,
     TarStreamRequest, TradeMongoStream, TradeZipFileStream,
 )
+
 from ..log import logger_group
 
 logger = Logger('exchange.bitmex.data')

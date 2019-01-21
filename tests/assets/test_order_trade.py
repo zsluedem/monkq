@@ -22,8 +22,6 @@
 # SOFTWARE.
 #
 
-from unittest.mock import MagicMock
-
 import pytest
 from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
@@ -113,7 +111,8 @@ def test_sell_order_trade(base_account: BaseAccount, instrument: Instrument) -> 
     assert trade2.value == -550
     assert trade2.commission == 1.375
 
-def test_future_limit_order(future_instrument: FutureInstrument, future_account:FutureAccount) -> None:
+
+def test_future_limit_order(future_instrument: FutureInstrument, future_account: FutureAccount) -> None:
     order1 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
                               quantity=100, price=11)
     assert order1.price == 11

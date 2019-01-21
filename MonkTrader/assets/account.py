@@ -25,7 +25,6 @@ from collections import defaultdict
 from typing import Dict, List, Type
 
 from dataclasses import dataclass, field
-
 from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.instrument import FutureInstrument
 from MonkTrader.assets.order import FutureLimitOrder

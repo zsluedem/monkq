@@ -29,8 +29,9 @@ from dateutil.tz import tzutc
 from MonkTrader.exception import BacktestTimeException
 from MonkTrader.ticker import FrequencyTicker
 
-start_time = datetime.datetime(2018,1,1, tzinfo=tzutc())
-end_time = datetime.datetime(2018,1,3, tzinfo=tzutc())
+start_time = datetime.datetime(2018, 1, 1, tzinfo=tzutc())
+end_time = datetime.datetime(2018, 1, 3, tzinfo=tzutc())
+
 
 def test_1m_timer():
     freq = FrequencyTicker(start_time=start_time, end_time=end_time, frequency='1m')
@@ -38,7 +39,8 @@ def test_1m_timer():
     for tick in freq.timer():
         assert tick == point
         point += relativedelta(minutes=+1)
-    assert point == end_time+ relativedelta(minutes=+1)
+    assert point == end_time + relativedelta(minutes=+1)
+
 
 def test_1d_timer():
     freq = FrequencyTicker(start_time=start_time, end_time=end_time, frequency='1d')
@@ -48,9 +50,12 @@ def test_1d_timer():
         point += relativedelta(days=+1)
     assert point == end_time + relativedelta(days=+1)
 
+
 def test_timer_aware_timezone():
     with pytest.raises(AssertionError):
-        FrequencyTicker(start_time=datetime.datetime(2018,1,1), end_time=datetime.datetime(2018,1,3), frequency='1m')
+        FrequencyTicker(start_time=datetime.datetime(2018, 1, 1), end_time=datetime.datetime(2018, 1, 3),
+                        frequency='1m')
+
 
 def test_timer_timeexception():
     with pytest.raises(BacktestTimeException):

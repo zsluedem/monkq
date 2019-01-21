@@ -25,7 +25,6 @@ import datetime
 from typing import TypeVar
 
 from dateutil.tz import tzutc
-from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")
@@ -346,7 +345,6 @@ perpetual_raw_data = {
     "timestamp": "2019-01-03T08:28:10.000Z"
 }
 
-
 future_raw_date = {
     "symbol": "TRXH19",
     "rootSymbol": "TRX",
@@ -458,9 +456,9 @@ test_instrument_keymap = {
     'listing': 'listing_date',
     'expiry': 'expiry_date',
     'underlying': 'underlying',
-    "quoteCurrency":'quote_currency',
-    'lotSize':'lot_size',
-    'tickSize':'tick_size',
+    "quoteCurrency": 'quote_currency',
+    'lotSize': 'lot_size',
+    'tickSize': 'tick_size',
     'makerFee': 'maker_fee',
     'takerFee': 'taker_fee',
 }
@@ -470,13 +468,13 @@ test_future_instrument_keymap = {
     'listing': 'listing_date',
     'expiry': 'expiry_date',
     'underlying': 'underlying',
-    "quoteCurrency":'quote_currency',
-    'lotSize':'lot_size',
-    'tickSize':'tick_size',
+    "quoteCurrency": 'quote_currency',
+    'lotSize': 'lot_size',
+    'tickSize': 'tick_size',
     'makerFee': 'maker_fee',
     'takerFee': 'taker_fee',
 
-    'initMargin':'init_margin_rate',
+    'initMargin': 'init_margin_rate',
     'maintMargin': 'maint_margin_rate',
 
     'settlementFee': 'settlement_fee',
@@ -505,8 +503,8 @@ def test_instrument(exchange: T_EXCHANGE) -> None:
     }, exchange)
 
     assert instrument.symbol == "RHOC"
-    assert instrument.listing_date == datetime.datetime(2018,12,28,12,tzinfo=tzutc())
-    assert instrument.expiry_date == datetime.datetime(2018,12,30,12,tzinfo=tzutc())
+    assert instrument.listing_date == datetime.datetime(2018, 12, 28, 12, tzinfo=tzutc())
+    assert instrument.expiry_date == datetime.datetime(2018, 12, 30, 12, tzinfo=tzutc())
     assert instrument.underlying == 'XBT'
     assert instrument.quote_currency == 'XBT'
     assert instrument.lot_size == 1
@@ -536,7 +534,7 @@ def test_future_instrument(exchange: T_EXCHANGE) -> None:
     assert instrument.settle_date == datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc())
     assert instrument.front_date == datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc())
     assert instrument.reference_symbol == '.TRXXBT30M'
-    assert instrument.deleverage == True
+    assert instrument.deleverage
     assert instrument.exchange == exchange
 
 # test_upside_instrument_keymap = {
@@ -550,7 +548,6 @@ def test_future_instrument(exchange: T_EXCHANGE) -> None:
 # test_perpetual_instrument_keymap = {
 #
 # }
-
 
 
 # def test_downside_instrument():

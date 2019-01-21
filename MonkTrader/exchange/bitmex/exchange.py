@@ -30,8 +30,6 @@ import time
 import aiohttp
 from aiohttp.helpers import sentinel
 from logbook import Logger
-from yarl import URL
-
 from MonkTrader.assets import AbcExchange
 from MonkTrader.config import settings
 from MonkTrader.exception import (
@@ -41,6 +39,8 @@ from MonkTrader.exchange.bitmex.auth import gen_header_dict
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
 from MonkTrader.tradecounter import TradeCounter
+from yarl import URL
+
 from .log import logger_group
 
 logger = Logger('exchange.bitmex.exchange')

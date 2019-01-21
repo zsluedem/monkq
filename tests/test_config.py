@@ -28,19 +28,18 @@ import tempfile
 
 from MonkTrader.config import Setting
 
-
-setting_content ="""
+setting_content = """
 A = 123
 B = 321
 """
 
 
-def test_settings() ->None:
+def test_settings() -> None:
     with tempfile.TemporaryDirectory() as temp:
         with open(os.path.join(temp, 'settings.py'), 'w') as f:
             f.write(setting_content)
         sys.path.insert(0, temp)
         setting = Setting()
         sys.path.pop(0)
-        assert setting.A == 123 # type: ignore
-        assert setting.B == 321 # type: ignore
+        assert setting.A == 123  # type: ignore
+        assert setting.B == 321  # type: ignore

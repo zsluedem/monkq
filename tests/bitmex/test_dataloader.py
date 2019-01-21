@@ -39,6 +39,7 @@ settings = f"""
 DATA_DIR = "{get_resource_path()}"
 """
 
+
 @over_written_settings(DATA_DIR=get_resource_path())
 def test_bitmex_dataloader(mock_exchange):
     with patch("MonkTrader.config.settings") as mock_settings:
@@ -50,8 +51,8 @@ def test_bitmex_dataloader(mock_exchange):
 
         # detailed values see file instruments.json in resource
         assert isinstance(XBT7D_D95, DownsideInstrument)
-        assert XBT7D_D95.listing_date == datetime.datetime(2018,12,28,12,tzinfo=tzutc())
-        assert XBT7D_D95.expiry_date == datetime.datetime(2019,1,4,12,tzinfo=tzutc())
+        assert XBT7D_D95.listing_date == datetime.datetime(2018, 12, 28, 12, tzinfo=tzutc())
+        assert XBT7D_D95.expiry_date == datetime.datetime(2019, 1, 4, 12, tzinfo=tzutc())
         assert XBT7D_D95.underlying == "XBT"
         assert XBT7D_D95.quote_currency == "XBT"
         assert XBT7D_D95.lot_size == 1
@@ -64,18 +65,17 @@ def test_bitmex_dataloader(mock_exchange):
         assert XBT7D_D95.maint_margin_rate == 0
         assert XBT7D_D95.settlement_fee == 0
         assert XBT7D_D95.settle_currency == "XBt"
-        assert XBT7D_D95.settle_date == datetime.datetime(2019,1,4,12,tzinfo=tzutc())
-        assert XBT7D_D95.front_date == datetime.datetime(2018,12,28,12,tzinfo=tzutc())
+        assert XBT7D_D95.settle_date == datetime.datetime(2019, 1, 4, 12, tzinfo=tzutc())
+        assert XBT7D_D95.front_date == datetime.datetime(2018, 12, 28, 12, tzinfo=tzutc())
         assert XBT7D_D95.reference_symbol == ".BXBT30M"
-        assert XBT7D_D95.deleverage == True
-
+        assert XBT7D_D95.deleverage
 
         XBT7D_U105 = dataloader.instruments.get('XBT7D_U105')
 
         # detailed values see file instruments.json in resource
         assert isinstance(XBT7D_U105, UpsideInstrument)
-        assert XBT7D_U105.listing_date == datetime.datetime(2018,12,28,12,tzinfo=tzutc())
-        assert XBT7D_U105.expiry_date == datetime.datetime(2019,1,4,12,tzinfo=tzutc())
+        assert XBT7D_U105.listing_date == datetime.datetime(2018, 12, 28, 12, tzinfo=tzutc())
+        assert XBT7D_U105.expiry_date == datetime.datetime(2019, 1, 4, 12, tzinfo=tzutc())
         assert XBT7D_U105.underlying == "XBT"
         assert XBT7D_U105.quote_currency == "XBT"
         assert XBT7D_U105.lot_size == 1
@@ -88,19 +88,17 @@ def test_bitmex_dataloader(mock_exchange):
         assert XBT7D_U105.maint_margin_rate == 0
         assert XBT7D_U105.settlement_fee == 0
         assert XBT7D_U105.settle_currency == "XBt"
-        assert XBT7D_U105.settle_date == datetime.datetime(2019,1,4,12,tzinfo=tzutc())
-        assert XBT7D_U105.front_date == datetime.datetime(2018,12,28,12,tzinfo=tzutc())
+        assert XBT7D_U105.settle_date == datetime.datetime(2019, 1, 4, 12, tzinfo=tzutc())
+        assert XBT7D_U105.front_date == datetime.datetime(2018, 12, 28, 12, tzinfo=tzutc())
         assert XBT7D_U105.reference_symbol == ".BXBT30M"
-        assert XBT7D_U105.deleverage == True
-
-
+        assert XBT7D_U105.deleverage
 
         XBTUSD = dataloader.instruments.get('XBTUSD')
 
         # detailed values see file instruments.json in resource
         assert isinstance(XBTUSD, PerpetualInstrument)
-        assert XBTUSD.listing_date == datetime.datetime(2016,5,4,12,tzinfo=tzutc())
-        assert XBTUSD.expiry_date == None
+        assert XBTUSD.listing_date == datetime.datetime(2016, 5, 4, 12, tzinfo=tzutc())
+        assert XBTUSD.expiry_date is None
         assert XBTUSD.underlying == "XBT"
         assert XBTUSD.quote_currency == "USD"
         assert XBTUSD.lot_size == 1
@@ -113,18 +111,17 @@ def test_bitmex_dataloader(mock_exchange):
         assert XBTUSD.maint_margin_rate == 0.005
         assert XBTUSD.settlement_fee == 0
         assert XBTUSD.settle_currency == "XBt"
-        assert XBTUSD.settle_date == None
-        assert XBTUSD.front_date == datetime.datetime(2016,5,4,12,tzinfo=tzutc())
+        assert XBTUSD.settle_date is None
+        assert XBTUSD.front_date == datetime.datetime(2016, 5, 4, 12, tzinfo=tzutc())
         assert XBTUSD.reference_symbol == ".BXBT"
-        assert XBTUSD.deleverage == True
-
+        assert XBTUSD.deleverage
 
         TRXH19 = dataloader.instruments.get('TRXH19')
 
         # detailed values see file instruments.json in resource
         assert isinstance(TRXH19, FutureInstrument)
-        assert TRXH19.listing_date == datetime.datetime(2018,12,12,6,tzinfo=tzutc())
-        assert TRXH19.expiry_date == datetime.datetime(2019,3,29,12,tzinfo=tzutc())
+        assert TRXH19.listing_date == datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc())
+        assert TRXH19.expiry_date == datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc())
         assert TRXH19.underlying == "TRX"
         assert TRXH19.quote_currency == "XBT"
         assert TRXH19.lot_size == 1
@@ -137,7 +134,7 @@ def test_bitmex_dataloader(mock_exchange):
         assert TRXH19.maint_margin_rate == 0.025
         assert TRXH19.settlement_fee == 0
         assert TRXH19.settle_currency == "XBt"
-        assert TRXH19.settle_date == datetime.datetime(2019,3,29,12,tzinfo=tzutc())
-        assert TRXH19.front_date == datetime.datetime(2019,2,22,12,tzinfo=tzutc())
+        assert TRXH19.settle_date == datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc())
+        assert TRXH19.front_date == datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc())
         assert TRXH19.reference_symbol == ".TRXXBT30M"
-        assert TRXH19.deleverage == True
+        assert TRXH19.deleverage

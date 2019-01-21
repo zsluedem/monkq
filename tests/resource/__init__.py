@@ -25,7 +25,7 @@ import os
 from typing import Optional
 
 
-def get_resource_path(file: Optional[str]=None) -> str:
+def get_resource_path(file: Optional[str] = None) -> str:
     current = os.path.realpath(__file__)
     if file is None:
         return os.path.dirname(current)

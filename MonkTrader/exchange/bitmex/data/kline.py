@@ -35,10 +35,10 @@ from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzutc
 from logbook import Logger
-from MonkTrader.const import CHINA_CONNECT_TIMEOUT, CHINA_WARNING, MAX_HISTORY
-from MonkTrader.exchange.bitmex.const import Bitmex_api_url
 from requests.exceptions import ConnectTimeout
 
+from MonkTrader.const import CHINA_CONNECT_TIMEOUT, CHINA_WARNING, MAX_HISTORY
+from MonkTrader.exchange.bitmex.const import Bitmex_api_url
 from ..log import logger_group
 
 logger = Logger("exchange.bitmex.data")
@@ -110,11 +110,10 @@ def save_kline(db_cli: pymongo.MongoClient, frequency: str, active: bool = True)
     end = datetime.datetime.now(tzutc()) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
 
     for index, symbol_info in enumerate(symbol_list):
-        logger.info('The {} of Total {}'.format
-                         (symbol_info['symbol'], len(symbol_list)))
-        logger.info('DOWNLOAD PROGRESS {} '.format(str(
-            float(index / len(symbol_list) * 100))[0:4] + '%')
-                         )
+        logger.info('The {} of Total {}'
+                    .format(symbol_info['symbol'], len(symbol_list)))
+        logger.info('DOWNLOAD PROGRESS {} '
+                    .format(str(float(index / len(symbol_list) * 100))[0:4] + '%'))
         ref = col.find({"symbol": symbol_info['symbol']}).sort("timestamp", -1)
 
         if ref.count() > 0:

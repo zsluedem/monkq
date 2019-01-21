@@ -25,8 +25,8 @@ from abc import ABC, abstractmethod, abstractproperty
 from typing import TYPE_CHECKING, List, TypeVar
 
 if TYPE_CHECKING:
-    from MonkTrader.assets.instrument import Instrument
-    from MonkTrader.assets.order import BaseOrder
+    from MonkTrader.assets.instrument import Instrument  # noqa: F401
+    from MonkTrader.assets.order import BaseOrder  # noqa: F401
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 T_ORDER = TypeVar("T_ORDER", bound="BaseOrder")

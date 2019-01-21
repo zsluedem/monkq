@@ -26,11 +26,12 @@ import datetime
 import json
 import ssl
 import time
-from typing import List
 
 import aiohttp
 from aiohttp.helpers import sentinel
 from logbook import Logger
+from yarl import URL
+
 from MonkTrader.assets import AbcExchange
 from MonkTrader.config import settings
 from MonkTrader.exception import (
@@ -40,12 +41,11 @@ from MonkTrader.exchange.bitmex.auth import gen_header_dict
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
 from MonkTrader.tradecounter import TradeCounter
-from yarl import URL
-
 from .log import logger_group
 
 logger = Logger('exchange.bitmex.exchange')
 logger_group.add_logger(logger)
+
 
 def authentication_required(fn):
     """Annotation for methods that require auth."""
@@ -227,14 +227,14 @@ class BitmexExchange(AbcExchange):
         return await self._curl_bitmex(path="order", postdict=order, verb="POST", max_retry=max_retry)
 
     @authentication_required
-    async def amend_bulk_orders(self, orders: List[Order]):
+    async def amend_bulk_orders(self, orders):
         """Amend multiple orders."""
         # Note rethrow; if this fails, we want to catch it and re-tick
         return await self._curl_bitmex(path='order/bulk',
                                        postdict={'orders': [order.to_postdict() for order in orders]}, verb='PUT')
 
     @authentication_required
-    async def create_bulk_orders(self, orders: List[Order]):
+    async def create_bulk_orders(self, orders):
         """Create multiple orders."""
         return await self._curl_bitmex(path='order/bulk',
                                        postdict={'orders': [order.to_postdict() for order in orders]}, verb='POST')
@@ -335,12 +335,12 @@ class BitmexExchange(AbcExchange):
                     logger.error("Order not found: {}".format(postdict['orderID']))
                     return resp
                 logger.error("Unable to contact the BitMEX API (404). " +
-                                "Request: {} \n {}".format(url, postdict))
+                             "Request: {} \n {}".format(url, postdict))
                 # exit_or_throw()
             elif resp.status == 429:
                 logger.error("Ratelimited on current request. Sleeping, then trying again. Try fewer " +
-                                "order pairs or contact support@bitmex.com to raise your limits. " +
-                                "Request: {} \n {}".format(url, postdict))
+                             "order pairs or contact support@bitmex.com to raise your limits. " +
+                             "Request: {} \n {}".format(url, postdict))
 
                 # Figure out how long we need to wait.
                 ratelimit_reset = resp.headers['X-RateLimit-Reset']
@@ -353,7 +353,7 @@ class BitmexExchange(AbcExchange):
             # 503 - BitMEX temporary downtime, likely due to a deploy. Try again
             elif resp.status == 503:
                 logger.warning("Unable to contact the BitMEX API (503), retrying. " +
-                                  "Request: {} \n {}".format(url, postdict))
+                               "Request: {} \n {}".format(url, postdict))
                 logger.warning("Response header :{}".format(resp.headers))
                 return await retry(max_retry)
             elif resp.status == 400:

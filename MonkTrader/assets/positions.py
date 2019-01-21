@@ -25,6 +25,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Dict, Type, TypeVar
 
 from dataclasses import dataclass
+
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
 from MonkTrader.exception import MarginException, MarginNotEnoughException
@@ -34,8 +35,10 @@ if TYPE_CHECKING:
     from MonkTrader.assets.account import BaseAccount, FutureAccount
 
 T_ACCOUNT = TypeVar("T_ACCOUNT", bound="BaseAccount")
-T_POSITION =TypeVar("T_POSITION", bound="BasePosition")
+T_POSITION = TypeVar("T_POSITION", bound="BasePosition")
 T_INSTRUMENT = TypeVar("T_INSTRUMENT", bound="Instrument")
+
+
 @dataclass()
 class BasePosition():
     instrument: Instrument
@@ -43,7 +46,7 @@ class BasePosition():
     quantity: float = 0
     open_price: float = 0
 
-    def position_effect(self, trade:"Trade") -> POSITION_EFFECT:
+    def position_effect(self, trade: "Trade") -> POSITION_EFFECT:
         if self.quantity == 0:
             # open a position
             return POSITION_EFFECT.OPEN
@@ -81,8 +84,8 @@ class BasePosition():
             self.quantity += trade.exec_quantity
         elif position_effect == POSITION_EFFECT.GET_MORE:
             # get more on position
-            self.open_price = (trade.exec_price * trade.exec_quantity + self.quantity * self.open_price) / (
-                    trade.exec_quantity + self.quantity)
+            self.open_price = (trade.exec_price * trade.exec_quantity + self.quantity * self.open_price) / \
+                              (trade.exec_quantity + self.quantity)
             self.quantity += trade.exec_quantity
         else:
             # 3,4,5 condition
@@ -159,35 +162,42 @@ class FutureBasePosition(BasePosition):
     @property
     def liq_price(self) -> float:
         """
-        liquidated price, if the position reach to this price , the position would be liquidated.
+        liquidated price, if the position reach to this price ,
+        the position would be liquidated.
         The liq price need the maint_margin to be implemented.
 
         The equation would be like :
 
-        open_value - liq_value = maintain_margin - minimum_maintain_margin - commission_taker_fee- funding_fee
+        open_value - liq_value = maintain_margin - minimum_maintain_margin -
+        commission_taker_fee- funding_fee
 
         :return:
         """
         if self.direction == DIRECTION.LONG:
             # if have funding rate
-            # (self.open_value - self.maint_margin) / (1-self.instrument.maint_margin-self.instrument.taker_fee - funding_rate) / self.quantity
+            # (self.open_value - self.maint_margin) /
+            # (1-self.instrument.maint_margin-self.instrument.taker_fee -
+            # funding_rate) / self.quantity
             # don't consider the funding situation yet
-            return (self.open_value - self.maint_margin) / (
-                    1 - self.instrument.maint_margin_rate - self.instrument.taker_fee) / abs(self.quantity)
+            return (self.open_value - self.maint_margin) / \
+                   (1 - self.instrument.maint_margin_rate - self.instrument.taker_fee) / abs(self.quantity)
         else:
             # if have funding rate
-            # (self.open_value + self.maint_margin) / (1+self.instrument.maint_margin+self.instrument.taker_fee + funding_rate) / self.quantity
+            # (self.open_value + self.maint_margin) /
+            # (1+self.instrument.maint_margin+self.instrument.taker_fee +
+            # funding_rate) / self.quantity
             # don't consider the funding situation yet
-            return (self.open_value + self.maint_margin) / (
-                    1 + self.instrument.maint_margin_rate + self.instrument.taker_fee) / abs(self.quantity)
+            return (self.open_value + self.maint_margin) / \
+                   (1 + self.instrument.maint_margin_rate + self.instrument.taker_fee) / abs(self.quantity)
 
     @property
     def bankruptcy_price(self) -> float:
         """
-        bankcruptcy price, if the position reach to this price , no margin would be left
-        The equation would be like :
+        bankcruptcy price, if the position reach to this price ,
+        no margin would be left The equation would be like :
 
-        open_value - liq_value = maintain_margin - commission_taker_fee- funding_fee
+        open_value - liq_value = maintain_margin - commission_taker_fee-
+        funding_fee
 
         :return:
         """
@@ -201,13 +211,17 @@ class FutureBasePosition(BasePosition):
 @dataclass()
 class CrossPosition(FutureBasePosition):
     """
-    Cross position use all the available margin in the account to ensure the position.If your account doesn't get enough
-    margin for the position.You whole account may be liquidated and you lost all your money.It would be good to use cross
+    Cross position use all the available margin in the account to
+    ensure the position.If your account doesn't get enough
+    margin for the position.You whole account may be liquidated and
+    you lost all your money.It would be good to use cross
     position if you hedge your position.
 
-    Cross position doesn't support setting up the margin. All the position margin cross position is going to take if based
+    Cross position doesn't support setting up the margin. All the position
+    margin cross position is going to take if based
     on the init margin ,the market value and the account available balance.
     """
+
     @property
     def maint_margin(self) -> float:
         return self.account.available_balance + self.open_init_margin
@@ -228,8 +242,10 @@ class CrossPosition(FutureBasePosition):
 @dataclass()
 class IsolatedPosition(FutureBasePosition):
     """
-    Isolated position would take a fixed margin to ensure the position. If the position reach to the liq price, only the
-    margin you assigned would be lost. This kind of position can help you allocate your position more wisely to ensure
+    Isolated position would take a fixed margin to ensure the position.
+    If the position reach to the liq price, only the
+    margin you assigned would be lost. This kind of position can help you
+    allocate your position more wisely to ensure
     that you don't lose all your money.
 
     You can set the mainain margin by yourself or set the leverage based on you market value.
@@ -283,32 +299,32 @@ class FutureCrossIsolatePosition(IsolatedPosition, CrossPosition):
     """
 
     isolated: bool = False  # isolate or cross position
-    
+
     @property
     def maint_margin(self) -> float:
         if self.isolated:
-            return IsolatedPosition.maint_margin.fget(self) # type: ignore
+            return IsolatedPosition.maint_margin.fget(self)  # type: ignore
         else:
-            return CrossPosition.maint_margin.fget(self) # type: ignore
+            return CrossPosition.maint_margin.fget(self)  # type: ignore
 
     @maint_margin.setter
     def maint_margin(self, value: float) -> None:
-        IsolatedPosition.maint_margin.fset(self, value) # type: ignore
+        IsolatedPosition.maint_margin.fset(self, value)  # type: ignore
         self.isolated = True
 
     @property
     def position_margin(self) -> float:
         if self.isolated:
-            return IsolatedPosition.position_margin.fget(self) # type: ignore
+            return IsolatedPosition.position_margin.fget(self)  # type: ignore
         else:
-            return CrossPosition.position_margin.fget(self) # type: ignore
+            return CrossPosition.position_margin.fget(self)  # type: ignore
 
     @property
     def leverage(self) -> float:
         if self.isolated:
-            return IsolatedPosition.leverage.fget(self) # type: ignore
+            return IsolatedPosition.leverage.fget(self)  # type: ignore
         else:
-            return CrossPosition.leverage.fget(self) # type: ignore
+            return CrossPosition.leverage.fget(self)  # type: ignore
 
     def set_leverage(self, leverage: float) -> None:
         super(FutureCrossIsolatePosition, self).set_leverage(leverage)
@@ -323,7 +339,9 @@ class FutureCrossIsolatePosition(IsolatedPosition, CrossPosition):
     def is_isolated(self) -> bool:
         return self.isolated
 
+
 FuturePosition = FutureCrossIsolatePosition
+
 
 class PositionManager(defaultdict, Dict[T_INSTRUMENT, T_POSITION]):
     def __init__(self, position_cls: Type[T_POSITION], account: T_ACCOUNT):

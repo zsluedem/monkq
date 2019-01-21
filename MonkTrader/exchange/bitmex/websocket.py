@@ -26,18 +26,17 @@ import decimal
 import json
 import ssl
 import time
-import traceback
 from collections import defaultdict, namedtuple
 from decimal import Decimal
 from functools import wraps
-from typing import Dict, Type, Union
+from typing import Dict, Union
 
 from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
 from dataclasses import dataclass, field
 from logbook import Logger
+
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
 from MonkTrader.interface import AbcStrategy
-
 from .log import logger_group
 
 OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
@@ -46,6 +45,7 @@ INTERVAL_FACTOR = 3
 
 logger = Logger("exchange.bitmex.websocket")
 logger_group.add_logger(logger)
+
 
 def findItemByKeys(keys: list, table: list, matchData: dict):
     for item in table:
@@ -242,134 +242,131 @@ class BitmexWebsocket():
 
         table = message['table'] if 'table' in message else None
         action = message['action'] if 'action' in message else None
-        try:
-            if 'subscribe' in message:
-                if message['success']:
-                    logger.debug("Subscribed to %s." % message['subscribe'])
+        if 'subscribe' in message:
+            if message['success']:
+                logger.debug("Subscribed to %s." % message['subscribe'])
+            else:
+                self.error("Unable to subscribe to %s. Error: \"%s\" Please check and restart." %
+                           (message['request']['args'][0], message['error']))
+        elif 'unsubscribe' in message:
+            if message['success']:
+                logger.debug("Unsubscribed to %s." % message['unsubscribe'])
+            else:
+                self.error("Unable to unsubscribe to %s. Error: \"%s\" Please check and restart." %
+                           (message['request']['args'][0], message['error']))
+        elif 'status' in message:
+            if message['status'] == 400:
+                self.error(message['error'])
+            if message['status'] == 401:
+                self.error("API Key incorrect, please check and restart.")
+        elif action:
+
+            if table not in self._data:
+                self._data[table] = []
+
+            if table not in self._keys:
+                self._keys[table] = []
+
+            # There are four possible actions from the WS:
+            # 'partial' - full table image
+            # 'insert'  - new row
+            # 'update'  - update row
+            # 'delete'  - delete row
+            if action == 'partial':
+                logger.debug("%s: partial" % table)
+                if message['table'] == "quote":
+                    for data in message['data']:
+                        self.quote_data[data['symbol']] = data
+                elif message['table'] == 'orderBookL2_25':
+                    for data in message['data']:
+                        side_book = getattr(self.order_book[data['symbol']], data['side'])
+                        side_book[data['id']] = data
+                elif message['table'] == 'position':
+                    for data in message['data']:
+                        assert data['currency'] == CURRENCY
+                        self.positions[data['symbol']] = data
+                elif message['table'] == 'margin':
+                    for data in message['data']:
+                        assert data['currency'] == CURRENCY
+                        self.margin = data
                 else:
-                    self.error("Unable to subscribe to %s. Error: \"%s\" Please check and restart." %
-                               (message['request']['args'][0], message['error']))
-            elif 'unsubscribe' in message:
-                if message['success']:
-                    logger.debug("Unsubscribed to %s." % message['unsubscribe'])
+                    self._data[table] += message['data']
+                    # Keys are communicated on partials to let you know how to uniquely identify
+                    # an item. We use it for updates.
+                    self._keys[table] = message['keys']
+            elif action == 'insert':
+                logger.debug('%s: inserting %s' % (table, message['data']))
+                if message['table'] == 'quote':
+                    for data in message['data']:
+                        self.quote_data[data['symbol']] = data
+                elif message['table'] == 'orderBookL2_25':
+                    for data in message['data']:
+                        side_book = getattr(self.order_book[data['symbol']], data['side'])
+                        side_book[data['id']] = data
+                elif message['table'] == 'position':
+                    for data in message['data']:
+                        assert data['currency'] == CURRENCY
+                        self.positions[data['symbol']] = data
+                elif message['table'] == 'margin':
+                    raise NotImplementedError
                 else:
-                    self.error("Unable to unsubscribe to %s. Error: \"%s\" Please check and restart." %
-                               (message['request']['args'][0], message['error']))
-            elif 'status' in message:
-                if message['status'] == 400:
-                    self.error(message['error'])
-                if message['status'] == 401:
-                    self.error("API Key incorrect, please check and restart.")
-            elif action:
+                    self._data[table] += message['data']
+                    # Limit the max length of the table to avoid excessive memory usage.
+                    # Don't trim orders because we'll lose valuable state if we do.
+                    if table not in ['order', 'orderBookL2'] and len(
+                            self._data[table]) > BitmexWebsocket.MAX_TABLE_LEN:
+                        self._data[table] = self._data[table][(BitmexWebsocket.MAX_TABLE_LEN // 2):]
 
-                if table not in self._data:
-                    self._data[table] = []
+            elif action == 'update':
+                logger.debug('%s: updating %s' % (table, message['data']))
+                # Locate the item in the collection and update it.
+                if message['table'] == "orderBookL2_25":
+                    for data in message['data']:
+                        side_book = getattr(self.order_book[data['symbol']], data['side'])
+                        bar = side_book[data['id']]
+                        bar.update(data)
+                elif message['table'] == 'position':
+                    for data in message['data']:
+                        assert data['currency'] == CURRENCY
+                        self.positions[data['symbol']].update(data)
+                elif message['table'] == 'margin':
+                    for data in message['data']:
+                        assert data['currency'] == CURRENCY
+                        self.margin.update(data)
+                else:
+                    for updateData in message['data']:
+                        item = findItemByKeys(self._keys[table], self._data[table], updateData)
+                        if not item:
+                            continue  # No item found to update. Could happen before push
 
-                if table not in self._keys:
-                    self._keys[table] = []
+                        # Log executions
+                        if table == 'order':
+                            is_canceled = 'ordStatus' in updateData and updateData['ordStatus'] == 'Canceled'
+                            if 'cumQty' in updateData and not is_canceled:
+                                contExecuted = updateData['cumQty'] - item['cumQty']
+                                if contExecuted > 0:
+                                    logger.info("Execution: {} {} Contracts of at {}".format(
+                                        item['side'], contExecuted, item['symbol'], item['price']))
 
-                # There are four possible actions from the WS:
-                # 'partial' - full table image
-                # 'insert'  - new row
-                # 'update'  - update row
-                # 'delete'  - delete row
-                if action == 'partial':
-                    logger.debug("%s: partial" % table)
-                    if message['table'] == "quote":
-                        for data in message['data']:
-                            self.quote_data[data['symbol']] = data
-                    elif message['table'] == 'orderBookL2_25':
-                        for data in message['data']:
-                            side_book = getattr(self.order_book[data['symbol']], data['side'])
-                            side_book[data['id']] = data
-                    elif message['table'] == 'position':
-                        for data in message['data']:
-                            assert data['currency'] == CURRENCY
-                            self.positions[data['symbol']] = data
-                    elif message['table'] == 'margin':
-                        for data in message['data']:
-                            assert data['currency'] == CURRENCY
-                            self.margin = data
-                    else:
-                        self._data[table] += message['data']
-                        # Keys are communicated on partials to let you know how to uniquely identify
-                        # an item. We use it for updates.
-                        self._keys[table] = message['keys']
-                elif action == 'insert':
-                    logger.debug('%s: inserting %s' % (table, message['data']))
-                    if message['table'] == 'quote':
-                        for data in message['data']:
-                            self.quote_data[data['symbol']] = data
-                    elif message['table'] == 'orderBookL2_25':
-                        for data in message['data']:
-                            side_book = getattr(self.order_book[data['symbol']], data['side'])
-                            side_book[data['id']] = data
-                    elif message['table'] == 'position':
-                        for data in message['data']:
-                            assert data['currency'] == CURRENCY
-                            self.positions[data['symbol']] = data
-                    elif message['table'] == 'margin':
-                        raise NotImplementedError
-                    else:
-                        self._data[table] += message['data']
-                        # Limit the max length of the table to avoid excessive memory usage.
-                        # Don't trim orders because we'll lose valuable state if we do.
-                        if table not in ['order', 'orderBookL2'] and len(
-                                self._data[table]) > BitmexWebsocket.MAX_TABLE_LEN:
-                            self._data[table] = self._data[table][(BitmexWebsocket.MAX_TABLE_LEN // 2):]
+                        # Update this item.
+                        item.update(updateData)
 
-                elif action == 'update':
-                    logger.debug('%s: updating %s' % (table, message['data']))
-                    # Locate the item in the collection and update it.
-                    if message['table'] == "orderBookL2_25":
-                        for data in message['data']:
-                            side_book = getattr(self.order_book[data['symbol']], data['side'])
-                            bar = side_book[data['id']]
-                            bar.update(data)
-                    elif message['table'] == 'position':
-                        for data in message['data']:
-                            assert data['currency'] == CURRENCY
-                            self.positions[data['symbol']].update(data)
-                    elif message['table'] == 'margin':
-                        for data in message['data']:
-                            assert data['currency'] == CURRENCY
-                            self.margin.update(data)
-                    else:
-                        for updateData in message['data']:
-                            item = findItemByKeys(self._keys[table], self._data[table], updateData)
-                            if not item:
-                                continue  # No item found to update. Could happen before push
-
-                            # Log executions
-                            if table == 'order':
-                                is_canceled = 'ordStatus' in updateData and updateData['ordStatus'] == 'Canceled'
-                                if 'cumQty' in updateData and not is_canceled:
-                                    contExecuted = updateData['cumQty'] - item['cumQty']
-                                    if contExecuted > 0:
-                                        logger.info("Execution: {} {} Contracts of at {}".format(
-                                                       item['side'], contExecuted, item['symbol'], item['price']))
-
-                            # Update this item.
-                            item.update(updateData)
-
-                            # Remove canceled / filled orders
-                            if table == 'order' and item['leavesQty'] <= 0:
-                                self._data[table].remove(item)
-
-                elif action == 'delete':
-                    logger.debug('%s: deleting %s' % (table, message['data']))
-                    # Locate the item in the collection and remove it.
-
-                    if message['table'] == "orderBookL2_25":
-                        for data in message['data']:
-                            side_book = getattr(self.order_book[data['symbol']], data['side'])
-                            side_book.pop(data['id'])
-                    else:
-                        for deleteData in message['data']:
-                            item = findItemByKeys(self._keys[table], self._data[table], deleteData)
+                        # Remove canceled / filled orders
+                        if table == 'order' and item['leavesQty'] <= 0:
                             self._data[table].remove(item)
+
+            elif action == 'delete':
+                logger.debug('%s: deleting %s' % (table, message['data']))
+                # Locate the item in the collection and remove it.
+
+                if message['table'] == "orderBookL2_25":
+                    for data in message['data']:
+                        side_book = getattr(self.order_book[data['symbol']], data['side'])
+                        side_book.pop(data['id'])
                 else:
-                    raise Exception("Unknown action: %s" % action)
-            logger.debug("Tick data process time: {}".format(round(time.time() - start, 7)))
-        except:
-            logger.error(traceback.format_exc())
+                    for deleteData in message['data']:
+                        item = findItemByKeys(self._keys[table], self._data[table], deleteData)
+                        self._data[table].remove(item)
+            else:
+                raise Exception("Unknown action: %s" % action)
+        logger.debug("Tick data process time: {}".format(round(time.time() - start, 7)))

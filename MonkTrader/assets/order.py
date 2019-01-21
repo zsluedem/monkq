@@ -24,6 +24,7 @@
 from typing import TYPE_CHECKING, List
 
 from dataclasses import dataclass, field
+
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.variable import DIRECTION, ORDER_STATUS, SIDE
 from MonkTrader.exception import ImpossibleException
@@ -77,7 +78,6 @@ class LimitOrder(BaseOrder):
     def order_value(self) -> float:
         return self.price * abs(self.quantity)
 
-
     @property
     def remain_value(self) -> float:
         return self.price * abs(self.remain_quantity)
@@ -106,30 +106,3 @@ class FutureLimitOrder(LimitOrder):
     @property
     def direction(self) -> DIRECTION:
         return DIRECTION.LONG if self.quantity > 0 else DIRECTION.SHORT
-
-    # @property
-    # def order_margin(self):
-    #     """
-    #     It is related with the position
-    #     1. open a position
-    #     2. get more on a position
-    #     3. close a position and reduce position
-    #     4. close a position and open a opposite position
-    #     """
-    #     position = self.account.positions[self.instrument]
-    #     if position.isolated:
-    #         leverage = position.leverage
-    #     else:
-    #         leverage = 1
-    #     if self.account.positions[self.instrument].quantity * self.quantity >= 0:
-    #         # open a position  or get more on a position
-    #         ret = self.remain_quantity* self.price / leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
-    #     elif abs(self.account.positions[self.instrument].quantity) >= abs(self.quantity):
-    #         # close a position and reduce position
-    #         ret = 0
-    #     else:
-    #         # close a position and open a opposite position
-    #         ret = self.order_value / self.quantity * \
-    #               abs(self.account.positions[self.instrument].quantity + self.remain_quantity) / \
-    #               leverage * (1 + self.instrument.init_margin_rate + self.instrument.taker_fee)
-    #     return abs(ret)

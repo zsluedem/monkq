@@ -22,15 +22,12 @@
 # SOFTWARE.
 #
 import datetime
-from typing import Union
 
 from dateutil.rrule import DAILY, MINUTELY, rrule
 from MonkTrader.exception import BacktestTimeException
-from MonkTrader.interface import Ticker
 from MonkTrader.utils import is_aware_datetime
 
 FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
-
 
 
 class FrequencyTicker():

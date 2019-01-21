@@ -59,11 +59,14 @@ class LoadDataException(MonkException):
 class ImpossibleException(MonkException):
     pass
 
+
 class AccountException(MonkException):
     pass
 
+
 class MarginException(AccountException):
     pass
+
 
 class MarginNotEnoughException(MarginException):
     pass

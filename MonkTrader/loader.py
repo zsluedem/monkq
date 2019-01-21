@@ -22,9 +22,7 @@
 # SOFTWARE.
 #
 
-import os
-import sys
-from typing import Type, Union
+from typing import Type
 
 from MonkTrader.exception import StrategyNotFound
 from MonkTrader.interface import AbcStrategy

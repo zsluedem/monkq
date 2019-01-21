@@ -22,9 +22,10 @@
 # SOFTWARE.
 #
 from collections import defaultdict
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Type
 
 from dataclasses import dataclass, field
+
 from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.instrument import FutureInstrument
 from MonkTrader.assets.order import FutureLimitOrder
@@ -64,7 +65,7 @@ class FutureAccount(BaseAccount):
         :return:
         """
         d: Dict[FutureInstrument, List[FutureLimitOrder]] = defaultdict(list)
-        for order in self.exchange.open_orders(): # type: ignore
+        for order in self.exchange.open_orders():  # type: ignore
             d[order.instrument].append(order)
         return sum([self._order_margin(instrument, orders) for instrument, orders in d.items()])
 
@@ -77,11 +78,11 @@ class FutureAccount(BaseAccount):
         init_rate: float
         position = self.positions[instrument]
         if position.isolated:
-            init_rate = 1/ position.leverage
+            init_rate = 1 / position.leverage
         else:
             init_rate = instrument.init_margin_rate
-        long_value:float = 0.
-        short_value:float = 0.
+        long_value: float = 0.
+        short_value: float = 0.
 
         opposite_orders: List[FutureLimitOrder] = []
         for order in orders:
@@ -92,10 +93,10 @@ class FutureAccount(BaseAccount):
             if order.direction != position.direction:
                 opposite_orders.append(order)
 
-        opposite_orders = sorted(opposite_orders,key=lambda x:x.price)
+        opposite_orders = sorted(opposite_orders, key=lambda x: x.price)
 
-        quantity:float = 0
-        opposite_offset_value:float = 0
+        quantity: float = 0
+        opposite_offset_value: float = 0
         for order in opposite_orders:
             if position.direction == DIRECTION.LONG:
                 if quantity - order.remain_quantity < position.quantity:
@@ -110,19 +111,18 @@ class FutureAccount(BaseAccount):
                     opposite_offset_value += order.remain_value
                     quantity -= order.remain_quantity
                 else:
-                    valid_quantity = quantity -  position.quantity
+                    valid_quantity = quantity - position.quantity
                     opposite_offset_value += valid_quantity * order.price
                     break
-
 
         if position.direction == DIRECTION.LONG:
             short_value -= opposite_offset_value
         else:
             long_value -= opposite_offset_value
 
-        valid_value:float = max(short_value, long_value)
+        valid_value: float = max(short_value, long_value)
 
-        return valid_value * (init_rate + 2* instrument.taker_fee)
+        return valid_value * (init_rate + 2 * instrument.taker_fee)
 
     @property
     def unrealised_pnl(self) -> float:
@@ -145,7 +145,7 @@ class FutureAccount(BaseAccount):
         else:
             if position_effect == POSITION_EFFECT.CLOSE or position_effect == POSITION_EFFECT.CLOSE_PART:
                 profit_quantity = abs(trade.exec_quantity)
-            elif abs(position.quantity)>= abs(trade.exec_quantity):
+            elif abs(position.quantity) >= abs(trade.exec_quantity):
                 profit_quantity = abs(trade.exec_quantity)
             else:
                 profit_quantity = abs(position.quantity)

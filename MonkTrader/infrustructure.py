@@ -24,9 +24,7 @@
 
 from MonkTrader.config import CONF
 from MonkTrader.const import BACKTEST, REALTIME
-from MonkTrader.context import Context
 from MonkTrader.interface import AbcRunner, AbcStrategy
-from MonkTrader.ticker import FrequencyTicker
 
 
 class BacktestRunner(AbcRunner):

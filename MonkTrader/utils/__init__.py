@@ -36,8 +36,10 @@ def assure_dir(directory: str) -> bool:
     """
     Assure dir is a directory.
     :param directory:
-    :return: If dir is a directory , return True, else create the directory and return False
-    :raise NotADirectoryError: if param dir is a file , raise NotADirectoryError
+    :return: If dir is a directory , return True, else create the directory
+        and return False
+    :raise NotADirectoryError: if param dir is a file ,
+        raise NotADirectoryError
     """
     path = pathlib.Path(directory)
     if path.is_dir():
@@ -60,9 +62,9 @@ class CsvFileDefaultDict(defaultdict):
     def __init__(self, dir: str, fieldnames: List[str], *args: Any, **kwargs: Any) -> None:
         super(CsvFileDefaultDict, self).__init__(*args, **kwargs)
         self.dir = dir
-        self.default_factory = csv.DictWriter  # type: Type[csv.DictWriter]
+        self.default_factory: Type[csv.DictWriter] = csv.DictWriter
         self.fieldnames = fieldnames
-        self.file_set = set()  # type: Set
+        self.file_set: Set = set()
 
     def __missing__(self, key: str) -> csv.DictWriter:
         f = open(os.path.join(self.dir, '{}.csv'.format(key)), 'w', newline=self.CSVNEWLINE)

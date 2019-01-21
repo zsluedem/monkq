@@ -22,7 +22,6 @@
 # SOFTWARE.
 #
 import inspect
-import types
 
 from MonkTrader.ticker import FrequencyTicker
 

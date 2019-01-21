@@ -22,12 +22,11 @@
 # SOFTWARE.
 #
 import datetime
-from typing import Dict, Optional, Type, TypeVar, Union
+from typing import Optional, Type, TypeVar
 
 import dataclasses
 from dateutil.parser import parse
 from MonkTrader.assets import AbcExchange
-from MonkTrader.exception import MonkException
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 

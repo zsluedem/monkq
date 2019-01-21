@@ -17,7 +17,7 @@ install:
 
 script:
   - pytest --cov=MonkTrader tests
-  - flake8 .
+  - flake8 MonkTrader tests
   - isort --recursive --check-only MonkTrader tests
 
 after_success:

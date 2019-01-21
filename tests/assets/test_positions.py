@@ -25,6 +25,7 @@ from typing import TypeVar
 from unittest.mock import MagicMock
 
 import pytest
+from MonkTrader.assets import AbcExchange  # noqa
 from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.order import BaseOrder

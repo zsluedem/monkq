@@ -25,6 +25,7 @@ import datetime
 from typing import TypeVar
 
 from dateutil.tz import tzutc
+from MonkTrader.assets import AbcExchange  # noqa
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")

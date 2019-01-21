@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -21,15 +21,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from dateutil.rrule import rrule, MINUTELY, DAILY
+import datetime
 
-FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
-from MonkTrader.interface import Ticker
+from dateutil.rrule import DAILY, MINUTELY, rrule
 from MonkTrader.exception import BacktestTimeException
 from MonkTrader.utils import is_aware_datetime
 
-from typing import Union
-import datetime
+FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
 
 
 class FrequencyTicker():

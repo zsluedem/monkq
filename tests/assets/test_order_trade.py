@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,14 +22,16 @@
 # SOFTWARE.
 #
 
-from MonkTrader.assets.order import BaseOrder, FutureLimitOrder
-from MonkTrader.assets.account import BaseAccount, FutureAccount
-from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.assets.variable import SIDE, ORDER_STATUS
-from MonkTrader.assets.trade import Trade
-from ..utils import random_string
 from unittest.mock import MagicMock
+
 import pytest
+from MonkTrader.assets.account import BaseAccount, FutureAccount
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
+from MonkTrader.assets.order import BaseOrder, FutureLimitOrder
+from MonkTrader.assets.trade import Trade
+from MonkTrader.assets.variable import ORDER_STATUS, SIDE
+
+from ..utils import random_string
 
 
 def test_buy_order_trade(base_account: BaseAccount, instrument: Instrument) -> None:

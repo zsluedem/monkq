@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,10 +22,12 @@
 # SOFTWARE.
 #
 
-from MonkTrader.config import Setting
 import os
 import sys
 import tempfile
+
+from MonkTrader.config import Setting
+
 
 setting_content ="""
 A = 123
@@ -42,5 +44,3 @@ def test_settings() ->None:
         sys.path.pop(0)
         assert setting.A == 123 # type: ignore
         assert setting.B == 321 # type: ignore
-
-

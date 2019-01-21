@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,16 +22,19 @@
 # SOFTWARE.
 #
 
-from MonkTrader.data import DataLoader
-from MonkTrader.config import settings
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
-from MonkTrader.exception import LoadDataException
-from MonkTrader.assets.instrument import FutureInstrument, PerpetualInstrument, DownsideInstrument, UpsideInstrument, \
-    Instrument
-from MonkTrader.assets import AbcExchange
-from typing import Dict, Type
-import os
 import json
+import os
+from typing import Dict, Type
+
+from MonkTrader.assets import AbcExchange
+from MonkTrader.assets.instrument import (
+    DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
+    UpsideInstrument,
+)
+from MonkTrader.config import settings
+from MonkTrader.data import DataLoader
+from MonkTrader.exception import LoadDataException
+from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
 # instrument , bitmex instrument key to monk instrument key map
 #

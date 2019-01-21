@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -23,6 +23,8 @@
 #
 
 import curses
+
+
 class Logo():
     def __init__(self, stdscr):
         max_height, max_width = stdscr.getmaxyx()
@@ -93,6 +95,3 @@ class MaWin():
             self.win.addstr(i+1, 1, f"MA{i}:{v}", curses.COLOR_CYAN)
         self.win.border()
         self.win.refresh()
-
-
-

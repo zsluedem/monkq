@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -21,24 +21,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.exchange.bitmex.const import trade_link, quote_link, symbols_link, TARFILETYPE
 import datetime
 import os
 
 import pymongo
-from dateutil.tz import tzutc
 from dateutil.relativedelta import relativedelta
-from dateutil.rrule import rrule, DAILY
+from dateutil.rrule import DAILY, rrule
 from logbook import Logger
 
 from MonkTrader.config import settings
-from MonkTrader.data import Point, ProcessPoints, DataDownloader
-from MonkTrader.exchange.bitmex.data.download import QuoteZipFileStream, TarStreamRequest, QuoteMongoStream, \
-    TradeZipFileStream, TradeMongoStream, SymbolsStreamRequest, START_DATE
-
+from MonkTrader.data import DataDownloader, Point, ProcessPoints
+from MonkTrader.exchange.bitmex.const import (
+    TARFILETYPE, quote_link, symbols_link, trade_link,
+)
+from MonkTrader.exchange.bitmex.data.download import (
+    START_DATE, QuoteMongoStream, QuoteZipFileStream, SymbolsStreamRequest,
+    TarStreamRequest, TradeMongoStream, TradeZipFileStream,
+)
 from ..log import logger_group
+
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
+
 
 class DatePoint(Point):
     def __init__(self, date: datetime.datetime):

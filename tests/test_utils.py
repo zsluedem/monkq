@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,14 +22,17 @@
 # SOFTWARE.
 #
 
-from MonkTrader.utils import assure_dir, CsvFileDefaultDict, is_aware_datetime, CsvZipDefaultDict
-import gzip
 import csv
-import pytest
-import tempfile
-import os
 import datetime
+import gzip
+import os
+import tempfile
+
+import pytest
 import pytz
+from MonkTrader.utils import (
+    CsvFileDefaultDict, CsvZipDefaultDict, assure_dir, is_aware_datetime,
+)
 
 
 def test_assure_home():

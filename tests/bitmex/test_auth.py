@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,8 +22,11 @@
 # SOFTWARE.
 #
 
-from MonkTrader.exchange.bitmex.auth import generate_signature, gen_header_dict, generate_expires, expire_ts
 import time
+
+from MonkTrader.exchange.bitmex.auth import (
+    expire_ts, gen_header_dict, generate_expires, generate_signature,
+)
 
 secret = "chNOOS4KvNXR_Xq4k4c9qsfoKWvnDecLATCRlcBwyKDYnWgO"
 api_id = "LAqUlngMIQkIUjXMUreyu3qn"

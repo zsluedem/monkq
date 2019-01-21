@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,14 +22,18 @@
 # SOFTWARE.
 #
 
-from aiohttp.test_utils import TestClient, TestServer, loop_context
 import asyncio
-from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket, INTERVAL_FACTOR
-from aiohttp import web, ClientSession, ClientTimeout, WSMsgType
-from ..resource import get_resource_path
-import pytest
-from MonkTrader.interface import AbcStrategy
 from functools import partial
+
+import pytest
+from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
+from aiohttp.test_utils import TestClient, TestServer, loop_context
+from MonkTrader.exchange.bitmex.websocket import (
+    INTERVAL_FACTOR, BitmexWebsocket,
+)
+from MonkTrader.interface import AbcStrategy
+
+from ..resource import get_resource_path
 
 pytestmark = pytest.mark.asyncio
 PORT = 6666
@@ -78,8 +82,9 @@ async def realtime_handler(request, async_lock, close_lock):
                 ret = await ws.receive_json()
                 assert ret.get('op') == 'unsubscribe'
                 assert ret.get('args') == ['orderBookL2_25:XBTUSD']
-            await ws.send_str(
-                data)  # in the test , this step never jump to another task, which caused the websocket doesn't get any message
+            await ws.send_str(data)
+            # in the test , this step never jump to another task,
+            # which caused the websocket doesn't get any message
             await asyncio.sleep(0.00001)  # in order to jump out of this loop
         except StopIteration:
             break

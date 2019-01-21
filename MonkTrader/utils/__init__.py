@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,21 +22,24 @@
 # SOFTWARE.
 #
 import csv
-import os
-from collections import defaultdict
-from typing import List, Any, Set, Type, IO
 import datetime
-from dateutil.tz import tzlocal
 import gzip
+import os
 import pathlib
+from collections import defaultdict
+from typing import IO, Any, List, Set, Type
+
+from dateutil.tz import tzlocal
 
 
 def assure_dir(directory: str) -> bool:
     """
     Assure dir is a directory.
     :param directory:
-    :return: If dir is a directory , return True, else create the directory and return False
-    :raise NotADirectoryError: if param dir is a file , raise NotADirectoryError
+    :return: If dir is a directory , return True, else create the directory
+        and return False
+    :raise NotADirectoryError: if param dir is a file ,
+        raise NotADirectoryError
     """
     path = pathlib.Path(directory)
     if path.is_dir():
@@ -59,9 +62,9 @@ class CsvFileDefaultDict(defaultdict):
     def __init__(self, dir: str, fieldnames: List[str], *args: Any, **kwargs: Any) -> None:
         super(CsvFileDefaultDict, self).__init__(*args, **kwargs)
         self.dir = dir
-        self.default_factory = csv.DictWriter  # type: Type[csv.DictWriter]
+        self.default_factory: Type[csv.DictWriter] = csv.DictWriter
         self.fieldnames = fieldnames
-        self.file_set = set()  # type: Set
+        self.file_set: Set = set()
 
     def __missing__(self, key: str) -> csv.DictWriter:
         f = open(os.path.join(self.dir, '{}.csv'.format(key)), 'w', newline=self.CSVNEWLINE)

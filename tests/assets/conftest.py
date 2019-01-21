@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -21,15 +21,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.assets import AbcExchange
 import datetime
-from dateutil.tz import tzutc
-from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.assets.account import BaseAccount, FutureAccount
-from MonkTrader.assets.positions import PositionManager, FuturePosition, BasePosition
+from typing import Generator, TypeVar
 from unittest.mock import MagicMock, Mock
+
 import pytest
-from typing import TypeVar, Generator
+from dateutil.tz import tzutc
+from MonkTrader.assets import AbcExchange
+from MonkTrader.assets.account import BaseAccount, FutureAccount
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
+from MonkTrader.assets.positions import (
+    BasePosition, FuturePosition, PositionManager,
+)
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")

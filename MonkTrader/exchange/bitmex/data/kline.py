@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -21,25 +21,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import pymongo
-import pandas as pd
-from dateutil.tz import tzutc
-
-import requests
-import json
 import datetime
+import json
 import time
 import warnings
-from logbook import Logger
+from typing import List
+from urllib.parse import urljoin
+
+import pandas as pd
+import pymongo
+import requests
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
+from dateutil.tz import tzutc
+from logbook import Logger
 from requests.exceptions import ConnectTimeout
 
-from urllib.parse import urljoin
-from MonkTrader.const import CHINA_WARNING, CHINA_CONNECT_TIMEOUT, MAX_HISTORY
+from MonkTrader.const import CHINA_CONNECT_TIMEOUT, CHINA_WARNING, MAX_HISTORY
 from MonkTrader.exchange.bitmex.const import Bitmex_api_url
-
-from typing import List
 from ..log import logger_group
 
 logger = Logger("exchange.bitmex.data")
@@ -111,11 +110,10 @@ def save_kline(db_cli: pymongo.MongoClient, frequency: str, active: bool = True)
     end = datetime.datetime.now(tzutc()) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
 
     for index, symbol_info in enumerate(symbol_list):
-        logger.info('The {} of Total {}'.format
-                         (symbol_info['symbol'], len(symbol_list)))
-        logger.info('DOWNLOAD PROGRESS {} '.format(str(
-            float(index / len(symbol_list) * 100))[0:4] + '%')
-                         )
+        logger.info('The {} of Total {}'
+                    .format(symbol_info['symbol'], len(symbol_list)))
+        logger.info('DOWNLOAD PROGRESS {} '
+                    .format(str(float(index / len(symbol_list) * 100))[0:4] + '%'))
         ref = col.find({"symbol": symbol_info['symbol']}).sort("timestamp", -1)
 
         if ref.count() > 0:

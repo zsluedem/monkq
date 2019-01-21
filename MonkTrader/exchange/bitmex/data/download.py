@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -21,25 +21,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
-import requests
-import io
-import zlib
 import csv
-import pymongo
+import datetime
+import io
 import os
 import shutil
-from logbook import Logger
+import zlib
+from typing import Generator
 
+import pymongo
+import requests
+from logbook import Logger
 from MonkTrader.config import settings
-from MonkTrader.utils import CsvFileDefaultDict, assure_dir, CsvZipDefaultDict
 from MonkTrader.exception import DataDownloadException
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
+from MonkTrader.utils import CsvFileDefaultDict, CsvZipDefaultDict, assure_dir
 
-from typing import Generator
 from ..log import logger_group
 
-logger  =Logger('exchange.bitmex.data')
+logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
 
 START_DATE = datetime.datetime(2014, 11, 22)  # bitmex open date
@@ -72,10 +72,13 @@ class RawStreamRequest(StreamRequest):
     Stream a url request and save the raw contents to local.
     The child class has to be configured the `FILENAME`
 
-    If anything exception happens in the process, the stream file would be deleted and raise `DataDownloadException`.
+    If anything exception happens in the process,
+    the stream file would be deleted and raise `DataDownloadException`.
 
-    :param url: the url used to stream, the url should be response content not just header.
-    :param dst_dir: the content would save to the dst_dir directory with the `FILENAMe`.
+    :param url: the url used to stream, the url should be response
+        content not just header.
+    :param dst_dir: the content would save to the dst_dir directory
+        with the `FILENAMe`.
     """
     FILENAME = None
 
@@ -113,17 +116,22 @@ class SymbolsStreamRequest(RawStreamRequest):
 
 class _CsvStreamRequest(StreamRequest):
     """
-    A base class to process the stream a url request which would return a zip csv file.
-    If any Exceptions happened in the process , the class would trigger `rollback` and raise `DataDownloadException` error.
+    A base class to process the stream a url request
+    which would return a zip csv file.
+    If any Exceptions happened in the process ,
+    the class would trigger `rollback` and raise `DataDownloadException` error.
     After all data are finished streaming, `cleanup` would trigger.
 
     The child class has to implement `setup`, `process_chunk`, `process_row`
 
     :param date: the date for the class to process
     :param url: use the url to stream the response to process
-    :param cache_num: it worked with the param chunk_process ,if the chunk_process is True, the class would process the csv rows
+    :param cache_num: it worked with the param chunk_process ,
+    if the chunk_process is True, the class would process the csv rows
         when the cached items reach to the cache_num
-    :param chunk_process: If chunk_process is True , the class would process with cached items.Otherwise, it would process row by row.
+    :param chunk_process: If chunk_process is True ,
+        the class would process with cached items.Otherwise,
+        it would process row by row.
     """
 
     def __init__(self, date: datetime.datetime, url: str, cache_num: int = 100, chunk_process: bool = False,
@@ -189,7 +197,8 @@ class _CsvStreamRequest(StreamRequest):
 class MongoStream(_CsvStreamRequest):
     """
     The class used to save the zip stream csv into MongoDB.
-    The child class has to be configured the collection name and if you want to create an index for the collections, you
+    The child class has to be configured the collection name
+    and if you want to create an index for the collections, you
     have to configure the index, too.
     """
     collection_name = None
@@ -245,8 +254,10 @@ class TradeMongoStream(MongoStream):
 
 class _FileStream(_CsvStreamRequest):
     """
-    The child class which inherit this class has to be configured the filednames which are used to generate the csv headers.
-    It takes a url and a destination directory to init and the class would stream the url response to several single files
+    The child class which inherit this class has to be configured
+    the filednames which are used to generate the csv headers.
+    It takes a url and a destination directory to init and
+    the class would stream the url response to several single files
     which are classified by the symbol name.
 
     The directory structure would be like :
@@ -307,7 +318,8 @@ class QuoteFileStream(_FileStream):
 
 class _ZipFileStream(_FileStream):
     """
-    Instead of saving raw csv file in the directory, this class save a compressed csv into local to save storage.
+    Instead of saving raw csv file in the directory, this class save
+    a compressed csv into local to save storage.
     """
     DEFAULT = 'DEFAULT'
 

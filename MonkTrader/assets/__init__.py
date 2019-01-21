@@ -10,8 +10,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,11 +22,11 @@
 # SOFTWARE.
 #
 from abc import ABC, abstractmethod, abstractproperty
-from typing import TypeVar, TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, TypeVar
 
 if TYPE_CHECKING:
-    from MonkTrader.assets.instrument import Instrument
-    from MonkTrader.assets.order import BaseOrder
+    from MonkTrader.assets.instrument import Instrument  # noqa: F401
+    from MonkTrader.assets.order import BaseOrder  # noqa: F401
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 T_ORDER = TypeVar("T_ORDER", bound="BaseOrder")

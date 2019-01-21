@@ -15,7 +15,10 @@ install:
   - pip install .
   - pip install -r requirements_dev.txt
 
-script: pytest --cov=MonkTrader tests
+script:
+  - pytest --cov=MonkTrader tests
+  - flake8 .
+  - isort --recursive --check-only MonkTrader tests
 
 after_success:
   - codecov

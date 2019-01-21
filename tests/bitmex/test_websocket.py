@@ -82,8 +82,9 @@ async def realtime_handler(request, async_lock, close_lock):
                 ret = await ws.receive_json()
                 assert ret.get('op') == 'unsubscribe'
                 assert ret.get('args') == ['orderBookL2_25:XBTUSD']
-            await ws.send_str(
-                data)  # in the test , this step never jump to another task, which caused the websocket doesn't get any message
+            await ws.send_str(data)
+            # in the test , this step never jump to another task,
+            # which caused the websocket doesn't get any message
             await asyncio.sleep(0.00001)  # in order to jump out of this loop
         except StopIteration:
             break

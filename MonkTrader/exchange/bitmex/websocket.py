@@ -293,7 +293,7 @@ class BitmexWebsocket():
                     self._data[table] += message['data']
                     # Keys are communicated on partials to let you know how to uniquely identify
                     # an item. We use it for updates.
-                    self._keys[table] = message['keys']
+                    self._keys[table] = message.get('keys')
             elif action == 'insert':
                 logger.debug('%s: inserting %s' % (table, message['data']))
                 if message['table'] == 'quote':

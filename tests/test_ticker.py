@@ -21,12 +21,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.ticker import FrequencyTicker
-from dateutil.tz import tzutc
-from dateutil.relativedelta import relativedelta
-from MonkTrader.exception import BacktestTimeException
 import datetime
+
 import pytest
+from dateutil.relativedelta import relativedelta
+from dateutil.tz import tzutc
+from MonkTrader.exception import BacktestTimeException
+from MonkTrader.ticker import FrequencyTicker
 
 start_time = datetime.datetime(2018,1,1, tzinfo=tzutc())
 end_time = datetime.datetime(2018,1,3, tzinfo=tzutc())
@@ -54,4 +55,3 @@ def test_timer_aware_timezone():
 def test_timer_timeexception():
     with pytest.raises(BacktestTimeException):
         FrequencyTicker(start_time=end_time, end_time=start_time, frequency='1m')
-

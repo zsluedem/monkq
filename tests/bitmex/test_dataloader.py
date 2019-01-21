@@ -22,14 +22,18 @@
 # SOFTWARE.
 #
 
+import datetime
+from unittest.mock import patch
+
+from dateutil.tz import tzutc
+from MonkTrader.assets.instrument import (
+    DownsideInstrument, FutureInstrument, PerpetualInstrument,
+    UpsideInstrument,
+)
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
-from MonkTrader.assets.instrument import DownsideInstrument, UpsideInstrument, FutureInstrument, PerpetualInstrument
+
 from ..resource import get_resource_path
 from ..utils import over_written_settings
-from unittest.mock import  patch
-
-import datetime
-from dateutil.tz import tzutc
 
 settings = f"""
 DATA_DIR = "{get_resource_path()}"

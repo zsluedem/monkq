@@ -22,6 +22,7 @@
 # SOFTWARE.
 #
 import asyncio
+
 from MonkTrader.exchange.bitmex import BitmexWebsocket
 
 

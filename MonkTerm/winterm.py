@@ -23,6 +23,8 @@
 #
 
 import curses
+
+
 class Logo():
     def __init__(self, stdscr):
         max_height, max_width = stdscr.getmaxyx()
@@ -93,6 +95,3 @@ class MaWin():
             self.win.addstr(i+1, 1, f"MA{i}:{v}", curses.COLOR_CYAN)
         self.win.border()
         self.win.refresh()
-
-
-

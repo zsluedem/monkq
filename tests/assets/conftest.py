@@ -21,15 +21,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.assets import AbcExchange
 import datetime
-from dateutil.tz import tzutc
-from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.assets.account import BaseAccount, FutureAccount
-from MonkTrader.assets.positions import PositionManager, FuturePosition, BasePosition
+from typing import Generator, TypeVar
 from unittest.mock import MagicMock, Mock
+
 import pytest
-from typing import TypeVar, Generator
+from dateutil.tz import tzutc
+from MonkTrader.assets import AbcExchange
+from MonkTrader.assets.account import BaseAccount, FutureAccount
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
+from MonkTrader.assets.positions import (
+    BasePosition, FuturePosition, PositionManager,
+)
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")

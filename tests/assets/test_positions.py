@@ -21,20 +21,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.assets.positions import PositionManager, BasePosition, FutureBasePosition, FutureCrossIsolatePosition, \
-    IsolatedPosition, CrossPosition
-from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
-from MonkTrader.assets.order import BaseOrder
-from MonkTrader.assets.trade import Trade
-from MonkTrader.assets.instrument import Instrument, FutureInstrument
+from typing import TypeVar
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.account import BaseAccount, FutureAccount
-from MonkTrader.exception import MarginNotEnoughException, MarginException
-from unittest.mock import MagicMock, PropertyMock, patch
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
+from MonkTrader.assets.order import BaseOrder
+from MonkTrader.assets.positions import (
+    BasePosition, CrossPosition, FutureBasePosition,
+    FutureCrossIsolatePosition, IsolatedPosition, PositionManager,
+)
+from MonkTrader.assets.trade import Trade
+from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
+from MonkTrader.exception import MarginException, MarginNotEnoughException
+
 from ..utils import random_string
-import pytest
-from unittest.mock import MagicMock
-from typing import TypeVar
 
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")
 

@@ -22,25 +22,26 @@
 # SOFTWARE.
 #
 import asyncio
-import json
-import aiohttp
-import time
 import datetime
-
-from aiohttp.helpers import sentinel
-
-from yarl import URL
+import json
 import ssl
-from logbook import Logger
-from MonkTrader.exchange.bitmex.auth import gen_header_dict
-from MonkTrader.exception import MaxRetryException, RateLimitException
-from MonkTrader.assets import AbcExchange
-from MonkTrader.exception import AuthException
-from MonkTrader.config import settings
-from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
-from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
-from MonkTrader.tradecounter import TradeCounter
+import time
 from typing import List
+
+import aiohttp
+from aiohttp.helpers import sentinel
+from logbook import Logger
+from MonkTrader.assets import AbcExchange
+from MonkTrader.config import settings
+from MonkTrader.exception import (
+    AuthException, MaxRetryException, RateLimitException,
+)
+from MonkTrader.exchange.bitmex.auth import gen_header_dict
+from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
+from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
+from MonkTrader.tradecounter import TradeCounter
+from yarl import URL
+
 from .log import logger_group
 
 logger = Logger('exchange.bitmex.exchange')

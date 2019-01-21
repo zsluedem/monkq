@@ -22,14 +22,16 @@
 # SOFTWARE.
 #
 
-from MonkTrader.assets.order import BaseOrder, FutureLimitOrder
-from MonkTrader.assets.account import BaseAccount, FutureAccount
-from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.assets.variable import SIDE, ORDER_STATUS
-from MonkTrader.assets.trade import Trade
-from ..utils import random_string
 from unittest.mock import MagicMock
+
 import pytest
+from MonkTrader.assets.account import BaseAccount, FutureAccount
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
+from MonkTrader.assets.order import BaseOrder, FutureLimitOrder
+from MonkTrader.assets.trade import Trade
+from MonkTrader.assets.variable import ORDER_STATUS, SIDE
+
+from ..utils import random_string
 
 
 def test_buy_order_trade(base_account: BaseAccount, instrument: Instrument) -> None:

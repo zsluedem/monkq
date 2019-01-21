@@ -21,23 +21,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import json
-import traceback
-import decimal
-from decimal import Decimal
 import asyncio
-import time
+import decimal
+import json
 import ssl
-from functools import wraps
+import time
+import traceback
 from collections import defaultdict, namedtuple
-from dataclasses import dataclass, field
-from logbook import Logger
+from decimal import Decimal
+from functools import wraps
+from typing import Dict, Type, Union
 
 from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
+from dataclasses import dataclass, field
+from logbook import Logger
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
 from MonkTrader.interface import AbcStrategy
 
-from typing import Dict, Union, Type
 from .log import logger_group
 
 OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
@@ -373,5 +373,3 @@ class BitmexWebsocket():
             logger.debug("Tick data process time: {}".format(round(time.time() - start, 7)))
         except:
             logger.error(traceback.format_exc())
-
-

@@ -22,11 +22,11 @@
 # SOFTWARE.
 #
 
+from abc import ABC, abstractmethod, abstractproperty
 from typing import Any, Iterator
-from MonkTrader.exception import DataDownloadException
-from abc import ABC, abstractproperty, abstractmethod
 
 from logbook import Logger
+from MonkTrader.exception import DataDownloadException
 
 logger = Logger('data')
 

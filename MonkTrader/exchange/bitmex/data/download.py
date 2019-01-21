@@ -21,22 +21,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
-import requests
-import io
-import zlib
 import csv
-import pymongo
+import datetime
+import io
 import os
 import shutil
-from logbook import Logger
+import zlib
+from typing import Generator
 
+import pymongo
+import requests
+from logbook import Logger
 from MonkTrader.config import settings
-from MonkTrader.utils import CsvFileDefaultDict, assure_dir, CsvZipDefaultDict
 from MonkTrader.exception import DataDownloadException
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
+from MonkTrader.utils import CsvFileDefaultDict, CsvZipDefaultDict, assure_dir
 
-from typing import Generator
 from ..log import logger_group
 
 logger  =Logger('exchange.bitmex.data')

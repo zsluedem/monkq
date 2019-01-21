@@ -22,14 +22,17 @@
 # SOFTWARE.
 #
 
-from MonkTrader.utils import assure_dir, CsvFileDefaultDict, is_aware_datetime, CsvZipDefaultDict
-import gzip
 import csv
-import pytest
-import tempfile
-import os
 import datetime
+import gzip
+import os
+import tempfile
+
+import pytest
 import pytz
+from MonkTrader.utils import (
+    CsvFileDefaultDict, CsvZipDefaultDict, assure_dir, is_aware_datetime,
+)
 
 
 def test_assure_home():

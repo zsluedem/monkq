@@ -23,10 +23,11 @@
 #
 import random
 import string
-from MonkTrader.config import settings
 from functools import wraps
+from typing import Any, Callable
 
-from typing import Callable, Any
+from MonkTrader.config import settings
+
 
 def random_string(length: int) -> str:
     return ''.join(random.choice(string.ascii_letters) for _ in range(length))

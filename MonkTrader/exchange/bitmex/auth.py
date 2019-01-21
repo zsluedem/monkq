@@ -21,10 +21,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import time
 import hashlib
 import hmac
+import time
 from urllib.parse import urlparse
+
 from MonkTrader.utils import local_offset_seconds
 
 _safe_nonce = 300

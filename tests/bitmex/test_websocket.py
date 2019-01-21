@@ -22,14 +22,18 @@
 # SOFTWARE.
 #
 
-from aiohttp.test_utils import TestClient, TestServer, loop_context
 import asyncio
-from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket, INTERVAL_FACTOR
-from aiohttp import web, ClientSession, ClientTimeout, WSMsgType
-from ..resource import get_resource_path
-import pytest
-from MonkTrader.interface import AbcStrategy
 from functools import partial
+
+import pytest
+from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
+from aiohttp.test_utils import TestClient, TestServer, loop_context
+from MonkTrader.exchange.bitmex.websocket import (
+    INTERVAL_FACTOR, BitmexWebsocket,
+)
+from MonkTrader.interface import AbcStrategy
+
+from ..resource import get_resource_path
 
 pytestmark = pytest.mark.asyncio
 PORT = 6666

@@ -21,15 +21,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from dateutil.rrule import rrule, MINUTELY, DAILY
+import datetime
+from typing import Union
 
-FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
-from MonkTrader.interface import Ticker
+from dateutil.rrule import DAILY, MINUTELY, rrule
 from MonkTrader.exception import BacktestTimeException
+from MonkTrader.interface import Ticker
 from MonkTrader.utils import is_aware_datetime
 
-from typing import Union
-import datetime
+FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
+
 
 
 class FrequencyTicker():

@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 from abc import ABC, abstractmethod, abstractproperty
-from typing import TypeVar, TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, TypeVar
 
 if TYPE_CHECKING:
     from MonkTrader.assets.instrument import Instrument

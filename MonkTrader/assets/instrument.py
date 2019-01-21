@@ -21,11 +21,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import dataclasses
 import datetime
+from typing import Dict, Optional, Type, TypeVar, Union
+
+import dataclasses
 from dateutil.parser import parse
 from MonkTrader.assets import AbcExchange
-from typing import Optional, TypeVar, Type, Dict, Union
 from MonkTrader.exception import MonkException
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")

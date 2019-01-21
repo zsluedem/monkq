@@ -22,10 +22,12 @@
 # SOFTWARE.
 #
 
-from MonkTrader.config import Setting
 import os
 import sys
 import tempfile
+
+from MonkTrader.config import Setting
+
 
 setting_content ="""
 A = 123
@@ -42,5 +44,3 @@ def test_settings() ->None:
         sys.path.pop(0)
         assert setting.A == 123 # type: ignore
         assert setting.B == 321 # type: ignore
-
-

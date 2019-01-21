@@ -22,10 +22,12 @@
 # SOFTWARE.
 #
 import datetime
-from dateutil.tz import tzutc
-from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.assets import AbcExchange
 from typing import TypeVar
+
+from dateutil.tz import tzutc
+from MonkTrader.assets import AbcExchange
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
+
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")
 
 up_raw_data = {

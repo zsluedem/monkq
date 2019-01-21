@@ -24,10 +24,10 @@
 
 import os
 import sys
+from typing import Type, Union
 
-from typing import Union, Type
-from MonkTrader.interface import AbcStrategy
 from MonkTrader.exception import StrategyNotFound
+from MonkTrader.interface import AbcStrategy
 
 
 class StrategyLoader():

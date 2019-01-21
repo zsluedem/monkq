@@ -21,16 +21,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from collections import defaultdict
+from typing import Dict, List, Optional, Type
+
 from dataclasses import dataclass, field
 from MonkTrader.assets import AbcExchange
-from MonkTrader.assets.trade import Trade
-from MonkTrader.assets.order import FutureLimitOrder
 from MonkTrader.assets.instrument import FutureInstrument
-from MonkTrader.assets.positions import PositionManager, BasePosition, FuturePosition
+from MonkTrader.assets.order import FutureLimitOrder
+from MonkTrader.assets.positions import (
+    BasePosition, FuturePosition, PositionManager,
+)
+from MonkTrader.assets.trade import Trade
 from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT, SIDE
-from typing import Optional, Type, List, Dict
-
-from collections import defaultdict
 
 
 @dataclass()

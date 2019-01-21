@@ -21,11 +21,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from dataclasses import field, dataclass
-from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.assets.variable import SIDE, ORDER_STATUS, DIRECTION
-from MonkTrader.exception import ImpossibleException
 from typing import TYPE_CHECKING, List
+
+from dataclasses import dataclass, field
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
+from MonkTrader.assets.variable import DIRECTION, ORDER_STATUS, SIDE
+from MonkTrader.exception import ImpossibleException
 
 if TYPE_CHECKING:
     from MonkTrader.assets.account import BaseAccount, FutureAccount

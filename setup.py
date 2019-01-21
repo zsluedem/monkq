@@ -24,11 +24,7 @@
 # coding=utf8
 
 
-from setuptools import (
-    find_packages,
-    setup,
-)
-
+from setuptools import find_packages, setup
 
 KEYWORDS = ["MonkTrader", "quant", "finance", "trading"]
 AUTHOR = "WILLQ"

@@ -21,16 +21,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from typing import List, TypeVar
+from unittest.mock import MagicMock
+
+import pytest
+from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.account import FutureAccount
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
+from MonkTrader.assets.order import FutureLimitOrder
 from MonkTrader.assets.positions import FuturePosition
 from MonkTrader.assets.trade import Trade
+
 from ..utils import random_string
-from MonkTrader.assets.order import FutureLimitOrder
-import pytest
-from unittest.mock import MagicMock
-from typing import List, TypeVar
-from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.assets import AbcExchange
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")

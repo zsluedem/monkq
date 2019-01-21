@@ -21,22 +21,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.exchange.bitmex.const import trade_link, quote_link, symbols_link, TARFILETYPE
 import datetime
 import os
 
 import pymongo
-from dateutil.tz import tzutc
 from dateutil.relativedelta import relativedelta
-from dateutil.rrule import rrule, DAILY
+from dateutil.rrule import DAILY, rrule
+from dateutil.tz import tzutc
 from logbook import Logger
-
 from MonkTrader.config import settings
-from MonkTrader.data import Point, ProcessPoints, DataDownloader
-from MonkTrader.exchange.bitmex.data.download import QuoteZipFileStream, TarStreamRequest, QuoteMongoStream, \
-    TradeZipFileStream, TradeMongoStream, SymbolsStreamRequest, START_DATE
+from MonkTrader.data import DataDownloader, Point, ProcessPoints
+from MonkTrader.exchange.bitmex.const import (
+    TARFILETYPE, quote_link, symbols_link, trade_link,
+)
+from MonkTrader.exchange.bitmex.data.download import (
+    START_DATE, QuoteMongoStream, QuoteZipFileStream, SymbolsStreamRequest,
+    TarStreamRequest, TradeMongoStream, TradeZipFileStream,
+)
 
 from ..log import logger_group
+
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
 

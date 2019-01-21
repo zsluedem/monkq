@@ -22,8 +22,9 @@
 # SOFTWARE.
 #
 
-import click
 import os
+
+import click
 from MonkTrader.exchange.bitmex.data import BitMexDownloader
 from MonkTrader.utils import assure_dir
 

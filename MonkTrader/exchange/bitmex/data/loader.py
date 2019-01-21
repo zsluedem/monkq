@@ -22,16 +22,19 @@
 # SOFTWARE.
 #
 
-from MonkTrader.data import DataLoader
-from MonkTrader.config import settings
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
-from MonkTrader.exception import LoadDataException
-from MonkTrader.assets.instrument import FutureInstrument, PerpetualInstrument, DownsideInstrument, UpsideInstrument, \
-    Instrument
-from MonkTrader.assets import AbcExchange
-from typing import Dict, Type
-import os
 import json
+import os
+from typing import Dict, Type
+
+from MonkTrader.assets import AbcExchange
+from MonkTrader.assets.instrument import (
+    DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
+    UpsideInstrument,
+)
+from MonkTrader.config import settings
+from MonkTrader.data import DataLoader
+from MonkTrader.exception import LoadDataException
+from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
 # instrument , bitmex instrument key to monk instrument key map
 #

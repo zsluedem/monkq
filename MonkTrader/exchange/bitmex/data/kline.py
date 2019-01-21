@@ -21,25 +21,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import pymongo
-import pandas as pd
-from dateutil.tz import tzutc
-
-import requests
-import json
 import datetime
+import json
 import time
 import warnings
-from logbook import Logger
+from typing import List
+from urllib.parse import urljoin
+
+import pandas as pd
+import pymongo
+import requests
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
+from dateutil.tz import tzutc
+from logbook import Logger
+from MonkTrader.const import CHINA_CONNECT_TIMEOUT, CHINA_WARNING, MAX_HISTORY
+from MonkTrader.exchange.bitmex.const import Bitmex_api_url
 from requests.exceptions import ConnectTimeout
 
-from urllib.parse import urljoin
-from MonkTrader.const import CHINA_WARNING, CHINA_CONNECT_TIMEOUT, MAX_HISTORY
-from MonkTrader.exchange.bitmex.const import Bitmex_api_url
-
-from typing import List
 from ..log import logger_group
 
 logger = Logger("exchange.bitmex.data")

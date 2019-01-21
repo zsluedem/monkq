@@ -22,13 +22,14 @@
 # SOFTWARE.
 #
 import csv
-import os
-from collections import defaultdict
-from typing import List, Any, Set, Type, IO
 import datetime
-from dateutil.tz import tzlocal
 import gzip
+import os
 import pathlib
+from collections import defaultdict
+from typing import IO, Any, List, Set, Type
+
+from dateutil.tz import tzlocal
 
 
 def assure_dir(directory: str) -> bool:

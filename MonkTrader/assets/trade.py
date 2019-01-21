@@ -21,8 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import dataclasses
 from typing import TYPE_CHECKING
+
+import dataclasses
 from MonkTrader.assets.order import BaseOrder
 from MonkTrader.assets.variable import SIDE
 

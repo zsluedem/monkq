@@ -21,13 +21,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from dataclasses import dataclass
-from typing import Dict
-from MonkTrader.assets.instrument import Instrument, FutureInstrument
-from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
-from MonkTrader.exception import MarginNotEnoughException, MarginException
 from collections import defaultdict
-from typing import TYPE_CHECKING, Type, TypeVar
+from typing import TYPE_CHECKING, Dict, Type, TypeVar
+
+from dataclasses import dataclass
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
+from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
+from MonkTrader.exception import MarginException, MarginNotEnoughException
 
 if TYPE_CHECKING:
     from MonkTrader.assets.trade import Trade

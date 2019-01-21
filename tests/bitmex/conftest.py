@@ -22,8 +22,8 @@
 # SOFTWARE.
 #
 
-import pytest
 import pymongo
+import pytest
 
 
 @pytest.yield_fixture(scope="function")
@@ -32,4 +32,3 @@ def mongo_cli() -> pymongo.MongoClient:
     yield cli
 
     cli.drop_database('bitmex')
-

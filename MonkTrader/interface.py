@@ -21,10 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from abc import ABC, abstractmethod
 import datetime
-
-from typing import Generator, List, Any
+from abc import ABC, abstractmethod
+from typing import Any, Generator, List
 
 from MonkTrader.assets import AbcExchange
 

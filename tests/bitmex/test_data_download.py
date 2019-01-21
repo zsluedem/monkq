@@ -21,22 +21,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.exchange.bitmex.data.download import TarStreamRequest, QuoteMongoStream, TradeMongoStream, QuoteFileStream, \
-    TradeFileStream, SymbolsStreamRequest, TradeZipFileStream, QuoteZipFileStream
-from MonkTrader.exchange.bitmex.data import DatePoint, BitMexProcessPoints, BitMexDownloader, START_DATE
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
-
-from MonkTrader.exception import DataDownloadException
-from dateutil.relativedelta import relativedelta
-from unittest.mock import MagicMock
-import tempfile
-import zlib
 import datetime
-import random
-import pytz
 import gzip
 import os
+import random
+import tempfile
+import zlib
+from unittest.mock import MagicMock
+
 import pytest
+import pytz
+from dateutil.relativedelta import relativedelta
+from MonkTrader.exception import DataDownloadException
+from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
+from MonkTrader.exchange.bitmex.data import (
+    START_DATE, BitMexDownloader, BitMexProcessPoints, DatePoint,
+)
+from MonkTrader.exchange.bitmex.data.download import (
+    QuoteFileStream, QuoteMongoStream, QuoteZipFileStream,
+    SymbolsStreamRequest, TarStreamRequest, TradeFileStream, TradeMongoStream,
+    TradeZipFileStream,
+)
 
 stream_b = b"""c1,c2,c3,c4
 1,2,3,4

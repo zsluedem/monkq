@@ -35,10 +35,10 @@ from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzutc
 from logbook import Logger
-from requests.exceptions import ConnectTimeout
-
 from MonkTrader.const import CHINA_CONNECT_TIMEOUT, CHINA_WARNING, MAX_HISTORY
 from MonkTrader.exchange.bitmex.const import Bitmex_api_url
+from requests.exceptions import ConnectTimeout
+
 from ..log import logger_group
 
 logger = Logger("exchange.bitmex.data")

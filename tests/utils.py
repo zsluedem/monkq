@@ -32,11 +32,13 @@ from MonkTrader.config import settings
 def random_string(length: int) -> str:
     return ''.join(random.choice(string.ascii_letters) for _ in range(length))
 
+
 def over_written_settings(**options: str) -> Callable:
     def decorate_func(func: Callable) -> Any:
         @wraps(func)
         def _wrap(*args: Any, **kwargs: Any) -> Any:
             for k, v in options.items():
                 setattr(settings, k, v)
-            return func(*args, **kwargs) # type: ignore
+            return func(*args, **kwargs)  # type: ignore
+
     return decorate_func

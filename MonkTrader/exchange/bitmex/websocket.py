@@ -34,9 +34,9 @@ from typing import Dict, Union
 from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
 from dataclasses import dataclass, field
 from logbook import Logger
-
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
 from MonkTrader.interface import AbcStrategy
+
 from .log import logger_group
 
 OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])

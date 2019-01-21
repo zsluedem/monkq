@@ -27,7 +27,6 @@ from functools import partial
 
 import pytest
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
-from aiohttp.test_utils import TestClient, TestServer, loop_context
 from MonkTrader.exchange.bitmex.websocket import (
     INTERVAL_FACTOR, BitmexWebsocket,
 )
@@ -189,7 +188,6 @@ async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lo
     assert position['currentQty'] == 1000
     assert position['markPrice'] == 3617.52
     assert position['liquidationPrice'] == 3304.5
-
 
     order_book = ws.get_order_book("XBTUSD")
     assert order_book.Buy[15599637950]['side'] == "Buy"

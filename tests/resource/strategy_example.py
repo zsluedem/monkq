@@ -22,5 +22,6 @@
 # SOFTWARE.
 #
 
+
 class ExampleStrategy():
     pass

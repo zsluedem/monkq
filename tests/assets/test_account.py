@@ -25,9 +25,9 @@ from typing import List, TypeVar
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.assets import AbcExchange
+from MonkTrader.assets import AbcExchange  # noqa
 from MonkTrader.assets.account import FutureAccount
-from MonkTrader.assets.instrument import FutureInstrument, Instrument
+from MonkTrader.assets.instrument import FutureInstrument, Instrument  # noqa
 from MonkTrader.assets.order import FutureLimitOrder
 from MonkTrader.assets.positions import FuturePosition
 from MonkTrader.assets.trade import Trade
@@ -311,7 +311,8 @@ def test_future_account_order_margin_short_position(exchange: MagicMock, future_
     assert account.order_margin == 208.45
 
 
-def test_future_account_order_margin_multiple_instruments(exchange: MagicMock, future_instrument: FutureInstrument, future_instrument2: FutureInstrument) -> None:
+def test_future_account_order_margin_multiple_instruments(exchange: MagicMock, future_instrument: FutureInstrument,
+                                                          future_instrument2: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
     exchange.open_orders.return_value = open_orders
     exchange.get_last_price.return_value = 10
@@ -355,7 +356,8 @@ def test_future_accoutn_order_margin_leverage(exchange: MagicMock, future_instru
     assert account.order_margin == pytest.approx(410)
 
 
-def test_future_account_position_margin(exchange: MagicMock, future_instrument: FutureInstrument, future_instrument2: FutureInstrument) -> None:
+def test_future_account_position_margin(exchange: MagicMock, future_instrument: FutureInstrument,
+                                        future_instrument2: FutureInstrument) -> None:
     # test the position margin of the account when the account have two different positions
     open_orders: List[FutureLimitOrder] = []
     exchange.open_orders.return_value = open_orders
@@ -379,6 +381,5 @@ def test_future_account_position_margin(exchange: MagicMock, future_instrument: 
     position1 = account.positions[future_instrument]
 
     position1.set_leverage(4)
-
 
     assert account.position_margin == pytest.approx(271.5)

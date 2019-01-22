@@ -24,8 +24,8 @@
 from typing import TYPE_CHECKING
 
 import dataclasses
-from MonkTrader.assets.order import BaseOrder
 from MonkTrader.assets.const import SIDE
+from MonkTrader.assets.order import BaseOrder
 
 if TYPE_CHECKING:
     from MonkTrader.assets.instrument import Instrument

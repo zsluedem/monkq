@@ -24,8 +24,8 @@
 from typing import TYPE_CHECKING, List
 
 from dataclasses import dataclass, field
-from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.const import DIRECTION, ORDER_STATUS, SIDE
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.exception import ImpossibleException
 
 if TYPE_CHECKING:

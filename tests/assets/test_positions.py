@@ -27,6 +27,7 @@ from unittest.mock import MagicMock
 import pytest
 from MonkTrader.assets import AbcExchange  # noqa
 from MonkTrader.assets.account import BaseAccount, FutureAccount
+from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.order import BaseOrder
 from MonkTrader.assets.positions import (
@@ -34,7 +35,6 @@ from MonkTrader.assets.positions import (
     FutureCrossIsolatePosition, IsolatedPosition, PositionManager,
 )
 from MonkTrader.assets.trade import Trade
-from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT
 from MonkTrader.exception import MarginException, MarginNotEnoughException
 
 from ..utils import random_string

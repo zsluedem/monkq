@@ -25,8 +25,8 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Dict, Type, TypeVar
 
 from dataclasses import dataclass
-from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT
+from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.exception import MarginException, MarginNotEnoughException
 
 if TYPE_CHECKING:

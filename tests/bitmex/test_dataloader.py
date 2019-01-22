@@ -23,7 +23,6 @@
 #
 
 import datetime
-from unittest.mock import patch
 
 from dateutil.tz import tzutc
 from MonkTrader.assets.instrument import (
@@ -33,7 +32,6 @@ from MonkTrader.assets.instrument import (
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 
 from ..resource import get_resource_path
-
 
 
 def test_bitmex_dataloader(exchange):

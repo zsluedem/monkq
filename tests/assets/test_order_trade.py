@@ -24,10 +24,10 @@
 
 import pytest
 from MonkTrader.assets.account import BaseAccount, FutureAccount
+from MonkTrader.assets.const import ORDER_STATUS, SIDE
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.order import BaseOrder, FutureLimitOrder
 from MonkTrader.assets.trade import Trade
-from MonkTrader.assets.const import ORDER_STATUS, SIDE
 
 from ..utils import random_string
 

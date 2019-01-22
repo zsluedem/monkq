@@ -31,7 +31,6 @@ from MonkTrader.assets.instrument import (
     DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
     UpsideInstrument,
 )
-from MonkTrader.config import settings
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataException
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME

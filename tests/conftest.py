@@ -25,11 +25,12 @@ from typing import Generator
 from unittest.mock import MagicMock
 
 import pytest
-
 from MonkTrader.assets import AbcExchange
 from MonkTrader.config import Setting
+
+
 @pytest.fixture()
-def settings():
+def settings() -> Generator[Setting, None, None]:
     yield Setting()
 
 

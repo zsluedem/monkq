@@ -26,6 +26,7 @@ from typing import Generator, TypeVar
 
 import pytest
 from dateutil.tz import tzutc
+from MonkTrader.assets import AbcExchange  # noqa: F401
 from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.positions import BasePosition, FuturePosition

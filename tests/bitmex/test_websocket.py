@@ -32,7 +32,7 @@ from MonkTrader.exchange.bitmex.websocket import (
 )
 from MonkTrader.interface import AbcStrategy
 
-from ..resource import get_resource_path
+from MonkTrader.utils import get_resource_path
 
 pytestmark = pytest.mark.asyncio
 API_KEY = "jeg9lHHlfNPu3UbCyLDCYm32"

@@ -25,8 +25,8 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Dict, Type, TypeVar
 
 from dataclasses import dataclass
+from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
-from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
 from MonkTrader.exception import MarginException, MarginNotEnoughException
 
 if TYPE_CHECKING:
@@ -66,7 +66,8 @@ class BasePosition():
 
     def deal(self, trade: "Trade") -> None:
         """
-        When a position make a trade, the position would be changed by the trade.
+        When a position make a trade, the position would be changed
+        by the trade.
         There are 5 conditions
         1. open a position
         2. get more on position
@@ -137,7 +138,8 @@ class FutureBasePosition(BasePosition):
     def min_open_maint_margin(self) -> float:
         """
         The minimum margin for this position.
-        If the margin for this position is lower than the maint_margin, the position would be liquidated.
+        If the margin for this position is lower than the maint_margin,
+        the position would be liquidated.
         :return:
         """
         return self.open_value * self.instrument.maint_margin_rate
@@ -247,7 +249,8 @@ class IsolatedPosition(FutureBasePosition):
     allocate your position more wisely to ensure
     that you don't lose all your money.
 
-    You can set the mainain margin by yourself or set the leverage based on you market value.
+    You can set the mainain margin by yourself or set the
+    leverage based on you market value.
     """
     _maint_margin: float = 0
 
@@ -258,8 +261,10 @@ class IsolatedPosition(FutureBasePosition):
     @maint_margin.setter
     def maint_margin(self, value: float) -> None:
         """
-        LONG position choose open_init_margin would be safer because it is bigger.
-        SHORT position choose last_init_margin would be safer because it is bigger.
+        LONG position choose open_init_margin would be
+        safer because it is bigger.
+        SHORT position choose last_init_margin would be
+        safer because it is bigger.
         :param value:
         :return:
         """
@@ -292,7 +297,8 @@ class IsolatedPosition(FutureBasePosition):
 @dataclass()
 class FutureCrossIsolatePosition(IsolatedPosition, CrossPosition):
     """
-    There are two kinds of future position in Bitmex, Cross position and isolated position.
+    There are two kinds of future position in Bitmex,
+    Cross position and isolated position.
 
     This position support to change from one to another.
     """

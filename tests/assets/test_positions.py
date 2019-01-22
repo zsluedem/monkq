@@ -34,7 +34,7 @@ from MonkTrader.assets.positions import (
     FutureCrossIsolatePosition, IsolatedPosition, PositionManager,
 )
 from MonkTrader.assets.trade import Trade
-from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT
+from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT
 from MonkTrader.exception import MarginException, MarginNotEnoughException
 
 from ..utils import random_string

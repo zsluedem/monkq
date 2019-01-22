@@ -32,7 +32,7 @@ from MonkTrader.assets.positions import (
     BasePosition, FuturePosition, PositionManager,
 )
 from MonkTrader.assets.trade import Trade
-from MonkTrader.assets.variable import DIRECTION, POSITION_EFFECT, SIDE
+from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT, SIDE
 
 
 @dataclass()

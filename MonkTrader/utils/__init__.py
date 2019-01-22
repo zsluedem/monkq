@@ -24,10 +24,11 @@
 import csv
 import datetime
 import gzip
+import inspect
 import os
 import pathlib
 from collections import defaultdict
-from typing import IO, Any, List, Set, Type
+from typing import IO, Any, List, Optional, Set, Type
 
 from dateutil.tz import tzlocal
 
@@ -115,3 +116,30 @@ def local_tz_offset():
 
 local_offset = local_tz_offset()
 local_offset_seconds = local_offset.total_seconds()
+
+
+def get_resource_path(file: Optional[str] = None, prefix='resource') -> str:
+    """
+    This function would get the file path from the module which use this
+    function. Supposed that:
+    We have a dir like below:
+
+    a_directory
+        |
+        |
+        +-- __init__.py
+        +-- a.py
+
+    If we use this function in `a.py`, then this function would return
+    `/path/to/a_directory/resource/{file}`
+
+    :param file:
+    :return:
+    """
+    outer_frame = inspect.getouterframes(inspect.currentframe())[1]
+    file_path = outer_frame.filename
+    dir_path = os.path.dirname(file_path)
+    if file is None:
+        return os.path.join(dir_path, prefix)
+    else:
+        return os.path.join(dir_path, prefix, file)

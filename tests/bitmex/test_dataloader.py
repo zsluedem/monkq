@@ -30,8 +30,7 @@ from MonkTrader.assets.instrument import (
     UpsideInstrument,
 )
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
-
-from ..resource import get_resource_path
+from MonkTrader.utils import get_resource_path
 
 
 def test_bitmex_dataloader(exchange):

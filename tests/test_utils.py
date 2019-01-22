@@ -31,7 +31,8 @@ import tempfile
 import pytest
 import pytz
 from MonkTrader.utils import (
-    CsvFileDefaultDict, CsvZipDefaultDict, assure_dir, is_aware_datetime,
+    CsvFileDefaultDict, CsvZipDefaultDict, assure_dir, get_resource_path,
+    is_aware_datetime,
 )
 
 
@@ -94,3 +95,13 @@ def test_aware_datetime():
 
     d2 = datetime.datetime(2018, 1, 1, 12, tzinfo=pytz.utc)
     assert is_aware_datetime(d2)
+
+
+def test_get_resource_path():
+    current_file_path = os.path.abspath(__file__)
+    dir_path = os.path.dirname(current_file_path)
+    g = get_resource_path('test.txt')
+    assert g == os.path.join(dir_path, 'resource', 'test.txt')
+
+    g = get_resource_path('test.txt', 'test')
+    assert g == os.path.join(dir_path, 'test', 'test.txt')

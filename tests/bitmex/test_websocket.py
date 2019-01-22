@@ -22,11 +22,12 @@
 # SOFTWARE.
 #
 
-import asyncio
+from asyncio import AbstractEventLoop, Lock, sleep
 from functools import partial
 
 import pytest
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
+from aiohttp.test_utils import TestServer
 from MonkTrader.exchange.bitmex.websocket import (
     INTERVAL_FACTOR, BitmexWebsocket,
 )
@@ -39,8 +40,6 @@ API_SECRET = "9d9Sjm_vMhWC9BcMOsf9y2hcM37d4sAbUJTyfEumdD3t92qE"
 
 ws_data_path = get_resource_path("mock_bitmex_ws_data.txt")
 
-normal_data_lock = asyncio.Lock()
-
 
 def ret_data():
     with open(ws_data_path) as f:
@@ -49,7 +48,7 @@ def ret_data():
         yield data
 
 
-async def realtime_handler(request, async_lock, close_lock):
+async def realtime_handler(request: web.Request, async_lock: Lock, close_lock: Lock):
     ws_data = ret_data()
 
     await async_lock.acquire()
@@ -82,7 +81,7 @@ async def realtime_handler(request, async_lock, close_lock):
             await ws.send_str(data)
             # in the test , this step never jump to another task,
             # which caused the websocket doesn't get any message
-            await asyncio.sleep(0.00001)  # in order to jump out of this loop
+            await sleep(0.00001)  # in order to jump out of this loop
         except StopIteration:
             break
     await ws.close()
@@ -97,7 +96,7 @@ async def ping_handler(request, close_lock):
     await ws.prepare(request)
     await ws.send_str(next(ws_data))
 
-    await asyncio.sleep(INTERVAL_FACTOR + 3)
+    await sleep(INTERVAL_FACTOR + 3)
 
     mes = await ws.receive()
     assert mes.type == WSMsgType.PING
@@ -106,21 +105,21 @@ async def ping_handler(request, close_lock):
     close_lock.release()
 
     while not ws.closed:
-        await asyncio.sleep(0.2)
+        await sleep(0.2)
 
 
 @pytest.fixture()
-async def async_lock(loop):
-    yield asyncio.Lock(loop=loop)
+async def async_lock(loop: AbstractEventLoop):
+    yield Lock(loop=loop)
 
 
 @pytest.fixture()
-async def close_lock(loop):
-    yield asyncio.Lock(loop=loop)
+async def close_lock(loop: AbstractEventLoop):
+    yield Lock(loop=loop)
 
 
 @pytest.fixture()
-async def normal_bitmex_server(aiohttp_server, async_lock, close_lock):
+async def normal_bitmex_server(aiohttp_server: TestServer, async_lock: Lock, close_lock: Lock):
     app = web.Application()
     app.router.add_get('/realtime', partial(realtime_handler, async_lock=async_lock, close_lock=close_lock))
     server = await aiohttp_server(app)
@@ -128,7 +127,7 @@ async def normal_bitmex_server(aiohttp_server, async_lock, close_lock):
 
 
 @pytest.fixture()
-async def ping_bitmex_server(aiohttp_server, close_lock):
+async def ping_bitmex_server(aiohttp_server: TestServer, close_lock: Lock):
     app = web.Application()
     app.router.add_get('/realtime', partial(ping_handler, close_lock=close_lock))
     server = await aiohttp_server(app)
@@ -149,7 +148,8 @@ class C(AbcStrategy):
         pass
 
 
-async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lock):
+async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: AbstractEventLoop, async_lock: Lock,
+                                close_lock: Lock):
     session = ClientSession(timeout=ClientTimeout(total=60))
     ws = BitmexWebsocket(C(),
                          loop,
@@ -160,7 +160,7 @@ async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lo
 
     await ws.setup()
     await ws.subscribe('quote', 'XBTUSD')
-    await asyncio.sleep(1)
+    await sleep(1)
     await ws.subscribe_multiple(
         ['trade:XBTUSD', "orderBookL2_25:XBTUSD", "position", "margin", "order", "execution", "connected"])
 
@@ -211,7 +211,7 @@ async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lo
     await session.close()
 
 
-async def test_bitmex_websocket_ping(ping_bitmex_server, loop, close_lock):
+async def test_bitmex_websocket_ping(ping_bitmex_server: TestServer, loop: AbstractEventLoop, close_lock: Lock):
     session = ClientSession()
     ws = BitmexWebsocket(C(),
                          loop,

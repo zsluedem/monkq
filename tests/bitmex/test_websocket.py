@@ -31,7 +31,6 @@ from MonkTrader.exchange.bitmex.websocket import (
     INTERVAL_FACTOR, BitmexWebsocket,
 )
 from MonkTrader.interface import AbcStrategy
-
 from MonkTrader.utils import get_resource_path
 
 pytestmark = pytest.mark.asyncio
@@ -152,7 +151,12 @@ class C(AbcStrategy):
 
 async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lock):
     session = ClientSession(timeout=ClientTimeout(total=60))
-    ws = BitmexWebsocket(C(), loop, session, "ws://127.0.0.1:{}/realtime".format(normal_bitmex_server.port), API_KEY, API_SECRET)
+    ws = BitmexWebsocket(C(),
+                         loop,
+                         session,
+                         "ws://127.0.0.1:{}/realtime".format(normal_bitmex_server.port),
+                         API_KEY,
+                         API_SECRET)
 
     await ws.setup()
     await ws.subscribe('quote', 'XBTUSD')
@@ -209,7 +213,12 @@ async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lo
 
 async def test_bitmex_websocket_ping(ping_bitmex_server, loop, close_lock):
     session = ClientSession()
-    ws = BitmexWebsocket(C(), loop, session, "ws://127.0.0.1:{}/realtime".format(ping_bitmex_server.port), API_KEY, API_SECRET)
+    ws = BitmexWebsocket(C(),
+                         loop,
+                         session,
+                         "ws://127.0.0.1:{}/realtime".format(ping_bitmex_server.port),
+                         API_KEY,
+                         API_SECRET)
 
     await ws.setup()
     await close_lock.acquire()

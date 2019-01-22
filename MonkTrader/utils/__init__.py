@@ -24,11 +24,11 @@
 import csv
 import datetime
 import gzip
+import inspect
 import os
 import pathlib
-import inspect
 from collections import defaultdict
-from typing import IO, Any, List, Set, Type, Optional
+from typing import IO, Any, List, Optional, Set, Type
 
 from dateutil.tz import tzlocal
 
@@ -118,7 +118,7 @@ local_offset = local_tz_offset()
 local_offset_seconds = local_offset.total_seconds()
 
 
-def get_resource_path(file: Optional[str] = None, prefix = 'resource') -> str:
+def get_resource_path(file: Optional[str] = None, prefix='resource') -> str:
     """
     This function would get the file path from the module which use this
     function. Supposed that:

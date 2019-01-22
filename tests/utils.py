@@ -23,22 +23,27 @@
 #
 import random
 import string
-from functools import wraps
-from typing import Any, Callable
+import sys
+from contextlib import contextmanager
+from typing import Any, Generator
 
-from MonkTrader.config import settings
+from MonkTrader.config import Setting
 
 
 def random_string(length: int) -> str:
     return ''.join(random.choice(string.ascii_letters) for _ in range(length))
 
 
-def over_written_settings(**options: str) -> Callable:
-    def decorate_func(func: Callable) -> Any:
-        @wraps(func)
-        def _wrap(*args: Any, **kwargs: Any) -> Any:
-            for k, v in options.items():
-                setattr(settings, k, v)
-            return func(*args, **kwargs)  # type: ignore
+@contextmanager
+def over_written_settings(settings: Setting, **options: Any) -> Generator[Setting, None, None]:
+    for k, v in options.items():
+        setattr(settings, k, v)
 
-    return decorate_func
+    yield settings
+
+
+@contextmanager
+def add_path(path: str) -> Generator[None, None, None]:
+    sys.path.insert(0, path)
+    yield
+    sys.path.pop(0)

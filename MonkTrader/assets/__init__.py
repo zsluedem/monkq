@@ -21,8 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from abc import ABC, abstractmethod, abstractproperty
-from typing import TYPE_CHECKING, List, TypeVar
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, TypeVar
 
 if TYPE_CHECKING:
     from MonkTrader.assets.instrument import Instrument  # noqa: F401
@@ -56,61 +56,3 @@ class AbcOrder(ABC):
 
 class AbcTrade(ABC):
     pass
-
-
-class AbcExchange(ABC):
-    @abstractmethod
-    def get_last_price(self, instrument: T_INSTRUMENT) -> float:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def withdraw(self) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def deposit(self) -> None:
-        raise NotImplementedError()
-
-    @abstractproperty
-    def exchange_info(self) -> None:
-        raise NotImplementedError()
-
-    @abstractproperty
-    def order_book(self) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_account(self) -> AbcAccount:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def place_limit_order(self) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def place_market_order(self) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def place_stop_limit_order(self) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def place_stop_market_order(self) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def open_orders(self) -> List[T_ORDER]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def cancel_order(self) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def available_instruments(self) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def setup(self) -> None:
-        raise NotImplementedError()

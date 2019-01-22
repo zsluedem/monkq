@@ -30,14 +30,13 @@ import time
 import aiohttp
 from aiohttp.helpers import sentinel
 from logbook import Logger
-from MonkTrader.assets import AbcExchange
 from MonkTrader.config import settings
 from MonkTrader.exception import (
     AuthException, MaxRetryException, RateLimitException,
 )
+from MonkTrader.exchange.base import BaseExchange
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
-from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
 from MonkTrader.tradecounter import TradeCounter
 from yarl import URL
 
@@ -59,7 +58,7 @@ def authentication_required(fn):
     return wrapped
 
 
-class BitmexSimulateExchange(AbcExchange):
+class BitmexSimulateExchange(BaseExchange):
     def __init__(self):
         self.dataloader = BitmexDataloader(self)
         self.trade_counter = TradeCounter(self)
@@ -74,11 +73,22 @@ class BitmexSimulateExchange(AbcExchange):
         pass
 
 
-class BitmexExchange(AbcExchange):
-    def __init__(self, base_url: str, loop: asyncio.AbstractEventLoop, orderIDPrefix: str, caller):
-        self._loop = loop
-        self.base_url = base_url
-        self.orderIDPrefix = orderIDPrefix
+class BitmexExchange(BaseExchange):
+    def __init__(self, name: str, exchange_setting: dict):
+        """
+        :param exchange_setting:
+        example:
+        {
+            'engine': 'MonkTrader.exchange.bitmex',
+            "IS_TEST": True,
+            "API_KEY": '',
+            "API_SECRET": ''
+
+        }
+        """
+        # self._loop = loop
+        # self.base_url = base_url
+        # self.orderIDPrefix = orderIDPrefix
 
         self._trace_config = aiohttp.TraceConfig()
         # self._trace_config.on_request_end.append(self._end_request)
@@ -91,10 +101,15 @@ class BitmexExchange(AbcExchange):
             self._ssl = None
 
         self._connector = aiohttp.TCPConnector(keepalive_timeout=90)
-        self.session = aiohttp.ClientSession(trace_configs=[self._trace_config], loop=self._loop,
+        self.session = aiohttp.ClientSession(trace_configs=[self._trace_config],
+                                             loop=self._loop,
                                              connector=self._connector)
-        self.caller = caller
-        self.ws = BitmexWebsocket(loop=loop, session=self.session, ssl=self._ssl, caller=self.caller)
+        # self.caller = caller
+        # self.ws = BitmexWebsocket(loop=loop, session=self.session,
+        #                           ssl=self._ssl, caller=self.caller)
+
+    def config(self):
+        pass
 
     async def setup(self):
         await self.ws.setup()
@@ -110,7 +125,8 @@ class BitmexExchange(AbcExchange):
         postdict = {
             'orderID': orderID,
         }
-        resp = await self._curl_bitmex(path=path, postdict=postdict, verb="DELETE")
+        resp = await self._curl_bitmex(path=path,
+                                       postdict=postdict, verb="DELETE")
         return await resp.json()
 
     @authentication_required
@@ -263,15 +279,20 @@ class BitmexExchange(AbcExchange):
 
     @authentication_required
     async def cancel_all_after_http(self, timeout, max_retry=5):
-        return await self._curl_bitmex(path='order/cancelAllAfter', postdict={'timeout': timeout * 1000}, verb="POST",
+        return await self._curl_bitmex(path='order/cancelAllAfter',
+                                       postdict={'timeout': timeout * 1000},
+                                       verb="POST",
                                        max_retry=max_retry)
 
     @authentication_required
     async def close_position(self, symbol, max_retry=5):
-        return await self._curl_bitmex(path='order', postdict={'execInst': "Close", "symbol": symbol}, verb="POST",
+        return await self._curl_bitmex(path='order',
+                                       postdict={'execInst': "Close", "symbol": symbol},
+                                       verb="POST",
                                        max_retry=max_retry)
 
-    async def _curl_bitmex(self, path, query=None, postdict=None, timeout=sentinel, verb=None,
+    async def _curl_bitmex(self, path, query=None, postdict=None,
+                           timeout=sentinel, verb=None,
                            max_retry=5) -> aiohttp.ClientResponse:
         url = self.base_url + path
 
@@ -303,8 +324,8 @@ class BitmexExchange(AbcExchange):
             retry_time -= 1
             if retry_time < 0:
                 logger.error(
-                    "Request with args {}, {}, {}, {}, {}, {} failed with retries".format(path, query, postdict,
-                                                                                          timeout, verb, max_retry))
+                    "Request with args {}, {}, {}, {}, {}, {} failed "
+                    "with retries".format(path, query, postdict, timeout, verb, max_retry))
                 raise MaxRetryException()
             else:
                 return await self._curl_bitmex(path, query, postdict, timeout, verb, retry_time)
@@ -321,7 +342,9 @@ class BitmexExchange(AbcExchange):
             timeout = aiohttp.ClientTimeout(total=timeout)
 
         try:
-            resp = await self.session.request(method=verb, url=str(url), proxy=proxy, headers=headers, data=data,
+            resp = await self.session.request(method=verb, url=str(url),
+                                              proxy=proxy, headers=headers,
+                                              data=data,
                                               ssl=self._ssl, timeout=timeout)
 
             if resp.status == 401:
@@ -338,8 +361,9 @@ class BitmexExchange(AbcExchange):
                              "Request: {} \n {}".format(url, postdict))
                 # exit_or_throw()
             elif resp.status == 429:
-                logger.error("Ratelimited on current request. Sleeping, then trying again. Try fewer " +
-                             "order pairs or contact support@bitmex.com to raise your limits. " +
+                logger.error("Ratelimited on current request. Sleeping, "
+                             "then trying again. Try fewer order pairs or"
+                             " contact support@bitmex.com to raise your limits. "
                              "Request: {} \n {}".format(url, postdict))
 
                 # Figure out how long we need to wait.

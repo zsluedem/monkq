@@ -21,40 +21,57 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
-from abc import ABC, abstractmethod
-from typing import Any, Generator
+from typing import List
+
+from MonkTrader.assets import T_INSTRUMENT, T_ORDER, AbcAccount
 
 
-class AbcRunner(ABC):
-    @abstractmethod
+class BaseExchange:
+    def __init__(self, name: str, exchange_setting: dict) -> None:
+        self.name = name
+        self.exchange_setting = exchange_setting
+
+    def get_last_price(self, instrument: T_INSTRUMENT) -> float:
+        raise NotImplementedError()
+
+    def withdraw(self) -> None:
+        raise NotImplementedError()
+
+    def deposit(self) -> None:
+        raise NotImplementedError()
+
+    def exchange_info(self) -> None:
+        raise NotImplementedError()
+
+    def order_book(self) -> None:
+        raise NotImplementedError()
+
+    def get_account(self) -> AbcAccount:
+        raise NotImplementedError()
+
+    def place_limit_order(self) -> None:
+        raise NotImplementedError()
+
+    def place_market_order(self) -> None:
+        raise NotImplementedError()
+
+    def place_stop_limit_order(self) -> None:
+        raise NotImplementedError()
+
+    def place_stop_market_order(self) -> None:
+        raise NotImplementedError()
+
+    def open_orders(self) -> List[T_ORDER]:
+        raise NotImplementedError()
+
+    def cancel_order(self) -> None:
+        raise NotImplementedError()
+
+    def available_instruments(self) -> None:
+        raise NotImplementedError()
+
     def setup(self) -> None:
         raise NotImplementedError()
 
-    @abstractmethod
-    def run(self) -> None:
-        raise NotImplementedError()
-
-
-class Ticker(ABC):
-    @abstractmethod
-    def timer(self) -> Generator[datetime.datetime, None, None]:
-        raise NotImplementedError()
-
-
-class AbcStrategy():
-    @abstractmethod
-    async def setup(self) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def on_trade(self, message: Any) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def tick(self, message: Any) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def handle_bar(self) -> None:
+    def config(self) -> None:
         raise NotImplementedError()

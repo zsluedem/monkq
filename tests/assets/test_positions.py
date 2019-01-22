@@ -25,7 +25,6 @@ from typing import TypeVar
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.assets import AbcExchange  # noqa
 from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
@@ -36,10 +35,11 @@ from MonkTrader.assets.positions import (
 )
 from MonkTrader.assets.trade import Trade
 from MonkTrader.exception import MarginException, MarginNotEnoughException
+from MonkTrader.exchange.base import BaseExchange  # noqa: F401
 
 from ..utils import random_string
 
-T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseExchange")
 
 
 def test_position_manager(instrument: Instrument, base_account: BaseAccount) -> None:

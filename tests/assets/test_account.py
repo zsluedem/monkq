@@ -25,17 +25,17 @@ from typing import List, TypeVar
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.assets import AbcExchange  # noqa
 from MonkTrader.assets.account import FutureAccount
 from MonkTrader.assets.instrument import FutureInstrument, Instrument  # noqa
 from MonkTrader.assets.order import FutureLimitOrder
 from MonkTrader.assets.positions import FuturePosition
 from MonkTrader.assets.trade import Trade
+from MonkTrader.exchange.base import BaseExchange  # noqa: F401
 
 from ..utils import random_string
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
-T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseExchange")
 
 
 def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstrument) -> None:

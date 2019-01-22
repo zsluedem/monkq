@@ -21,19 +21,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import Generator
-from unittest.mock import MagicMock
-
-import pytest
-from MonkTrader.config import Setting
-from MonkTrader.exchange.base import BaseExchange
-
-
-@pytest.fixture()
-def settings() -> Generator[Setting, None, None]:
-    yield Setting()
-
-
-@pytest.fixture()
-def exchange() -> Generator[MagicMock, None, None]:
-    yield MagicMock(BaseExchange)

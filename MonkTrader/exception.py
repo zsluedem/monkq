@@ -27,6 +27,10 @@ class MonkException(BaseException):
     pass
 
 
+class SettingException(MonkException):
+    pass
+
+
 class MaxRetryException(MonkException):
     pass
 

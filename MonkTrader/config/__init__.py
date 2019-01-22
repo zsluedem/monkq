@@ -57,8 +57,6 @@ class Setting:
                 setattr(self, setting, setting_value)
                 self._explicit_settings.add(setting)
 
-    def is_overridden(self, setting: str) -> bool:
-        return setting in self._explicit_settings
 
 
 def gen_settings() -> Setting:

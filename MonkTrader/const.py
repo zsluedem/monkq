@@ -22,6 +22,8 @@
 # SOFTWARE.
 #
 
+from enum import Enum
+
 MAX_HISTORY = 750
 
 CHINA_WARNING = "科学上网"
@@ -29,5 +31,6 @@ CHINA_CONNECT_TIMEOUT = 5
 
 XBtUnit = 100000000
 
-BACKTEST = 'backtest'
-REALTIME = 'realtime'
+class RUN_TYPE(Enum):
+    BACKTEST = 1
+    REALTIME = 2

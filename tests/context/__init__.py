@@ -10,7 +10,7 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in
+# The above copyright notice and this permission notice shall be included in 
 # all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -21,28 +21,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import random
-import string
-from contextlib import contextmanager
-from MonkTrader.config import Setting
-from typing import Any, Generator
-import os
-
-
-def random_string(length: int) -> str:
-    return ''.join(random.choice(string.ascii_letters) for _ in range(length))
-
-
-@contextmanager
-def over_written_settings(settings: Setting,**options: Any) -> Generator[Setting, None, None]:
-    for k, v in options.items():
-        setattr(settings, k, v)
-
-    yield settings
-
-
-@contextmanager
-def add_path(path: str) -> Generator[None, None ,None]:
-    os.sys.path.insert(0, path)
-    yield
-    os.sys.path.pop(0)

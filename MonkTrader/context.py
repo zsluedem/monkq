@@ -21,11 +21,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.interface import AbcContext
+from typing import Dict
+from importlib import import_module
+from MonkTrader.const import RUN_TYPE
+from MonkTrader.exception import SettingException
 
-EXCHANGE = ('bitmex')
 
-
-class Context(AbcContext):
+class Context:
     def __init__(self, settings):
         self._settings = settings
+        self._exchanges: Dict = {}
+
+    def load_exchanges(self):
+        for name, exchange_setting in self._settings.EXCHANGES.items():
+            self._exchanges[name] = self._load_exchange(name, exchange_setting)
+
+    def _load_exchange(self, name: str,exchange_setting: Dict):
+        mod = import_module(exchange_setting.get('engine'))
+
+        if self._settings.RUN_TYPE == RUN_TYPE.REALTIME:
+            exchange_cls = getattr(mod, 'default_exchange')
+        elif self._settings.RUN_TYPE == RUN_TYPE.BACKTEST:
+            exchange_cls = getattr(mod, 'default_sim_exchange')
+        else:
+            raise SettingException()
+
+        return exchange_cls(name, exchange_setting)
+

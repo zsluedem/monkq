@@ -28,16 +28,6 @@ from typing import Any, Generator, List
 from MonkTrader.assets import AbcExchange
 
 
-class AbcContext(ABC):
-    @abstractmethod
-    def get_exchange(self, exchange_name: str) -> AbcExchange:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def available_exchanges(self) -> List[AbcExchange]:
-        raise NotImplementedError()
-
-
 class AbcRunner(ABC):
     @abstractmethod
     def setup(self) -> None:

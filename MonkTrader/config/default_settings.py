@@ -1,4 +1,5 @@
 import os
+
 from MonkTrader.const import RUN_TYPE
 
 # Mongodb uri which is used to load data or download data in.
@@ -17,7 +18,7 @@ LOG_LEVEL = 'INFO'  # DEBUG, INFO, NOTICE, WARNING, ERROR
 START_TIME = '2018-01-01T00:00:00Z'
 END_TIME = '2018-06-01T00:00:00Z'
 
-RUN_TYPE = RUN_TYPE.BACKTEST  # BACKTEST, REALTIME
+RUN_TYPE = RUN_TYPE.BACKTEST  # type: ignore
 
 TICK_TYPE = 'tick'  # tick , bar
 

@@ -10,7 +10,7 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in 
+# The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -23,14 +23,16 @@
 #
 
 import os
+
 import pytest
-from tests.utils import over_written_settings, add_path
+from MonkTrader.config import Setting
 from MonkTrader.const import RUN_TYPE
 from MonkTrader.context import Context
 from MonkTrader.exception import SettingException
+from tests.utils import add_path, over_written_settings
 
 
-def test_context_load_exchanges_realtime(settings) -> None:
+def test_context_load_exchanges_realtime(settings: Setting) -> None:
     exchange_settings = {
         'test': {
             'engine': 'exchange_mod',
@@ -44,7 +46,7 @@ def test_context_load_exchanges_realtime(settings) -> None:
             context.load_exchanges()
 
 
-def test_context_load_exchanges_backtest(settings) -> None:
+def test_context_load_exchanges_backtest(settings: Setting) -> None:
     exchange_settings = {
         'test': {
             'engine': 'exchange_mod',
@@ -58,7 +60,7 @@ def test_context_load_exchanges_backtest(settings) -> None:
             context.load_exchanges()
 
 
-def test_contest_load_exchanges_exception(settings) -> None:
+def test_contest_load_exchanges_exception(settings: Setting) -> None:
     exchange_settings = {
         'test': {
             'engine': 'exchange_mod',

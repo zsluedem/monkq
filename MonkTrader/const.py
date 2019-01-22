@@ -31,6 +31,7 @@ CHINA_CONNECT_TIMEOUT = 5
 
 XBtUnit = 100000000
 
+
 class RUN_TYPE(Enum):
     BACKTEST = 1
     REALTIME = 2

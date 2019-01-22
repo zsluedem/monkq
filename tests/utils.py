@@ -23,10 +23,11 @@
 #
 import random
 import string
+import sys
 from contextlib import contextmanager
-from MonkTrader.config import Setting
 from typing import Any, Generator
-import os
+
+from MonkTrader.config import Setting
 
 
 def random_string(length: int) -> str:
@@ -34,7 +35,7 @@ def random_string(length: int) -> str:
 
 
 @contextmanager
-def over_written_settings(settings: Setting,**options: Any) -> Generator[Setting, None, None]:
+def over_written_settings(settings: Setting, **options: Any) -> Generator[Setting, None, None]:
     for k, v in options.items():
         setattr(settings, k, v)
 
@@ -42,7 +43,7 @@ def over_written_settings(settings: Setting,**options: Any) -> Generator[Setting
 
 
 @contextmanager
-def add_path(path: str) -> Generator[None, None ,None]:
-    os.sys.path.insert(0, path)
+def add_path(path: str) -> Generator[None, None, None]:
+    sys.path.insert(0, path)
     yield
-    os.sys.path.pop(0)
+    sys.path.pop(0)

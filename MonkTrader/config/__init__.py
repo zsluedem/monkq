@@ -24,7 +24,6 @@
 import os
 import sys
 import warnings
-from typing import Set
 
 import lazy_object_proxy
 from MonkTrader.config import (  # type: ignore
@@ -48,15 +47,12 @@ class Setting:
         except ImportError:
             warnings.warn("Can not find settings.py in the current path, we are going to use the default settings.")
             return
-        self._explicit_settings: Set[str] = set()
 
         for setting in dir(mod):
             if setting.isupper():
                 setting_value = getattr(mod, setting)
 
                 setattr(self, setting, setting_value)
-                self._explicit_settings.add(setting)
-
 
 
 def gen_settings() -> Setting:

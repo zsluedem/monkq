@@ -25,8 +25,8 @@ from typing import Generator
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.assets import AbcExchange
 from MonkTrader.config import Setting
+from MonkTrader.exchange.base import BaseExchange
 
 
 @pytest.fixture()
@@ -36,4 +36,4 @@ def settings() -> Generator[Setting, None, None]:
 
 @pytest.fixture()
 def exchange() -> Generator[MagicMock, None, None]:
-    yield MagicMock(AbcExchange)
+    yield MagicMock(BaseExchange)

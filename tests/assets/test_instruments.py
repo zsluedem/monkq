@@ -25,10 +25,10 @@ import datetime
 from typing import TypeVar
 
 from dateutil.tz import tzutc
-from MonkTrader.assets import AbcExchange  # noqa
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
+from MonkTrader.exchange.base import BaseExchange  # noqa: F401
 
-T_EXCHANGE = TypeVar('T_EXCHANGE', bound="AbcExchange")
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseExchange")
 
 up_raw_data = {
     "symbol": "XBT7D_U105",

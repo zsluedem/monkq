@@ -26,13 +26,13 @@ import json
 import os
 from typing import Dict, Type
 
-from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.instrument import (
     DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
     UpsideInstrument,
 )
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataException
+from MonkTrader.exchange.base import BaseExchange
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
 # instrument , bitmex instrument key to monk instrument key map
@@ -72,7 +72,7 @@ class BitmexDataloader(DataLoader):
         'FFWCSX': PerpetualInstrument,  # perpetual  futures contracts
     }
 
-    def __init__(self, exchange: AbcExchange, data_dir: str) -> None:
+    def __init__(self, exchange: BaseExchange, data_dir: str) -> None:
         self.data_dir = data_dir
         self.instruments: Dict[str, Instrument] = dict()
         self.exchange = exchange

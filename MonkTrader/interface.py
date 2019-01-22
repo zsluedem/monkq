@@ -23,9 +23,7 @@
 #
 import datetime
 from abc import ABC, abstractmethod
-from typing import Any, Generator, List
-
-from MonkTrader.assets import AbcExchange
+from typing import Any, Generator
 
 
 class AbcRunner(ABC):

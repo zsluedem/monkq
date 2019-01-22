@@ -25,7 +25,6 @@ from collections import defaultdict
 from typing import Dict, List, Type
 
 from dataclasses import dataclass, field
-from MonkTrader.assets import AbcExchange
 from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT, SIDE
 from MonkTrader.assets.instrument import FutureInstrument
 from MonkTrader.assets.order import FutureLimitOrder
@@ -33,11 +32,12 @@ from MonkTrader.assets.positions import (
     BasePosition, FuturePosition, PositionManager,
 )
 from MonkTrader.assets.trade import Trade
+from MonkTrader.exchange.base import BaseExchange
 
 
 @dataclass()
 class BaseAccount():
-    exchange: AbcExchange
+    exchange: BaseExchange
     position_cls: Type[BasePosition]
     positions: PositionManager = field(init=False)
     wallet_balance: float = 0

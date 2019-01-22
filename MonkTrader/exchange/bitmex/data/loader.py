@@ -52,8 +52,8 @@ instrument_map = {
     'makerFee': 'maker_fee',
     'takerFee': 'taker_fee',
 
-    'initMargin': 'init_margin',
-    'maintMargin': 'maint_margin',
+    'initMargin': 'init_margin_rate',
+    'maintMargin': 'maint_margin_rate',
 
     'settlementFee': 'settlement_fee',
     'settlCurrency': 'settle_currency',
@@ -73,8 +73,8 @@ class BitmexDataloader(DataLoader):
         'FFWCSX': PerpetualInstrument,  # perpetual  futures contracts
     }
 
-    def __init__(self, exchange: AbcExchange) -> None:
-        self.data_dir = settings.DATA_DIR
+    def __init__(self, exchange: AbcExchange, data_dir: str) -> None:
+        self.data_dir = data_dir
         self.instruments: Dict[str, Instrument] = dict()
         self.exchange = exchange
 

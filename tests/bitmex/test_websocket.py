@@ -35,7 +35,6 @@ from MonkTrader.interface import AbcStrategy
 from ..resource import get_resource_path
 
 pytestmark = pytest.mark.asyncio
-PORT = 6666
 API_KEY = "jeg9lHHlfNPu3UbCyLDCYm32"
 API_SECRET = "9d9Sjm_vMhWC9BcMOsf9y2hcM37d4sAbUJTyfEumdD3t92qE"
 
@@ -125,7 +124,7 @@ async def close_lock(loop):
 async def normal_bitmex_server(aiohttp_server, async_lock, close_lock):
     app = web.Application()
     app.router.add_get('/realtime', partial(realtime_handler, async_lock=async_lock, close_lock=close_lock))
-    server = await aiohttp_server(app, port=PORT)
+    server = await aiohttp_server(app)
     yield server
 
 
@@ -133,7 +132,7 @@ async def normal_bitmex_server(aiohttp_server, async_lock, close_lock):
 async def ping_bitmex_server(aiohttp_server, close_lock):
     app = web.Application()
     app.router.add_get('/realtime', partial(ping_handler, close_lock=close_lock))
-    server = await aiohttp_server(app, port=PORT)
+    server = await aiohttp_server(app)
     yield server
 
 
@@ -153,7 +152,7 @@ class C(AbcStrategy):
 
 async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lock):
     session = ClientSession(timeout=ClientTimeout(total=60))
-    ws = BitmexWebsocket(C(), loop, session, "ws://127.0.0.1:{}/realtime".format(PORT), API_KEY, API_SECRET)
+    ws = BitmexWebsocket(C(), loop, session, "ws://127.0.0.1:{}/realtime".format(normal_bitmex_server.port), API_KEY, API_SECRET)
 
     await ws.setup()
     await ws.subscribe('quote', 'XBTUSD')
@@ -210,7 +209,7 @@ async def test_bitmex_websocket(normal_bitmex_server, loop, async_lock, close_lo
 
 async def test_bitmex_websocket_ping(ping_bitmex_server, loop, close_lock):
     session = ClientSession()
-    ws = BitmexWebsocket(C(), loop, session, "ws://127.0.0.1:{}/realtime".format(PORT), API_KEY, API_SECRET)
+    ws = BitmexWebsocket(C(), loop, session, "ws://127.0.0.1:{}/realtime".format(ping_bitmex_server.port), API_KEY, API_SECRET)
 
     await ws.setup()
     await close_lock.acquire()

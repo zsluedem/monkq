@@ -30,7 +30,7 @@ from MonkTrader.const import RUN_TYPE
 from MonkTrader.exception import SettingException
 
 if TYPE_CHECKING:
-    from MonkTrader.exchange.base import BaseExchange
+    from MonkTrader.exchange.base import BaseExchange  # noqa: F401
 
 T_EXCHANGE = TypeVar("T_EXCHANGE", bound="BaseExchange")
 

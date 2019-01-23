@@ -21,22 +21,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
-from abc import ABC, abstractmethod
-from typing import Generator
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from MonkTrader.context import Context
 
 
-class AbcRunner(ABC):
-    @abstractmethod
-    def setup(self) -> None:
-        raise NotImplementedError()
+class BaseStrategy():
+    def __init__(self, context: "Context"):
+        self.context = context
+    async def setup(self) -> None:
+        pass
 
-    @abstractmethod
-    def run(self) -> None:
-        raise NotImplementedError()
+    async def on_trade(self, message: Any) -> None:
+        pass
 
+    async def tick(self, message: Any) -> None:
+        pass
 
-class Ticker(ABC):
-    @abstractmethod
-    def timer(self) -> Generator[datetime.datetime, None, None]:
-        raise NotImplementedError()
+    async def handle_bar(self) -> None:
+        pass

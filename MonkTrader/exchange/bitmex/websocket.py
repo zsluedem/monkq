@@ -34,8 +34,8 @@ from typing import Dict, Union
 from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
 from dataclasses import dataclass, field
 from logbook import Logger
+from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
-from MonkTrader.interface import AbcStrategy
 
 from .log import logger_group
 
@@ -85,7 +85,7 @@ class BackgroundTask:
 class BitmexWebsocket():
     MAX_TABLE_LEN = 200
 
-    def __init__(self, caller: AbcStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession, ws_url: str,
+    def __init__(self, strategy: BaseStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession, ws_url: str,
                  api_key: str, api_secret: str, ssl: ssl.SSLContext = None, http_proxy=None):
         self._loop = loop
 
@@ -96,7 +96,7 @@ class BitmexWebsocket():
         self._api_secret = api_secret
         self._http_proxy = http_proxy
         self.background_task = BackgroundTask()
-        self.caller = caller
+        self.strategy = strategy
         self.session: ClientSession = session
         self._last_comm_time = 0  # this is used for a mark point for ping
 
@@ -155,13 +155,13 @@ class BitmexWebsocket():
                 if decode_message.get('action'):
                     if decode_message.get('table') == 'execution':
                         start = time.time()
-                        ret = self.caller.on_trade(message=decode_message)
+                        ret = self.strategy.on_trade(message=decode_message)
                         if asyncio.iscoroutine(ret):
                             await ret
                         logger.debug('User on_trade process time: {}'.format(round(time.time() - start, 7)))
                     else:
                         start = time.time()
-                        ret = self.caller.tick(message=decode_message)
+                        ret = self.strategy.tick(message=decode_message)
                         if asyncio.iscoroutine(ret):
                             await ret
                         logger.debug('User tick process time: {}'.format(round(time.time() - start, 7)))

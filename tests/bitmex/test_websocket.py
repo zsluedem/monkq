@@ -24,14 +24,15 @@
 
 from asyncio import AbstractEventLoop, Lock, sleep
 from functools import partial
+from unittest.mock import MagicMock
 
 import pytest
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
 from aiohttp.test_utils import TestServer
+from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.exchange.bitmex.websocket import (
     INTERVAL_FACTOR, BitmexWebsocket,
 )
-from MonkTrader.interface import AbcStrategy
 from MonkTrader.utils import get_resource_path
 
 pytestmark = pytest.mark.asyncio
@@ -134,7 +135,7 @@ async def ping_bitmex_server(aiohttp_server: TestServer, close_lock: Lock):
     yield server
 
 
-class C(AbcStrategy):
+class C(BaseStrategy):
     async def setup(self) -> None:
         pass
 
@@ -151,7 +152,7 @@ class C(AbcStrategy):
 async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: AbstractEventLoop, async_lock: Lock,
                                 close_lock: Lock):
     session = ClientSession(timeout=ClientTimeout(total=60))
-    ws = BitmexWebsocket(C(),
+    ws = BitmexWebsocket(C(MagicMock()),
                          loop,
                          session,
                          "ws://127.0.0.1:{}/realtime".format(normal_bitmex_server.port),
@@ -213,7 +214,7 @@ async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: Abstract
 
 async def test_bitmex_websocket_ping(ping_bitmex_server: TestServer, loop: AbstractEventLoop, close_lock: Lock):
     session = ClientSession()
-    ws = BitmexWebsocket(C(),
+    ws = BitmexWebsocket(C(MagicMock()),
                          loop,
                          session,
                          "ws://127.0.0.1:{}/realtime".format(ping_bitmex_server.port),

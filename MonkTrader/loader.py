@@ -24,16 +24,16 @@
 
 from typing import Type
 
+from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.exception import StrategyNotFound
-from MonkTrader.interface import AbcStrategy
 
 
 class StrategyLoader():
     def __init__(self):
         pass
 
-    def load_strategy(self, cls: Type[AbcStrategy]):
-        if issubclass(cls, AbcStrategy):
+    def load_strategy(self, cls: Type[BaseStrategy]):
+        if issubclass(cls, BaseStrategy):
             return cls
         else:
             raise StrategyNotFound()

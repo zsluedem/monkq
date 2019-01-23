@@ -25,11 +25,16 @@
 import os
 
 import pytest
+from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.config import Setting
 from MonkTrader.const import RUN_TYPE
 from MonkTrader.context import Context
 from MonkTrader.exception import SettingException
 from tests.utils import add_path, over_written_settings
+
+
+class Strategy(BaseStrategy):
+    pass
 
 
 def test_context_load_exchanges_realtime(settings: Setting) -> None:
@@ -60,7 +65,7 @@ def test_context_load_exchanges_backtest(settings: Setting) -> None:
             context.load_exchanges()
 
 
-def test_contest_load_exchanges_exception(settings: Setting) -> None:
+def test_context_load_exchanges_exception(settings: Setting) -> None:
     exchange_settings = {
         'test': {
             'engine': 'exchange_mod',
@@ -73,3 +78,14 @@ def test_contest_load_exchanges_exception(settings: Setting) -> None:
             context = Context(custom_settings)
             with pytest.raises(SettingException):
                 context.load_exchanges()
+
+
+def test_context_load_strategy(settings: Setting) -> None:
+    with add_path(os.path.dirname(__file__)):
+        with over_written_settings(settings, STRATEGY="MonkTrader.base_strategy.BaseStrategy") as custom_settings:
+            context = Context(custom_settings)
+            context.load_strategy()
+
+    with over_written_settings(settings, STRATEGY=Strategy) as custom_settings:
+        context = Context(custom_settings)
+        context.load_strategy()

@@ -22,14 +22,15 @@
 # SOFTWARE.
 #
 
+from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.config import CONF
 from MonkTrader.const import BACKTEST, REALTIME
-from MonkTrader.interface import AbcRunner, AbcStrategy
+from MonkTrader.interface import AbcRunner
 
 
 class BacktestRunner(AbcRunner):
-    def __init__(self, strategy: AbcStrategy):
-        self.strategy: AbcStrategy = strategy
+    def __init__(self, strategy: BaseStrategy):
+        self.strategy: BaseStrategy = strategy
 
     def run(self):
         pass
@@ -39,8 +40,8 @@ class BacktestRunner(AbcRunner):
 
 
 class RealtimeRunner(AbcRunner):
-    def __init__(self, strategy: AbcStrategy):
-        self.strategy: AbcStrategy = strategy
+    def __init__(self, strategy: BaseStrategy):
+        self.strategy: BaseStrategy = strategy
 
     def run(self):
         pass
@@ -59,7 +60,7 @@ class Framework():
 
         self.tick_type = CONF.TICK_TYPE
 
-        self.strategy: AbcStrategy = None
+        self.strategy: BaseStrategy = None
 
     def load_strategy(self):
         pass

@@ -22,20 +22,31 @@
 # SOFTWARE.
 #
 from importlib import import_module
-from typing import Dict, Type, TypeVar
+from typing import TYPE_CHECKING, Dict, Type, TypeVar
 
+from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.config import Setting
 from MonkTrader.const import RUN_TYPE
 from MonkTrader.exception import SettingException
-from MonkTrader.exchange.base import BaseExchange
 
-T_EXCHANGE = TypeVar("T_EXCHANGE", bound=BaseExchange)
+if TYPE_CHECKING:
+    from MonkTrader.exchange.base import BaseExchange  # noqa: F401
+
+T_EXCHANGE = TypeVar("T_EXCHANGE", bound="BaseExchange")
 
 
 class Context:
     def __init__(self, settings: Setting) -> None:
         self._settings = settings
         self._exchanges: Dict = {}
+
+    def _import_cls_from_str(self, entry: str) -> Type[BaseStrategy]:
+        mod_path, _, cls_name = entry.rpartition('.')
+
+        mod = import_module(mod_path)
+
+        cls: Type[BaseStrategy] = getattr(mod, cls_name)
+        return cls
 
     def load_exchanges(self) -> None:
         for name, exchange_setting in self._settings.EXCHANGES.items():  # type:ignore
@@ -52,4 +63,12 @@ class Context:
         else:
             raise SettingException()
 
-        return exchange_cls(name, exchange_setting)
+        return exchange_cls(self, name, exchange_setting)
+
+    def load_strategy(self) -> None:
+        if isinstance(self._settings.STRATEGY, BaseStrategy):  # type: ignore
+            strategy_cls = getattr(self._settings, "STRATEGY")
+            self.strategy = strategy_cls(self)  # type: ignore
+        elif isinstance(self._settings.STRATEGY, str):  # type: ignore
+            strategy_cls = self._import_cls_from_str(self._settings.STRATEGY)  # type: ignore
+            self.strategy = strategy_cls(self)  # type: ignore

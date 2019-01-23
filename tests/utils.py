@@ -44,6 +44,7 @@ def over_written_settings(settings: Setting, **options: Any) -> Generator[Settin
 
 @contextmanager
 def add_path(path: str) -> Generator[None, None, None]:
+    """add a path in the sys path . Mostly for import"""
     sys.path.insert(0, path)
     yield
     sys.path.pop(0)

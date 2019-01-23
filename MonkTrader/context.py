@@ -48,7 +48,6 @@ class Context:
         cls: Type[BaseStrategy] = getattr(mod, cls_name)
         return cls
 
-
     def load_exchanges(self) -> None:
         for name, exchange_setting in self._settings.EXCHANGES.items():  # type:ignore
             self._exchanges[name] = self._load_exchange(name, exchange_setting)
@@ -70,6 +69,6 @@ class Context:
         if isinstance(self._settings.STRATEGY, BaseStrategy):  # type: ignore
             strategy_cls = getattr(self._settings, "STRATEGY")
             self.strategy = strategy_cls(self)  # type: ignore
-        elif isinstance(self._settings.STRATEGY, str):   # type: ignore
+        elif isinstance(self._settings.STRATEGY, str):  # type: ignore
             strategy_cls = self._import_cls_from_str(self._settings.STRATEGY)  # type: ignore
             self.strategy = strategy_cls(self)  # type: ignore

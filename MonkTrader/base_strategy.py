@@ -21,7 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from MonkTrader.context import Context
@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 class BaseStrategy():
     def __init__(self, context: "Context"):
         self.context = context
+
     async def setup(self) -> None:
         pass
 

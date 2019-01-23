@@ -36,6 +36,7 @@ from tests.utils import add_path, over_written_settings
 class Strategy(BaseStrategy):
     pass
 
+
 def test_context_load_exchanges_realtime(settings: Setting) -> None:
     exchange_settings = {
         'test': {
@@ -77,6 +78,7 @@ def test_context_load_exchanges_exception(settings: Setting) -> None:
             context = Context(custom_settings)
             with pytest.raises(SettingException):
                 context.load_exchanges()
+
 
 def test_context_load_strategy(settings: Setting) -> None:
     with add_path(os.path.dirname(__file__)):

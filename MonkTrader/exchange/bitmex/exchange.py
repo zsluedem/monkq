@@ -26,17 +26,20 @@ import datetime
 import json
 import ssl
 import time
+from typing import Union, Optional
 
 import aiohttp
 from aiohttp.helpers import sentinel
 from logbook import Logger
 from MonkTrader.config import settings
+from MonkTrader.context import Context
 from MonkTrader.exception import (
     AuthException, MaxRetryException, RateLimitException,
 )
 from MonkTrader.exchange.base import BaseExchange
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
+from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
 from MonkTrader.tradecounter import TradeCounter
 from yarl import URL
 
@@ -74,7 +77,8 @@ class BitmexSimulateExchange(BaseExchange):
 
 
 class BitmexExchange(BaseExchange):
-    def __init__(self, name: str, exchange_setting: dict):
+    def __init__(self, context: Context, name: str, exchange_setting: dict,
+                 loop:Optional[asyncio.AbstractEventLoop]=None):
         """
         :param exchange_setting:
         example:
@@ -83,12 +87,21 @@ class BitmexExchange(BaseExchange):
             "IS_TEST": True,
             "API_KEY": '',
             "API_SECRET": ''
-
         }
         """
-        # self._loop = loop
-        # self.base_url = base_url
-        # self.orderIDPrefix = orderIDPrefix
+        super(BitmexExchange, self).__init__(context=context, name=name,
+                                             exchange_setting=exchange_setting)
+        if loop:
+            self._loop = loop
+        else:
+            self._loop = asyncio.get_event_loop()
+        if self.exchange_setting['IS_TEST']:
+            base_url = BITMEX_API_URL
+            ws_url = BITMEX_WEBSOCKET_URL
+        else:
+            base_url = BITMEX_TESTNET_API_URL
+            ws_url = BITMEX_TESTNET_WEBSOCKET_URL
+        self.base_url = base_url
 
         self._trace_config = aiohttp.TraceConfig()
         # self._trace_config.on_request_end.append(self._end_request)
@@ -104,79 +117,46 @@ class BitmexExchange(BaseExchange):
         self.session = aiohttp.ClientSession(trace_configs=[self._trace_config],
                                              loop=self._loop,
                                              connector=self._connector)
-        # self.caller = caller
-        # self.ws = BitmexWebsocket(loop=loop, session=self.session,
-        #                           ssl=self._ssl, caller=self.caller)
+        self.ws = BitmexWebsocket(strategy=context.strategy, loop=None,
+                                  session=self.session, ws_url=ws_url,
+                                  api_key=self.api_key, api_secret=self.api_secret,
+                                  ssl=self._ssl, http_proxy=None)
 
-    def config(self):
+    def get_last_price(self, instrument: Union[str, T_INSTRUMENT]):
         pass
+
+    def exchange_info(self):
+        pass
+
+    def place_limit_order(self, target: Union[str, T_INSTRUMENT],
+                          price: float, quantity) -> str:
+        raise NotImplementedError()
+
+    def place_market_order(self, target: Union[str, T_INSTRUMENT], quantity: float) -> str:
+        raise NotImplementedError()
+
+    def amend_order(self, order_id: str, **options) -> None:
+        raise NotImplementedError()
+
+    def cancel_order(self, order_id: str) -> None:
+        raise NotImplementedError()
+
+    async def open_orders_http(self):
+        return
+
+    open_orders = authentication_required(open_orders_http)
+
+    def get_account(self):
+        pass
+
+    async def available_instruments(self) -> List:
+        resp = await self._curl_bitmex(path='instrument/active', verb='GET')
+        return await resp.json()
 
     async def setup(self):
         await self.ws.setup()
 
-    async def available_instruments(self):
-        resp = await self._curl_bitmex(path='instrument/active', verb='GET')
-        return await resp.json()
-
-    @authentication_required
-    async def cancel(self, orderID):
-        """Cancel an existing order."""
-        path = "order"
-        postdict = {
-            'orderID': orderID,
-        }
-        resp = await self._curl_bitmex(path=path,
-                                       postdict=postdict, verb="DELETE")
-        return await resp.json()
-
-    @authentication_required
-    async def cancel_order(self):
-        pass
-
-    @authentication_required
-    def open_orders(self):
-        """Get open orders."""
-        return self.ws.open_orders()
-
-    async def place_limit_order(self):
-        raise NotImplementedError()
-
-    async def place_market_order(self):
-        raise NotImplementedError()
-
-    async def place_stop_limit_order(self):
-        raise NotImplementedError()
-
-    async def place_stop_market_order(self):
-        raise NotImplementedError()
-
-    def funds(self):
-        return self.ws.funds()
-
-    def get_account(self):
-        raise NotImplementedError()
-
-    @property
-    def order_book(self):
-        return
-
-    @property
-    def exchange_info(self):
-        return
-
-    @authentication_required
-    async def withdraw(self, amount, fee, address):
-        path = "user/requestWithdrawal"
-        postdict = {
-            'amount': amount,
-            'fee': fee,
-            'currency': 'XBt',
-            'address': address
-        }
-        resp = await self._curl_bitmex(path=path, postdict=postdict, verb="POST")
-        return await resp.json()
-
-    def deposit(self):
+    def get_kline(self, instrument: Union[str, T_INSTRUMENT]):
         pass
 
     async def subscribe(self, topic: str, symbol: str = ''):
@@ -217,79 +197,150 @@ class BitmexExchange(BaseExchange):
         resp = await self._curl_bitmex(path='instrument', query=query, verb='GET')
         return await resp.json()
 
-    @authentication_required
-    async def leverage_position(self, symbol, leverage):
-        """Set the leverage on an isolated margin position"""
-        path = "position/leverage"
-        postdict = {
-            'symbol': symbol,
-            'leverage': leverage
-        }
-        resp = await self._curl_bitmex(path=path, postdict=postdict, verb="POST")
-        return await resp.json()
-
-    @authentication_required
-    async def isolate_position(self, symbol: str, is_not: bool):
-        path = "position/isolate"
-        postdict = {
-            'symbol': symbol,
-            'enabled': 'true' if is_not else 'false'
-        }
-        resp = self._curl_bitmex(path=path, postdict=postdict, verb="POST")
-        return await resp.json()
-
-    @authentication_required
-    async def place_quick_order(self, order: dict, max_retry=5):
-        return await self._curl_bitmex(path="order", postdict=order, verb="POST", max_retry=max_retry)
-
-    @authentication_required
-    async def amend_bulk_orders(self, orders):
-        """Amend multiple orders."""
-        # Note rethrow; if this fails, we want to catch it and re-tick
-        return await self._curl_bitmex(path='order/bulk',
-                                       postdict={'orders': [order.to_postdict() for order in orders]}, verb='PUT')
-
-    @authentication_required
-    async def create_bulk_orders(self, orders):
-        """Create multiple orders."""
-        return await self._curl_bitmex(path='order/bulk',
-                                       postdict={'orders': [order.to_postdict() for order in orders]}, verb='POST')
-
-    @authentication_required
-    async def http_open_orders(self, symbol):
-        """Get open orders via HTTP. Used on close to ensure we catch them all."""
-        path = "order"
-        resp = await self._curl_bitmex(
-            path=path,
-            query={
-                'filter': json.dumps({'ordStatus.isTerminated': False, 'symbol': symbol}),
-                'count': 500
-            },
-            verb="GET"
-        )
-        orders = await resp.json()
-        # Only return orders that start with our clOrdID prefix.
-        return [o for o in orders if str(o['clOrdID']).startswith(self.orderIDPrefix)]
-
-    @authentication_required
-    async def user(self):
-        path = 'user'
-        resp = await self._curl_bitmex(path, verb="GET")
-        return await resp.json()
-
-    @authentication_required
-    async def cancel_all_after_http(self, timeout, max_retry=5):
-        return await self._curl_bitmex(path='order/cancelAllAfter',
-                                       postdict={'timeout': timeout * 1000},
-                                       verb="POST",
-                                       max_retry=max_retry)
-
-    @authentication_required
-    async def close_position(self, symbol, max_retry=5):
-        return await self._curl_bitmex(path='order',
-                                       postdict={'execInst': "Close", "symbol": symbol},
-                                       verb="POST",
-                                       max_retry=max_retry)
+    # @authentication_required
+    # async def cancel(self, orderID):
+    #     """Cancel an existing order."""
+    #     path = "order"
+    #     postdict = {
+    #         'orderID': orderID,
+    #     }
+    #     resp = await self._curl_bitmex(path=path,
+    #                                    postdict=postdict, verb="DELETE")
+    #     return await resp.json()
+    #
+    # def funds(self):
+    #     return self.ws.funds()
+    #
+    # @property
+    # def order_book(self):
+    #     return
+    #
+    # @authentication_required
+    # async def withdraw(self, amount, fee, address):
+    #     path = "user/requestWithdrawal"
+    #     postdict = {
+    #         'amount': amount,
+    #         'fee': fee,
+    #         'currency': 'XBt',
+    #         'address': address
+    #     }
+    #     resp = await self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+    #     return await resp.json()
+    #
+    # def deposit(self):
+    #     pass
+    #
+    # async def subscribe(self, topic: str, symbol: str = ''):
+    #     await self.ws.subscribe(topic, symbol)
+    #
+    # async def subscribe_multiple(self, topics: list):
+    #     await self.ws.subscribe_multiple(topics)
+    #
+    # async def unsubscribe(self, topic: str, symbol: str = ''):
+    #     await self.ws.unsubscribe(topic, symbol)
+    #
+    # def ticker_data(self, symbol=None):
+    #     """Get ticker data."""
+    #     return self.ws.get_ticker(symbol)
+    #
+    # def instrument(self, symbol):
+    #     """Get an instrument's details."""
+    #     return self.ws.get_instrument(symbol)
+    #
+    # def recent_trades(self):
+    #     """Get recent trades."""
+    #     return self.ws.recent_trades()
+    #
+    # async def recent_klines(self, symbol: str, frequency: str, count: int):
+    #     path = 'trade/bucketed'
+    #     query = {
+    #         "symbol": symbol,
+    #         "binSize": frequency,
+    #         "count": count,
+    #         "reverse": "true"
+    #     }
+    #     return await self._curl_bitmex(path=path, query=query)
+    #
+    # async def instruments(self, filter=None):
+    #     query = {}
+    #     if filter is not None:
+    #         query['filter'] = json.dumps(filter)
+    #     resp = await self._curl_bitmex(path='instrument', query=query, verb='GET')
+    #     return await resp.json()
+    #
+    # @authentication_required
+    # async def leverage_position(self, symbol, leverage):
+    #     """Set the leverage on an isolated margin position"""
+    #     path = "position/leverage"
+    #     postdict = {
+    #         'symbol': symbol,
+    #         'leverage': leverage
+    #     }
+    #     resp = await self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+    #     return await resp.json()
+    #
+    # @authentication_required
+    # async def isolate_position(self, symbol: str, is_not: bool):
+    #     path = "position/isolate"
+    #     postdict = {
+    #         'symbol': symbol,
+    #         'enabled': 'true' if is_not else 'false'
+    #     }
+    #     resp = self._curl_bitmex(path=path, postdict=postdict, verb="POST")
+    #     return await resp.json()
+    #
+    # @authentication_required
+    # async def place_quick_order(self, order: dict, max_retry=5):
+    #     return await self._curl_bitmex(path="order", postdict=order, verb="POST", max_retry=max_retry)
+    #
+    # @authentication_required
+    # async def amend_bulk_orders(self, orders):
+    #     """Amend multiple orders."""
+    #     # Note rethrow; if this fails, we want to catch it and re-tick
+    #     return await self._curl_bitmex(path='order/bulk',
+    #                                    postdict={'orders': [order.to_postdict() for order in orders]}, verb='PUT')
+    #
+    # @authentication_required
+    # async def create_bulk_orders(self, orders):
+    #     """Create multiple orders."""
+    #     return await self._curl_bitmex(path='order/bulk',
+    #                                    postdict={'orders': [order.to_postdict() for order in orders]}, verb='POST')
+    #
+    # @authentication_required
+    # async def http_open_orders(self, symbol):
+    #     """Get open orders via HTTP. Used on close to ensure we catch them all."""
+    #     path = "order"
+    #     resp = await self._curl_bitmex(
+    #         path=path,
+    #         query={
+    #             'filter': json.dumps({'ordStatus.isTerminated': False, 'symbol': symbol}),
+    #             'count': 500
+    #         },
+    #         verb="GET"
+    #     )
+    #     orders = await resp.json()
+    #     # Only return orders that start with our clOrdID prefix.
+    #     return [o for o in orders if str(o['clOrdID']).startswith(self.orderIDPrefix)]
+    #
+    # @authentication_required
+    # async def user(self):
+    #     path = 'user'
+    #     resp = await self._curl_bitmex(path, verb="GET")
+    #     return await resp.json()
+    #
+    # @authentication_required
+    # async def cancel_all_after_http(self, timeout, max_retry=5):
+    #     return await self._curl_bitmex(path='order/cancelAllAfter',
+    #                                    postdict={'timeout': timeout * 1000},
+    #                                    verb="POST",
+    #                                    max_retry=max_retry)
+    #
+    # @authentication_required
+    # async def close_position(self, symbol, max_retry=5):
+    #     return await self._curl_bitmex(path='order',
+    #                                    postdict={'execInst': "Close", "symbol": symbol},
+    #                                    verb="POST",
+    #                                    max_retry=max_retry)
 
     async def _curl_bitmex(self, path, query=None, postdict=None,
                            timeout=sentinel, verb=None,

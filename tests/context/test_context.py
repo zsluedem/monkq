@@ -29,7 +29,7 @@ from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.config import Setting
 from MonkTrader.const import RUN_TYPE
 from MonkTrader.context import Context
-from MonkTrader.exception import SettingException
+from MonkTrader.exception import SettingError
 from tests.utils import add_path, over_written_settings
 
 
@@ -76,7 +76,7 @@ def test_context_load_exchanges_exception(settings: Setting) -> None:
         with over_written_settings(settings, EXCHANGES=exchange_settings,
                                    RUN_TYPE="NO") as custom_settings:
             context = Context(custom_settings)
-            with pytest.raises(SettingException):
+            with pytest.raises(SettingError):
                 context.load_exchanges()
 
 

@@ -33,7 +33,7 @@ import pymongo
 import requests
 from logbook import Logger
 from MonkTrader.config import settings
-from MonkTrader.exception import DataDownloadException
+from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 from MonkTrader.utils import CsvFileDefaultDict, CsvZipDefaultDict, assure_dir
 
@@ -97,7 +97,7 @@ class RawStreamRequest(StreamRequest):
         except Exception as e:
             self.rollback()
             logger.exception("Exception #{}# happened when process {} {}".format(e, self.url, self.dst_file))
-            raise DataDownloadException()
+            raise DataDownloadError()
 
     def rollback(self):
         logger.info("Remove the not complete file {}".format(self.dst_file))
@@ -178,7 +178,7 @@ class _CsvStreamRequest(StreamRequest):
         except BaseException as e:
             self.rollback()
             logger.exception("Exception {} happened when process {} data".format(e, self.date))
-            raise DataDownloadException()
+            raise DataDownloadError()
         self.cleanup()
 
     def rollback(self):

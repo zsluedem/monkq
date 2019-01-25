@@ -23,54 +23,64 @@
 #
 
 
-class MonkException(BaseException):
+class MonkError(BaseException):
     pass
 
 
-class SettingException(MonkException):
+class SettingError(MonkError):
     pass
 
 
-class MaxRetryException(MonkException):
+class NetworkError(MonkError):
     pass
 
 
-class RateLimitException(MonkException):
-    def __init__(self, ratelimit_reset: int) -> None:
+class HttpError(NetworkError):
+    def __init__(self, path, verb, query, postdict, retry):
+        self.path = path
+        self.verb = verb
+        self.query = query
+        self.postdict = postdict
+        self.retry = retry
+
+
+class MaxRetryError(HttpError):
+    pass
+
+
+class RateLimitError(HttpError):
+    def __init__(self, path, verb, query, postdict, retry,ratelimit_reset: int) -> None:
+        super(RateLimitError, self).__init__(path, verb, query, postdict, retry)
         self.ratelimit_reset = ratelimit_reset
 
 
-class BacktestTimeException(MonkException):
+class AuthError(NetworkError):
     pass
 
 
-class StrategyNotFound(MonkException):
+class BacktestError(MonkError):
     pass
 
 
-class DataDownloadException(MonkException):
+class DataDownloadError(MonkError):
     pass
 
 
-class AuthException(MonkException):
+class LoadDataError(MonkError):
     pass
 
 
-class LoadDataException(MonkException):
+class ImpossibleError(MonkError):
     pass
 
 
-class ImpossibleException(MonkException):
+class AssetsError(MonkError):
     pass
 
 
-class AccountException(MonkException):
+class MarginError(AssetsError):
     pass
 
 
-class MarginException(AccountException):
-    pass
-
-
-class MarginNotEnoughException(MarginException):
+class MarginNotEnoughError(MarginError):
     pass

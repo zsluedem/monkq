@@ -31,7 +31,7 @@ from logbook import Logger
 from MonkTrader.config import settings
 from MonkTrader.data import DataDownloader, Point, ProcessPoints
 from MonkTrader.exchange.bitmex.const import (
-    TARFILETYPE, quote_link, symbols_link, trade_link,
+    TARFILETYPE, QUOTE_LINK, SYMBOL_LINK, TRADE_LINK,
 )
 from MonkTrader.exchange.bitmex.data.download import (
     START_DATE, QuoteMongoStream, QuoteZipFileStream, SymbolsStreamRequest,
@@ -89,7 +89,7 @@ class BitMexDownloader(DataDownloader):
 
     def init_kind(self, mode: str, kind: str):
         if kind == 'quote':
-            self.link = quote_link
+            self.link = QUOTE_LINK
             if mode == 'csv':
                 Streamer = QuoteZipFileStream
             elif mode == 'tar':
@@ -99,7 +99,7 @@ class BitMexDownloader(DataDownloader):
             else:
                 raise ValueError
         elif kind == 'trade':
-            self.link = trade_link
+            self.link = TRADE_LINK
             if mode == 'csv':
                 Streamer = TradeZipFileStream
             elif mode == 'tar':
@@ -109,7 +109,7 @@ class BitMexDownloader(DataDownloader):
             else:
                 raise ValueError
         elif kind == 'instruments':
-            self.link = symbols_link
+            self.link = SYMBOL_LINK
             Streamer = SymbolsStreamRequest
         else:
             raise ValueError()

@@ -31,31 +31,42 @@ class SettingError(MonkError):
     pass
 
 
-class NetworkError(MonkError):
+class AuthError(MonkError):
     pass
 
 
-class HttpError(NetworkError):
-    def __init__(self, path, verb, query, postdict, retry):
-        self.path = path
-        self.verb = verb
-        self.query = query
-        self.postdict = postdict
-        self.retry = retry
+class RequestError(MonkError):
+    pass
+
+
+class HttpError(RequestError):
+    def __init__(self, url: str, method: str, body: str, headers: dict, message: str = ''):
+        self.url = url
+        self.method = method
+        self.body = body,
+        self.headers = headers
+        self.message = message
 
 
 class MaxRetryError(HttpError):
     pass
 
 
+class NotFoundError(HttpError):
+    pass
+
+
 class RateLimitError(HttpError):
-    def __init__(self, path, verb, query, postdict, retry,ratelimit_reset: int) -> None:
-        super(RateLimitError, self).__init__(path, verb, query, postdict, retry)
+    def __init__(self, url: str, method: str, body: str, headers: dict, message: str = '',
+                 ratelimit_reset: int = 0) -> None:
+        super(RateLimitError, self).__init__(url, method, body, headers, message)
         self.ratelimit_reset = ratelimit_reset
 
 
-class AuthError(NetworkError):
-    pass
+class HttpAuthError(AuthError, HttpError):
+    def __init__(self, api_key: str, api_secret: str):
+        self.api_key = api_key
+        self.api_secret = api_secret
 
 
 class BacktestError(MonkError):
@@ -71,6 +82,10 @@ class LoadDataError(MonkError):
 
 
 class ImpossibleError(MonkError):
+    pass
+
+
+class UnKnownError(MonkError):
     pass
 
 

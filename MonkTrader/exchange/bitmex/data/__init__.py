@@ -31,7 +31,7 @@ from logbook import Logger
 from MonkTrader.config import settings
 from MonkTrader.data import DataDownloader, Point, ProcessPoints
 from MonkTrader.exchange.bitmex.const import (
-    TARFILETYPE, QUOTE_LINK, SYMBOL_LINK, TRADE_LINK,
+    QUOTE_LINK, SYMBOL_LINK, TARFILETYPE, TRADE_LINK,
 )
 from MonkTrader.exchange.bitmex.data.download import (
     START_DATE, QuoteMongoStream, QuoteZipFileStream, SymbolsStreamRequest,

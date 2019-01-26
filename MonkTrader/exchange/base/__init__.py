@@ -35,20 +35,18 @@ class BaseExchange:
 
     def get_last_price(self, instrument: Union[str, T_INSTRUMENT]) -> float:
         """
-
-        :param instrument:
-        :return:
+        get instrument last trade price
         """
         raise NotImplementedError()
 
     def exchange_info(self) -> None:
         """
         get the exchange information
-        :return:
         """
         raise NotImplementedError()
 
-    def place_limit_order(self, target: Union[str, T_INSTRUMENT], price: float, quantity: float) -> str:
+    def place_limit_order(self, target: Union[str, T_INSTRUMENT],
+                          price: float, quantity: float) -> str:
         """
         create a new limit order in the exchange.
 
@@ -56,12 +54,12 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    def place_market_order(self) -> str:
+    def place_market_order(self, target: Union[str, T_INSTRUMENT],
+                           quantity: float) -> str:
         """
         create a new market order in the exchange.
 
         It would return an uuid of the order, you can find the order by id.
-        :return:
         """
         raise NotImplementedError()
 
@@ -74,17 +72,20 @@ class BaseExchange:
     def cancel_order(self, order_id: str) -> None:
         """
         cancel an order from the exchange by the order id.
+        If you cancel the order successfully, it would return True
+        otherwise False.
         """
         raise NotImplementedError()
 
-    def open_orders(self) -> List[T_ORDER]:
+    def open_orders(self) -> None:
+        """
+        get all the open orders
+        """
         raise NotImplementedError()
 
     def get_order(self, order_id: str) -> T_ORDER:
         """
         get the order obj by th order_id returned when the order was created.
-        :param order_id:
-        :return:
         """
         raise NotImplementedError()
 
@@ -92,18 +93,31 @@ class BaseExchange:
         raise NotImplementedError()
 
     def available_instruments(self) -> None:
+        """
+        return all the available instruments at the moment
+        """
+        raise NotImplementedError()
+
+    def get_kline(self, target: Union[str, T_INSTRUMENT], freq: str,
+                  count: int = 100, including_now: bool = False)-> List[dict]:
+        """
+        get an instrument kline
+        """
+        raise NotImplementedError()
+
+    def get_recent_trades(self, instrument: Union[str, T_INSTRUMENT])-> List[dict]:
+        """
+        get recent trade. Maximum recent 500 trades
+        """
         raise NotImplementedError()
 
     def setup(self) -> None:
         raise NotImplementedError()
 
-    def config(self) -> None:
-        raise NotImplementedError()
-
     # def order_book(self) -> None:
     #     raise NotImplementedError()
     # def withdraw(self) -> None:
-    #     raise NotImplementedError()
+    #     raise NotImplementedError()s
     #
     # def deposit(self) -> None:
     #     raise NotImplementedError()

@@ -165,7 +165,7 @@ class BitmexExchange(BaseExchange):
         query = {
             "symbol": target,
         }
-        resp = await  self._curl_bitmex(path='instrument', query=query)
+        resp = await self._curl_bitmex(path='instrument', query=query)
         content = await resp.json()
         try:
             one = content[0]

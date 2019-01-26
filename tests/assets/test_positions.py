@@ -34,7 +34,7 @@ from MonkTrader.assets.positions import (
     FutureCrossIsolatePosition, IsolatedPosition, PositionManager,
 )
 from MonkTrader.assets.trade import Trade
-from MonkTrader.exception import MarginException, MarginNotEnoughException
+from MonkTrader.exception import MarginError, MarginNotEnoughError
 from MonkTrader.exchange.base import BaseExchange  # noqa: F401
 
 from ..utils import random_string
@@ -212,9 +212,9 @@ def test_cross_position(exchange: MagicMock, future_instrument: FutureInstrument
     assert position.bankruptcy_price == pytest.approx(14.0351, 0.0001)
     assert position.maint_margin == 12000
     assert position.position_margin == pytest.approx(1890)
-    with pytest.raises(MarginException):
+    with pytest.raises(MarginError):
         position.maint_margin = 10
-    with pytest.raises(MarginException):
+    with pytest.raises(MarginError):
         position.leverage
 
     # short
@@ -225,9 +225,9 @@ def test_cross_position(exchange: MagicMock, future_instrument: FutureInstrument
     assert position.bankruptcy_price == pytest.approx(29.6924, 0.0001)
     assert position.maint_margin == 13980
     assert position.position_margin == pytest.approx(1701)
-    with pytest.raises(MarginException):
+    with pytest.raises(MarginError):
         position.maint_margin = 10
-    with pytest.raises(MarginException):
+    with pytest.raises(MarginError):
         position.leverage
 
 
@@ -251,15 +251,15 @@ def test_isolated_position(exchange: MagicMock, future_instrument: FutureInstrum
     assert position.position_margin == 800
     assert position.bankruptcy_price == pytest.approx(10.2255, 0.0001)
 
-    with pytest.raises(MarginNotEnoughException):
+    with pytest.raises(MarginNotEnoughError):
         # more than the available margin
         position.maint_margin = 1100
 
-    with pytest.raises(MarginNotEnoughException):
+    with pytest.raises(MarginNotEnoughError):
         # less than the init margin
         position.maint_margin = 400
 
-    with pytest.raises(MarginNotEnoughException):
+    with pytest.raises(MarginNotEnoughError):
         # more than the available margin
         position.set_leverage(2)
 
@@ -286,15 +286,15 @@ def test_isolated_position(exchange: MagicMock, future_instrument: FutureInstrum
     assert position.bankruptcy_price == pytest.approx(10.6401, 0.0001)
     assert position.leverage == 6.6
     # position.maint_margin =
-    with pytest.raises(MarginNotEnoughException):
+    with pytest.raises(MarginNotEnoughError):
         # more than the available margin
         position.maint_margin = 11000
 
-    with pytest.raises(MarginNotEnoughException):
+    with pytest.raises(MarginNotEnoughError):
         # less than the init margin
         position.maint_margin = 100
 
-    with pytest.raises(MarginNotEnoughException):
+    with pytest.raises(MarginNotEnoughError):
         mock_account.available_balance = 3000
         position.set_leverage(2)
 
@@ -330,15 +330,15 @@ def test_cross_isolated_position(exchange: MagicMock, future_instrument: FutureI
     assert position.bankruptcy_price == pytest.approx(14.0351, 0.0001)
     assert position.maint_margin == 12000
     assert position.position_margin == pytest.approx(1890)
-    with pytest.raises(MarginException):
+    with pytest.raises(MarginError):
         position.leverage
-    with pytest.raises(MarginException):
+    with pytest.raises(MarginError):
         position.maint_margin = 100
 
-    with pytest.raises(MarginNotEnoughException):
+    with pytest.raises(MarginNotEnoughError):
         position.set_leverage(3)
     assert not position.isolated
-    with pytest.raises(MarginNotEnoughException):
+    with pytest.raises(MarginNotEnoughError):
         position.set_maint_margin(300)
     assert not position.isolated
 

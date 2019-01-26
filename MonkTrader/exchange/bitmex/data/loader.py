@@ -31,7 +31,7 @@ from MonkTrader.assets.instrument import (
     UpsideInstrument,
 )
 from MonkTrader.data import DataLoader
-from MonkTrader.exception import LoadDataException
+from MonkTrader.exception import LoadDataError
 from MonkTrader.exchange.base import BaseExchange
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
@@ -84,6 +84,6 @@ class BitmexDataloader(DataLoader):
         for instrument_raw in instruments_raw:
             instrument_cls = self.instrument_cls.get(instrument_raw['typ'])
             if instrument_cls is None:
-                raise LoadDataException()
+                raise LoadDataError()
             instrument = instrument_cls.create(instrument_map, instrument_raw, self.exchange)
             self.instruments[instrument.symbol] = instrument

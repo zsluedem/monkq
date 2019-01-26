@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Dict, Type, TypeVar
 from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.config import Setting
 from MonkTrader.const import RUN_TYPE
-from MonkTrader.exception import SettingException
+from MonkTrader.exception import SettingError
 
 if TYPE_CHECKING:
     from MonkTrader.exchange.base import BaseExchange  # noqa: F401
@@ -61,7 +61,7 @@ class Context:
         elif self._settings.RUN_TYPE == RUN_TYPE.BACKTEST:  # type: ignore
             exchange_cls = getattr(mod, 'default_sim_exchange')
         else:
-            raise SettingException()
+            raise SettingError()
 
         return exchange_cls(self, name, exchange_setting)
 

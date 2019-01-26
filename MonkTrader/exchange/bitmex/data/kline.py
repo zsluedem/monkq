@@ -36,7 +36,7 @@ from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzutc
 from logbook import Logger
 from MonkTrader.const import CHINA_CONNECT_TIMEOUT, CHINA_WARNING, MAX_HISTORY
-from MonkTrader.exchange.bitmex.const import Bitmex_api_url
+from MonkTrader.exchange.bitmex.const import BITMEX_API_URL
 from requests.exceptions import ConnectTimeout
 
 from ..log import logger_group
@@ -47,9 +47,9 @@ logger_group.add_logger(logger)
 
 def fetch_bitmex_symbols(active: bool = False):
     if active:
-        url = urljoin(Bitmex_api_url, "instrument/active")
+        url = urljoin(BITMEX_API_URL, "instrument/active")
     else:
-        url = urljoin(Bitmex_api_url, "instrument")
+        url = urljoin(BITMEX_API_URL, "instrument")
     try:
         req = requests.get(url, params={"count": 500}, timeout=CHINA_CONNECT_TIMEOUT)
     except ConnectTimeout:
@@ -61,7 +61,7 @@ def fetch_bitmex_symbols(active: bool = False):
 def fetch_bitmex_kline(symbol: str, start_time: datetime.datetime, end_time: datetime.datetime, frequency: str):
     datas = list()
     while start_time < end_time:
-        url = urljoin(Bitmex_api_url, "trade/bucketed")
+        url = urljoin(BITMEX_API_URL, "trade/bucketed")
         try:
             req = requests.get(url, params={"symbol": symbol, "binSize": frequency,
                                             "startTime": start_time.isoformat(),

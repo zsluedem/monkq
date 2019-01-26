@@ -21,3 +21,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from dataclasses import dataclass
+
+
+@dataclass()
+class ExchangeInfo:
+    name: str
+    location: str
+    info: str

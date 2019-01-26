@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Dict, Type, TypeVar
 from dataclasses import dataclass
 from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
-from MonkTrader.exception import MarginException, MarginNotEnoughException
+from MonkTrader.exception import MarginError, MarginNotEnoughError
 
 if TYPE_CHECKING:
     from MonkTrader.assets.trade import Trade
@@ -229,11 +229,11 @@ class CrossPosition(FutureBasePosition):
 
     @maint_margin.setter
     def maint_margin(self, value: float) -> float:
-        raise MarginException("You can not set the margin in cross position")
+        raise MarginError("You can not set the margin in cross position")
 
     @property
     def leverage(self) -> float:
-        raise MarginException("Cross position doesn't support to see position leverage")
+        raise MarginError("Cross position doesn't support to see position leverage")
 
     @property
     def position_margin(self) -> float:
@@ -269,7 +269,7 @@ class IsolatedPosition(FutureBasePosition):
         :return:
         """
         if value >= self.account.available_balance or value < self.last_init_margin:
-            raise MarginNotEnoughException()
+            raise MarginNotEnoughError()
         else:
             self._maint_margin = value
 

@@ -31,7 +31,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from dateutil.relativedelta import relativedelta
-from MonkTrader.exception import DataDownloadException
+from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 from MonkTrader.exchange.bitmex.data import (
     START_DATE, BitMexDownloader, BitMexProcessPoints, DatePoint,
@@ -209,7 +209,7 @@ def test_bitmexdownloader_do_all():
         stream.process.assert_called_once_with()
 
         b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
-        m = MagicMock(side_effect=DataDownloadException())
+        m = MagicMock(side_effect=DataDownloadError())
         b.Streamer = m
         b.do_all()
 
@@ -314,7 +314,7 @@ def test_raw_stream_request_exception():
         outcome = os.path.join(tmp, date.strftime("%Y%m%d") + '.csv.gz')
         stream = MockRawStreamRequest(date, mock_url, tmp, stream=stream_b)
         stream._stream_requests = _mock_exception_stream
-        with pytest.raises(DataDownloadException):
+        with pytest.raises(DataDownloadError):
             stream.process()
 
         assert not os.path.exists(outcome)
@@ -351,7 +351,7 @@ def test_quote_mongo_stream_exception():
 
     stream = MockQuoteMongoStream(d, mock_url, stream=stream_quote)
     stream._stream_requests = _mock_exception_stream
-    with pytest.raises(DataDownloadException):
+    with pytest.raises(DataDownloadError):
         stream.process()
 
     obj = stream._cli.bitmex.quote.find_one({'symbol': "ADAZ18", "askSize": 524060})
@@ -405,7 +405,7 @@ def test_trade_mongo_stream_exception():
 
     stream = MockTradeMongoStream(d, mock_url, stream=stream_trade)
     stream._stream_requests = _mock_exception_stream
-    with pytest.raises(DataDownloadException):
+    with pytest.raises(DataDownloadError):
         stream.process()
 
     obj = stream._cli.bitmex.trade.find_one(
@@ -454,7 +454,7 @@ def test_trade_file_stream_exception():
         stream = MockTradeFileStream(date=d, url=mock_url, dst_dir=tmp, stream=stream_trade)
         stream._stream_requests = _mock_exception_stream
 
-        with pytest.raises(DataDownloadException):
+        with pytest.raises(DataDownloadError):
             stream.process()
 
         assert not os.path.exists(tar_dir)
@@ -497,7 +497,7 @@ def test_quote_file_stream_exception():
         stream = MockQuoteFileStream(date=d, url=mock_url, dst_dir=tmp, stream=stream_quote)
         stream._stream_requests = _mock_exception_stream
 
-        with pytest.raises(DataDownloadException):
+        with pytest.raises(DataDownloadError):
             stream.process()
 
         assert not os.path.exists(tar_dir)
@@ -540,7 +540,7 @@ def test_trade_zip_file_stream_exception():
         stream = MockTradeZipFileStream(date=d, url=mock_url, dst_dir=tmp, stream=stream_trade)
         stream._stream_requests = _mock_exception_stream
 
-        with pytest.raises(DataDownloadException):
+        with pytest.raises(DataDownloadError):
             stream.process()
 
         assert not os.path.exists(tar_dir)
@@ -583,7 +583,7 @@ def test_quote_zip_file_stream_exception():
         stream = MockQuoteZipFileStream(date=d, url=mock_url, dst_dir=tmp, stream=stream_quote)
         stream._stream_requests = _mock_exception_stream
 
-        with pytest.raises(DataDownloadException):
+        with pytest.raises(DataDownloadError):
             stream.process()
 
         assert not os.path.exists(tar_dir)

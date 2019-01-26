@@ -26,7 +26,7 @@ import datetime
 import pytest
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzutc
-from MonkTrader.exception import BacktestTimeException
+from MonkTrader.exception import BacktestError
 from MonkTrader.ticker import FrequencyTicker
 
 start_time = datetime.datetime(2018, 1, 1, tzinfo=tzutc())
@@ -58,5 +58,5 @@ def test_timer_aware_timezone():
 
 
 def test_timer_timeexception():
-    with pytest.raises(BacktestTimeException):
+    with pytest.raises(BacktestError):
         FrequencyTicker(start_time=end_time, end_time=start_time, frequency='1m')

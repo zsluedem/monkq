@@ -47,7 +47,6 @@ from MonkTrader.exchange.bitmex.const import (
 )
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
-from MonkTrader.tradecounter import TradeCounter
 from yarl import URL
 
 from .log import logger_group
@@ -72,7 +71,7 @@ def authentication_required(fn):
 class BitmexSimulateExchange(BaseExchange):
     def __init__(self):
         self.dataloader = BitmexDataloader(self)
-        self.trade_counter = TradeCounter(self)
+        # self.trade_counter = TradeCounter(self)
 
     def setup(self):
         self.dataloader.load()

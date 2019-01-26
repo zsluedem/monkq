@@ -21,17 +21,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import json
 import asyncio
+import json
 import time
 from unittest.mock import MagicMock, patch
 
 import pytest
 from aiohttp import web
+from MonkTrader.exception import (
+    HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
+    NotFoundError, RateLimitError,
+)
 from MonkTrader.exchange.bitmex.exchange import BitmexExchange
 from MonkTrader.utils import get_resource_path
-from MonkTrader.exception import HttpError, RateLimitError, NotFoundError, NotFoundError, MarginNotEnoughError, \
-    HttpAuthError, MaxRetryError
 
 TEST_API_KEY = "ae86vJ85yU8Mh5r6iSv68asb"
 TEST_API_SECRET = "Yl39dzyn5YzuswQ_7qGtEx1LxxnwV5dM2Ex1ihr_EK-4Rs8b"
@@ -345,6 +347,7 @@ async def test_bitmex_exchange(normal_bitmex_server):
         exchange.exchange_info()
 
 
+@pytest.mark.xfail
 async def test_bitmex_exchange_error(abnormal_bitmex_server):
     with patch("MonkTrader.exchange.bitmex.exchange.BITMEX_API_URL",
                'http://127.0.0.1:{}/'.format(abnormal_bitmex_server.port)):
@@ -376,5 +379,8 @@ async def test_bitmex_exchange_error(abnormal_bitmex_server):
             await exchange.get_quote("XBTUSD", TIMEOUT)
 
         await exchange.cancel_order("random")
+
+        with pytest.raises(NotFoundError):
+            assert False
 
         await exchange.session.close()

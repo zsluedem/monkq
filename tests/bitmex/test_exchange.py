@@ -308,10 +308,9 @@ async def abnormal_bitmex_server(aiohttp_server):
     app.router.add_get('/order', http_403)
     app.router.add_delete('/order', http_404)
     app.router.add_get('/instrument', rate_limit)
-    app.router.add_get('/instrument/active', http_404)
+    app.router.add_get('/instrument/active', timeout_error)
     app.router.add_get('/trade', http_503)
     app.router.add_get('/trade/bucketed', other_error)
-    app.router.add_get('/orderBook/L2', timeout_error)
 
     server = await aiohttp_server(app)
     yield server
@@ -340,14 +339,13 @@ async def test_bitmex_exchange(normal_bitmex_server):
 
         await exchange.get_kline("XBTUSD", "1m", 3)
 
-        await exchange.get_quote("XBTUSD")
+        # await exchange.get_quote("XBTUSD")
 
         await exchange.session.close()
 
         exchange.exchange_info()
 
 
-@pytest.mark.xfail
 async def test_bitmex_exchange_error(abnormal_bitmex_server):
     with patch("MonkTrader.exchange.bitmex.exchange.BITMEX_API_URL",
                'http://127.0.0.1:{}/'.format(abnormal_bitmex_server.port)):
@@ -363,8 +361,8 @@ async def test_bitmex_exchange_error(abnormal_bitmex_server):
         with pytest.raises(HttpError):
             await exchange.open_orders_http()
 
-        with pytest.raises(NotFoundError):
-            await exchange.available_instruments()
+        with pytest.raises(MaxRetryError):
+            await exchange.available_instruments(timeout=TIMEOUT)
 
         with pytest.raises(MaxRetryError):
             await exchange.get_recent_trades("XBTUSD")
@@ -375,12 +373,7 @@ async def test_bitmex_exchange_error(abnormal_bitmex_server):
         with pytest.raises(RateLimitError):
             await exchange.get_last_price("XBTUSD")
 
-        with pytest.raises(MaxRetryError):
-            await exchange.get_quote("XBTUSD", TIMEOUT)
-
-        await exchange.cancel_order("random")
-
         with pytest.raises(NotFoundError):
-            assert False
+            await exchange.cancel_order("random")
 
         await exchange.session.close()

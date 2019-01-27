@@ -159,17 +159,17 @@ class BitmexExchange(BaseExchange):
                                   api_key=self.api_key, api_secret=self.api_secret,
                                   ssl=self._ssl, http_proxy=None)
 
-    async def get_quote(self, target: Union[str, T_INSTRUMENT],
-                        timeout: int = sentinel, max_retry: int = 0):
-        if isinstance(target, Instrument):
-            target = Instrument.symbol
-        query = {
-            "symbol": target,
-            "depth": "1"
-        }
-        resp = await self._curl_bitmex(path='orderBook/L2', query=query,
-                                       timeout=timeout, max_retry=max_retry)
-        return await resp.json()
+    # async def get_quote(self, target: Union[str, T_INSTRUMENT],
+    #                     timeout: int = sentinel, max_retry: int = 0):
+    #     if isinstance(target, Instrument):
+    #         target = Instrument.symbol
+    #     query = {
+    #         "symbol": target,
+    #         "depth": "1"
+    #     }
+    #     resp = await self._curl_bitmex(path='orderBook/L2', query=query,
+    #                                    timeout=timeout, max_retry=max_retry)
+    #     return await resp.json()
 
     async def get_last_price(self, target: Union[str, T_INSTRUMENT],
                              timeout: int = sentinel, max_retry: int = 0):
@@ -548,10 +548,9 @@ class BitmexExchange(BaseExchange):
                 elif resp.status == 404:
                     if method == 'DELETE':
                         logger.warning("Order not found: {}".format(postdict['orderID']))
-                    else:
-                        raise NotFoundError(url=resp.request_info.url, method=resp.request_info.method,
-                                            body=postdict, headers=resp.request_info.headers,
-                                            message=message)
+                    raise NotFoundError(url=resp.request_info.url, method=resp.request_info.method,
+                                        body=postdict, headers=resp.request_info.headers,
+                                        message=message)
                 return resp
                 # exit_or_throw()
             elif resp.status == 429:

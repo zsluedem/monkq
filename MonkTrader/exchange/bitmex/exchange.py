@@ -128,11 +128,11 @@ class BitmexExchange(BaseExchange):
         else:
             self._loop = asyncio.get_event_loop()
         if self.exchange_setting['IS_TEST']:
-            base_url = BITMEX_API_URL
-            ws_url = BITMEX_WEBSOCKET_URL
-        else:
             base_url = BITMEX_TESTNET_API_URL
             ws_url = BITMEX_TESTNET_WEBSOCKET_URL
+        else:
+            base_url = BITMEX_API_URL
+            ws_url = BITMEX_WEBSOCKET_URL
         self.base_url = base_url
 
         self._trace_config = aiohttp.TraceConfig()
@@ -159,13 +159,27 @@ class BitmexExchange(BaseExchange):
                                   api_key=self.api_key, api_secret=self.api_secret,
                                   ssl=self._ssl, http_proxy=None)
 
-    async def get_last_price(self, target: Union[str, T_INSTRUMENT]):
+    # async def get_quote(self, target: Union[str, T_INSTRUMENT],
+    #                     timeout: int = sentinel, max_retry: int = 0):
+    #     if isinstance(target, Instrument):
+    #         target = Instrument.symbol
+    #     query = {
+    #         "symbol": target,
+    #         "depth": "1"
+    #     }
+    #     resp = await self._curl_bitmex(path='orderBook/L2', query=query,
+    #                                    timeout=timeout, max_retry=max_retry)
+    #     return await resp.json()
+
+    async def get_last_price(self, target: Union[str, T_INSTRUMENT],
+                             timeout: int = sentinel, max_retry: int = 0):
         if isinstance(target, Instrument):
             target = Instrument.symbol
         query = {
             "symbol": target,
         }
-        resp = await self._curl_bitmex(path='instrument', query=query)
+        resp = await self._curl_bitmex(path='instrument', query=query,
+                                       timeout=timeout, max_retry=max_retry)
         content = await resp.json()
         try:
             one = content[0]
@@ -175,10 +189,13 @@ class BitmexExchange(BaseExchange):
             return 0
 
     def exchange_info(self) -> ExchangeInfo:
-        return ExchangeInfo(name="bitmex", location="unknown", info="famous exchange")
+        return ExchangeInfo(name="bitmex",
+                            location="unknown",
+                            info="famous exchange")
 
     async def place_limit_order(self, target: Union[str, T_INSTRUMENT],
-                                price: float, quantity) -> str:
+                                price: float, quantity, timeout: int = sentinel,
+                                max_retry: int = 0) -> str:
         if isinstance(target, Instrument):
             target = Instrument.symbol
         postdict = {
@@ -186,11 +203,14 @@ class BitmexExchange(BaseExchange):
             "price": price,
             "orderQty": quantity
         }
-        resp = await self._curl_bitmex(path="order", postdict=postdict, method="POST")
+        resp = await self._curl_bitmex(path="order", postdict=postdict, method="POST",
+                                       timeout=timeout, max_retry=max_retry)
         order_info = await resp.json()
         return order_info['orderID']
 
-    async def place_market_order(self, target: Union[str, T_INSTRUMENT], quantity: float) -> str:
+    async def place_market_order(self, target: Union[str, T_INSTRUMENT],
+                                 quantity: float, timeout: int = sentinel,
+                                 max_retry: int = 0) -> str:
         if isinstance(target, Instrument):
             target = Instrument.symbol
         postdict = {
@@ -198,11 +218,15 @@ class BitmexExchange(BaseExchange):
             "orderQty": quantity,
             "ordType": "Market"
         }
-        resp = await self._curl_bitmex(path="order", postdict=postdict, method="POST")
+        resp = await self._curl_bitmex(path="order", postdict=postdict,
+                                       method="POST", timeout=timeout,
+                                       max_retry=max_retry)
         order_info = await resp.json()
         return order_info['orderID']
 
-    async def amend_order(self, order_id: str, quantity: float = None, price: float = None) -> bool:
+    async def amend_order(self, order_id: str, quantity: float = None,
+                          price: float = None, timeout: int = sentinel,
+                          max_retry: int = 0) -> bool:
         postdict = {
             "orderID": order_id,
         }
@@ -210,29 +234,35 @@ class BitmexExchange(BaseExchange):
             postdict.update({"orderQty": quantity})
         if price:
             postdict.update({'price': price})
-        resp = await self._curl_bitmex(path="order", postdict=postdict, method="PUT")
+        resp = await self._curl_bitmex(path="order", postdict=postdict,
+                                       method="PUT", timeout=timeout,
+                                       max_retry=max_retry)
         if 300 > resp.status >= 200:
             return True
         else:
             return False
-        return True
 
     @authentication_required
-    async def cancel_order(self, order_id: str) -> bool:
+    async def cancel_order(self, order_id: str, timeout: int = sentinel,
+                           max_retry: int = 0) -> bool:
         path = "order"
         postdict = {
             'orderID': order_id,
         }
-        resp = await self._curl_bitmex(path=path, postdict=postdict, method="DELETE")
+        resp = await self._curl_bitmex(path=path, postdict=postdict,
+                                       method="DELETE", timeout=timeout,
+                                       max_retry=max_retry)
         if 300 > resp.status >= 200:
             return True
         else:
             return False
 
     @authentication_required
-    async def open_orders_http(self):
+    async def open_orders_http(self, timeout: int = sentinel, max_retry: int = 0):
         query = {"filter": '{"open": true}', "count": 500}
-        resp = await self._curl_bitmex(path='order', query=query, method="GET")
+        resp = await self._curl_bitmex(path='order', query=query,
+                                       method="GET", timeout=timeout,
+                                       max_retry=max_retry)
         return await resp.json()
 
     open_orders = open_orders_http
@@ -240,10 +270,11 @@ class BitmexExchange(BaseExchange):
     def get_account(self):
         pass
 
-    async def available_instruments(self) -> ValuesView[T_INSTRUMENT]:
+    async def available_instruments(self, timeout: int = sentinel) -> ValuesView[T_INSTRUMENT]:
         if self._available_instrument_cache:
             return self._available_instrument_cache.values()
-        resp = await self._curl_bitmex(path='instrument/active', method='GET')
+        resp = await self._curl_bitmex(path='instrument/active', method='GET',
+                                       max_retry=0, timeout=timeout)
         contents = await resp.json()
         for one in contents:
             instrument = FutureInstrument.create(self.INSTRUMENT_KEY_MAP, one, self)
@@ -253,8 +284,9 @@ class BitmexExchange(BaseExchange):
     async def setup(self):
         await self.ws.setup()
 
-    async def get_kline(self, target: Union[str, T_INSTRUMENT], freq: str, count: int = 100,
-                        including_now: bool = False):
+    async def get_kline(self, target: Union[str, T_INSTRUMENT], freq: str,
+                        count: int = 100, including_now: bool = False,
+                        timeout: int = sentinel, max_retry: int = 5):
         if isinstance(target, Instrument):
             target = Instrument.symbol
         query = {
@@ -264,10 +296,13 @@ class BitmexExchange(BaseExchange):
             "reverse": "true",
             "count": count
         }
-        resp = await self._curl_bitmex(path='trade/bucketed', query=query)
+        resp = await self._curl_bitmex(path='trade/bucketed', query=query,
+                                       timeout=timeout, max_retry=max_retry)
         return await resp.json()
 
-    async def get_recent_trades(self, target: Union[str, T_INSTRUMENT], count: int = 100):
+    async def get_recent_trades(self, target: Union[str, T_INSTRUMENT],
+                                count: int = 100, timeout: int = sentinel,
+                                max_retry: int = 5):
         if isinstance(target, Instrument):
             target = Instrument.symbol
         query = {
@@ -275,7 +310,9 @@ class BitmexExchange(BaseExchange):
             "count": count,
             "reverse": "true"
         }
-        resp = await self._curl_bitmex(path="trade", query=query, method="GET")
+        resp = await self._curl_bitmex(path="trade", query=query,
+                                       method="GET", timeout=timeout,
+                                       max_retry=max_retry)
         return await resp.json()
 
     # @authentication_required
@@ -454,18 +491,6 @@ class BitmexExchange(BaseExchange):
 
         headers = {}
 
-        async def retry(retry_time):
-            logger.info("Retry on remain times {}".format(retry_time))
-            retry_time -= 1
-            if retry_time < 0:
-                logger.warning(
-                    "Request with args {}, {}, {}, {}, {}, {} failed "
-                    "with retries".format(path, query, postdict, timeout, method, max_retry))
-                raise MaxRetryError(url=resp.request_info.url, method=resp.request_info.method,
-                                    body=postdict, headers=resp.request_info.headers)
-            else:
-                return await self._curl_bitmex(path, query, postdict, timeout, method, retry_time)
-
         if postdict:
             data = json.dumps(postdict)
             headers.update({'content-type': "application/json"})
@@ -476,6 +501,18 @@ class BitmexExchange(BaseExchange):
 
         if timeout is not sentinel:
             timeout = aiohttp.ClientTimeout(total=timeout)
+
+        async def retry(retry_time):
+            logger.info("Retry on remain times {}".format(retry_time))
+            retry_time -= 1
+            if retry_time < 0:
+                logger.warning(
+                    "Request with args {}, {}, {}, {}, {}, {} failed "
+                    "with retries".format(path, query, postdict, timeout, method, max_retry))
+                raise MaxRetryError(url=path, method=method,
+                                    body=postdict, headers=headers)
+            else:
+                return await self._curl_bitmex(path, query, postdict, timeout, method, retry_time)
 
         try:
             resp = await self.session.request(method=method, url=str(url),
@@ -511,10 +548,9 @@ class BitmexExchange(BaseExchange):
                 elif resp.status == 404:
                     if method == 'DELETE':
                         logger.warning("Order not found: {}".format(postdict['orderID']))
-                    else:
-                        raise NotFoundError(url=resp.request_info.url, method=resp.request_info.method,
-                                            body=postdict, headers=resp.request_info.headers,
-                                            message=message)
+                    raise NotFoundError(url=resp.request_info.url, method=resp.request_info.method,
+                                        body=postdict, headers=resp.request_info.headers,
+                                        message=message)
                 return resp
                 # exit_or_throw()
             elif resp.status == 429:

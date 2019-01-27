@@ -60,5 +60,12 @@ def download(kind: str, mode: str, dst_dir: str):
     b.do_all()
 
 
+@cmd_main.command()
+@click.help_option()
+@click.option('--name', '-n', type=str)
+def start_strategy(name: str):
+    pass
+
+
 if __name__ == '__main__':
     cmd_main()

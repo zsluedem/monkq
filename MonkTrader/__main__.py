@@ -61,7 +61,7 @@ def download(ctx: click.Context, kind: str, mode: str, dst_dir: str):
 @click.option('--directory', '-d', default=os.getcwd(), type=str)
 def startstrategy(name: str, directory):
     assert os.path.isdir(directory), 'You have to provide an exist directory'
-    template_dir = os.path.join(MonkTrader.__path__[0], 'config', 'project_template')
+    # template_dir = os.path.join(MonkTrader.__path__[0], 'config', 'project_template')
 
 
 if __name__ == '__main__':

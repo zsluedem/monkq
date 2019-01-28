@@ -25,10 +25,11 @@
 import os
 
 import click
+import MonkTrader
 from MonkTrader.exchange.bitmex.data import BitMexDownloader
 from MonkTrader.utils import assure_dir
 
-USERHOME = os.path.join(os.path.expanduser("~"), '.monk')
+USERHOME = os.path.join(os.path.expanduser('~'), '.monk')
 
 
 @click.group()
@@ -39,18 +40,12 @@ def cmd_main(ctx: click.Context, config):
 
 
 @cmd_main.command()
-@click.option('-o', '--out', type=click.Path())
-@click.pass_context
-def gegnerate_settings(ctx, out):
-    pass
-
-
-@cmd_main.command()
 @click.help_option()
-@click.option('--kind', default="trade", type=click.Choice(['quote', 'trade', 'instruments']))
-@click.option('--mode', default="csv", type=click.Choice(['mongo', 'csv', 'tar']), help="Define the download mode")
-@click.option('--dst_dir', default=os.path.expanduser("~/.monk/data"), type=str)
-def download(kind: str, mode: str, dst_dir: str):
+@click.option('--kind', default='trade', type=click.Choice(['quote', 'trade', 'instruments']))
+@click.option('--mode', default='csv', type=click.Choice(['mongo', 'csv', 'tar']), help='Define the download mode')
+@click.option('--dst_dir', default=os.path.expanduser('~/.monk/data'), type=str)
+@click.pass_context
+def download(ctx: click.Context, kind: str, mode: str, dst_dir: str):
     if kind == 'instruments':
         pass
     else:
@@ -63,8 +58,10 @@ def download(kind: str, mode: str, dst_dir: str):
 @cmd_main.command()
 @click.help_option()
 @click.option('--name', '-n', type=str)
-def start_strategy(name: str):
-    pass
+@click.option('--directory', '-d', default=os.getcwd(), type=str)
+def startstrategy(name: str, directory):
+    assert os.path.isdir(directory), 'You have to provide an exist directory'
+    template_dir = os.path.join(MonkTrader.__path__[0], 'config', 'project_template')
 
 
 if __name__ == '__main__':

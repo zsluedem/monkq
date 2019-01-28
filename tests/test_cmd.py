@@ -21,21 +21,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import tempfile
 import os
-import pytest
-from MonkTrader.__main__ import cmd_main
+import tempfile
 from unittest.mock import patch
+
+import pytest
 from click.testing import CliRunner
+from MonkTrader.__main__ import cmd_main
+
 
 def test_download():
     with patch("MonkTrader.__main__.BitMexDownloader") as downloader:
         with tempfile.TemporaryDirectory() as f:
             runner = CliRunner()
-            runner.invoke(cmd_main, ['download','--kind', 'trade', '--dst_dir', f])
+            runner.invoke(cmd_main, ['download', '--kind', 'trade', '--dst_dir', f])
 
-            downloader.assert_called_with('trade', 'csv', os.path.join(f,'csv#trade'))
-            obj = downloader('trade', 'csv', os.path.join(f,'csv#trade'))
+            downloader.assert_called_with('trade', 'csv', os.path.join(f, 'csv#trade'))
+            obj = downloader('trade', 'csv', os.path.join(f, 'csv#trade'))
             obj.do_all.assert_called()
 
 

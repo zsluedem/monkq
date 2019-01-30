@@ -23,10 +23,13 @@
 #
 
 import os
+import shutil
 
 import click
+import MonkTrader
+from MonkTrader.exception import CommandError
 from MonkTrader.exchange.bitmex.data import BitMexDownloader
-from MonkTrader.utils import assure_dir
+from MonkTrader.utils import assure_dir, make_writable
 
 USERHOME = os.path.join(os.path.expanduser('~'), '.monk')
 
@@ -57,10 +60,40 @@ def download(ctx: click.Context, kind: str, mode: str, dst_dir: str):
 @cmd_main.command()
 @click.help_option()
 @click.option('--name', '-n', type=str)
-@click.option('--directory', '-d', default=os.getcwd(), type=str)
-def startstrategy(name: str, directory):
+@click.option('--directory', '-d', default=lambda: os.getcwd(), type=str)
+@click.pass_context
+def startstrategy(ctx: click.Context, name: str, directory: str):
+    directory = os.path.abspath(directory)
     assert os.path.isdir(directory), 'You have to provide an exist directory'
-    # template_dir = os.path.join(MonkTrader.__path__[0], 'config', 'project_template')
+    template_dir = os.path.join(MonkTrader.__path__[0], 'config', 'project_template')
+    target_dir = os.path.join(directory, name)
+    if os.path.exists(target_dir):
+        raise CommandError("The project name has already been used")
+    assure_dir(target_dir)
+    prefix_length = len(template_dir) + 1
+
+    for root, dirs, files in os.walk(template_dir):
+        relative_dir = root[prefix_length:]
+        if relative_dir:
+            create_dir = os.path.join(target_dir, relative_dir)
+            if not os.path.exists(create_dir):
+                os.mkdir(create_dir)
+
+        for dirname in dirs[:]:
+            if dirname.startswith('.') or dirname == '__pycache__':
+                dirs.remove(dirname)
+
+        for filename in files:
+            if filename.endswith(('.pyo', '.pyc')):
+                # Ignore some files as they cause various breakages.
+                continue
+
+            old_path = os.path.join(root, filename)
+            new_path = os.path.join(target_dir, relative_dir, filename)
+
+            shutil.copyfile(old_path, new_path)
+            shutil.copymode(old_path, new_path)
+            make_writable(new_path)
 
 
 if __name__ == '__main__':

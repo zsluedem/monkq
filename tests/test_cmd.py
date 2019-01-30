@@ -25,22 +25,95 @@ import os
 import tempfile
 from unittest.mock import patch
 
-import pytest
-from click.testing import CliRunner
 from MonkTrader.__main__ import cmd_main
 
 
 def test_download():
     with patch("MonkTrader.__main__.BitMexDownloader") as downloader:
-        with tempfile.TemporaryDirectory() as f:
-            runner = CliRunner()
-            runner.invoke(cmd_main, ['download', '--kind', 'trade', '--dst_dir', f])
+        with tempfile.TemporaryDirectory() as tem_dir:
+            cmd_main.main(['download', '--kind', 'trade', '--dst_dir', tem_dir], standalone_mode=False)
 
-            downloader.assert_called_with('trade', 'csv', os.path.join(f, 'csv#trade'))
-            obj = downloader('trade', 'csv', os.path.join(f, 'csv#trade'))
+            downloader.assert_called_with('trade', 'csv', os.path.join(tem_dir, 'csv#trade'))
+            obj = downloader('trade', 'csv', os.path.join(tem_dir, 'csv#trade'))
             obj.do_all.assert_called()
 
 
-@pytest.mark.xfail
 def test_startstrategy():
-    assert False
+    with tempfile.TemporaryDirectory() as tem_dir:
+        cmd_main.main(['startstrategy', '-n', 'strategy1', '-d', tem_dir], standalone_mode=False)
+
+        with open(os.path.join(tem_dir, 'strategy1', '__init__.py')) as f:
+            assert f.read() == ''
+
+        with open(os.path.join(tem_dir, 'strategy1', 'manage.py')) as f:
+            assert f.read() == """from MonkTrader.__main__ import cmd_main
+
+if __name__ == '__main__':
+    cmd_main()
+"""
+
+        with open(os.path.join(tem_dir, 'strategy1', 'settings.py')) as f:
+            assert f.read() == """import os
+
+from MonkTrader.const import RUN_TYPE
+
+# Mongodb uri which is used to load data or download data in.
+DATABASE_URI = "mongodb://127.0.0.1:27017"
+
+# HTTP Proxy
+HTTP_PROXY = ""
+
+# used only for testing
+SSL_PATH = ''
+
+FREQUENCY = 'tick'  # tick, 1m
+
+LOG_LEVEL = 'INFO'  # DEBUG, INFO, NOTICE, WARNING, ERROR
+
+START_TIME = '2018-01-01T00:00:00Z'
+END_TIME = '2018-06-01T00:00:00Z'
+
+RUN_TYPE = RUN_TYPE.BACKTEST
+
+TICK_TYPE = 'tick'  # tick , bar
+
+STRATEGY = "strategy.MyStrategy"
+
+DATA_DIR = os.path.expanduser("~/.monk/data")
+
+EXCHANGES = {
+    'bitmex': {
+        'engine': 'MonkTrader.exchange.bitmex',
+        "IS_TEST": True,
+        "API_KEY": '',
+        "API_SECRET": ''
+    }
+}
+
+BUILTIN_PLUGINS = {
+
+}
+
+INSTALLED_PLUGINS = {
+
+}
+
+"""
+
+        with open(os.path.join(tem_dir, 'strategy1', 'strategy.py')) as f:
+            assert f.read() == """from MonkTrader.base_strategy import BaseStrategy
+
+
+class MyStrategy(BaseStrategy):
+    def setup(self):
+        pass
+
+    def on_trade(self, message):
+        pass
+
+    def tick(self, message):
+        pass
+
+    def handle_bar(self):
+        pass
+"""

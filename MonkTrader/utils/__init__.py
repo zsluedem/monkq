@@ -27,6 +27,7 @@ import gzip
 import inspect
 import os
 import pathlib
+import stat
 from collections import defaultdict
 from typing import IO, Any, List, Optional, Set, Type
 
@@ -143,3 +144,10 @@ def get_resource_path(file: Optional[str] = None, prefix='resource') -> str:
         return os.path.join(dir_path, prefix)
     else:
         return os.path.join(dir_path, prefix, file)
+
+
+def make_writable(filename):
+    if not os.access(filename, os.W_OK):
+        st = os.stat(filename)
+        new_permissions = stat.S_IMODE(st.st_mode) | stat.S_IWUSR
+        os.chmod(filename, new_permissions)

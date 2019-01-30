@@ -27,6 +27,10 @@ class MonkError(BaseException):
     pass
 
 
+class CommandError(MonkError):
+    pass
+
+
 class SettingError(MonkError):
     pass
 

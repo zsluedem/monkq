@@ -1,5 +1,6 @@
 from MonkTrader.base_strategy import BaseStrategy
 
+
 class MyStrategy(BaseStrategy):
     def setup(self):
         pass
@@ -12,4 +13,3 @@ class MyStrategy(BaseStrategy):
 
     def handle_bar(self):
         pass
-

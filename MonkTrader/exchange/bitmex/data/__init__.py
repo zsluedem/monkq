@@ -113,7 +113,7 @@ class BitMexDownloader(DataDownloader):
             Streamer = SymbolsStreamRequest
         else:
             raise ValueError()
-        self.Streamer = Streamer  # type: Type[StreamRequest]
+        self.Streamer = Streamer
 
     def init_mode(self, mode: str, dst_dir: str, kind: str):
         self.end = datetime.datetime.utcnow() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)

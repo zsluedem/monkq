@@ -99,13 +99,13 @@ class BaseExchange:
         raise NotImplementedError()
 
     def get_kline(self, target: Union[str, T_INSTRUMENT], freq: str,
-                  count: int = 100, including_now: bool = False)-> List[dict]:
+                  count: int = 100, including_now: bool = False) -> List[dict]:
         """
         get an instrument kline
         """
         raise NotImplementedError()
 
-    def get_recent_trades(self, instrument: Union[str, T_INSTRUMENT])-> List[dict]:
+    def get_recent_trades(self, instrument: Union[str, T_INSTRUMENT]) -> List[dict]:
         """
         get recent trade. Maximum recent 500 trades
         """

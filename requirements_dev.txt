@@ -13,4 +13,4 @@ mypy==0.650
 pytest-cov
 codecov
 isort
-flake8
+flake8==3.6

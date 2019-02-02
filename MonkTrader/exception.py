@@ -47,7 +47,7 @@ class HttpError(RequestError):
     def __init__(self, url: str, method: str, body: str, headers: dict, message: str = ''):
         self.url = url
         self.method = method
-        self.body = body,
+        self.body = body
         self.headers = headers
         self.message = message
 

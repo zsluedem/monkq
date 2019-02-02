@@ -24,7 +24,7 @@
 import datetime
 
 from dateutil.rrule import DAILY, MINUTELY, rrule
-from MonkTrader.exception import BacktestError
+from MonkTrader.exception import SettingError
 from MonkTrader.utils import is_aware_datetime
 
 FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
@@ -36,7 +36,7 @@ class FrequencyTicker():
         assert is_aware_datetime(end_time)
 
         if start_time >= end_time:
-            raise BacktestError()
+            raise SettingError("START TIME can not bigger than END TIME")
         self.start_time = start_time
         self.end_time = end_time
         self.frequency = FREQ_DICT.get(frequency)

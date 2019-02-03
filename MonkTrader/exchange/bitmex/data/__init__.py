@@ -30,6 +30,7 @@ from dateutil.rrule import DAILY, rrule
 from logbook import Logger
 from MonkTrader.config import settings
 from MonkTrader.data import DataDownloader, Point, ProcessPoints
+from MonkTrader.utils.i18n import _
 from MonkTrader.exchange.bitmex.const import (
     QUOTE_LINK, SYMBOL_LINK, TARFILETYPE, TRADE_LINK,
 )
@@ -80,7 +81,7 @@ class BitMexProcessPoints(ProcessPoints):
 
 class BitMexDownloader(DataDownloader):
     def __init__(self, kind: str, mode: str, dst_dir: str):
-        logger.info('Start downloading the data')
+        logger.info(_('Start downloading the data'))
         self.mode = mode
         self.kind = kind
         self.dst_dir = dst_dir
@@ -129,7 +130,7 @@ class BitMexDownloader(DataDownloader):
                 self.start = item['timestamp'] + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
             except StopIteration:
                 logger.info(
-                    'There is no data in the database. We are going to self.star download data from scratch')
+                    _('There is no data in the database. We are going to self.star download data from scratch'))
                 self.start = START_DATE
         elif mode == 'csv':
             dones = os.listdir(dst_dir)
@@ -152,8 +153,8 @@ class BitMexDownloader(DataDownloader):
         return BitMexProcessPoints(self.start, self.end)
 
     def download_one_point(self, point: DatePoint) -> None:
-        logger.info('Downloading {} data on {}'.format(self.kind, point.value.isoformat()))
+        logger.info(_('Downloading {} data on {}'.format(self.kind, point.value.isoformat())))
         qstream = self.Streamer(date=point.value, url=self.link.format(point.value.strftime("%Y%m%d")),
                                 dst_dir=self.dst_dir)
         qstream.process()
-        logger.info('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat()))
+        logger.info(_('Finished downloading {} data on {}'.format(self.kind, point.value.isoformat())))

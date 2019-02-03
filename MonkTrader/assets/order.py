@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 from MonkTrader.assets.const import DIRECTION, ORDER_STATUS, SIDE
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.exception import ImpossibleError
+from MonkTrader.utils.i18n import _
 
 if TYPE_CHECKING:
     from MonkTrader.assets.account import BaseAccount, FutureAccount
@@ -51,8 +52,8 @@ class BaseOrder():
         elif abs(self.traded_quantity) < abs(self.quantity):
             return ORDER_STATUS.PARTLY_TRADED
         else:
-            raise ImpossibleError(
-                "order quantity: {}, traded quantity: {}".format(self.quantity, self.traded_quantity))
+            raise ImpossibleError(_(
+                "order quantity: {}, traded quantity: {}".format(self.quantity, self.traded_quantity)))
 
     @property
     def side(self) -> SIDE:

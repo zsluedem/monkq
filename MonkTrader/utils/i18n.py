@@ -21,30 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
 
-from dateutil.rrule import DAILY, MINUTELY, rrule
-from MonkTrader.exception import SettingError
-from MonkTrader.utils import is_aware_datetime
-from MonkTrader.utils.i18n import _
+from gettext import gettext
 
-FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
-
-
-class FrequencyTicker():
-    def __init__(self, start_time: datetime.datetime, end_time: datetime.datetime, frequency: str):
-        assert is_aware_datetime(start_time)
-        assert is_aware_datetime(end_time)
-
-        if start_time >= end_time:
-            raise SettingError(_("START TIME can not bigger than END TIME"))
-        self.start_time = start_time
-        self.end_time = end_time
-        self.frequency = FREQ_DICT.get(frequency)
-
-        self.current = start_time
-
-    def timer(self):
-        for current_datetime in rrule(self.frequency, dtstart=self.start_time, until=self.end_time):
-            self.current = current_datetime
-            yield self.current
+_ = gettext

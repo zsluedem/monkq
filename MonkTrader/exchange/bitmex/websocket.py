@@ -34,6 +34,7 @@ from typing import Dict, Union
 from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
 from dataclasses import dataclass, field
 from logbook import Logger
+from MonkTrader.utils.i18n import _
 from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
 
@@ -130,19 +131,19 @@ class BitmexWebsocket():
             while not self._ws.closed:
                 if time.time() - self._last_comm_time > INTERVAL_FACTOR:
                     logger.debug(
-                        'No communication during {} seconds. Send ping signal to keep connection open'.format(
-                            INTERVAL_FACTOR))
+                        _('No communication during {} seconds. Send ping signal to keep connection open'.format(
+                            INTERVAL_FACTOR)))
                     await self._ws.ping()
                     self._last_comm_time = time.time()
                 await asyncio.sleep(INTERVAL_FACTOR)
         except asyncio.CancelledError:
-            logger.warning('Your bitmex ping task has been stopped')
+            logger.warning(_('Your bitmex ping task has been stopped'))
 
     async def _run(self):
         try:
             while not self._ws.closed:
                 message = await self._ws.receive()
-                logger.debug("Receive message from bitmex:{}".format(message.data))
+                logger.debug(_("Receive message from bitmex:{}".format(message.data)))
                 if message.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
                     continue
                 elif message.type == WSMsgType.CLOSED:
@@ -158,15 +159,15 @@ class BitmexWebsocket():
                         ret = self.strategy.on_trade(message=decode_message)
                         if asyncio.iscoroutine(ret):
                             await ret
-                        logger.debug('User on_trade process time: {}'.format(round(time.time() - start, 7)))
+                        logger.debug(_('User on_trade process time: {}'.format(round(time.time() - start, 7))))
                     else:
                         start = time.time()
                         ret = self.strategy.tick(message=decode_message)
                         if asyncio.iscoroutine(ret):
                             await ret
-                        logger.debug('User tick process time: {}'.format(round(time.time() - start, 7)))
+                        logger.debug(_('User tick process time: {}'.format(round(time.time() - start, 7))))
         except asyncio.CancelledError:
-            logger.warning('Your bitmex handler has been stopped')
+            logger.warning(_('Your bitmex handler has been stopped'))
 
     @timestamp_update
     async def subscribe(self, topic, symbol=''):
@@ -205,7 +206,7 @@ class BitmexWebsocket():
         instruments = self._data['instrument']
         matchingInstruments = [i for i in instruments if i['symbol'] == symbol]
         if len(matchingInstruments) == 0:
-            raise Exception('Unable to find instrument or index with symbol: {}'.format(symbol))
+            raise Exception(_('Unable to find instrument or index with symbol: {}'.format(symbol)))
         instrument = matchingInstruments[0]
         # Turn the 'tickSize' into 'tickLog' for use in rounding
         # http://stackoverflow.com/a/6190291/832202
@@ -244,21 +245,21 @@ class BitmexWebsocket():
         action = message['action'] if 'action' in message else None
         if 'subscribe' in message:
             if message['success']:
-                logger.debug("Subscribed to %s." % message['subscribe'])
+                logger.debug(_("Subscribed to %s." % message['subscribe']))
             else:
-                self.error("Unable to subscribe to %s. Error: \"%s\" Please check and restart." %
-                           (message['request']['args'][0], message['error']))
+                self.error(_("Unable to subscribe to %s. Error: \"%s\" Please check and restart." %
+                           (message['request']['args'][0], message['error'])))
         elif 'unsubscribe' in message:
             if message['success']:
-                logger.debug("Unsubscribed to %s." % message['unsubscribe'])
+                logger.debug(_("Unsubscribed to %s." % message['unsubscribe']))
             else:
-                self.error("Unable to unsubscribe to %s. Error: \"%s\" Please check and restart." %
-                           (message['request']['args'][0], message['error']))
+                self.error(_("Unable to unsubscribe to %s. Error: \"%s\" Please check and restart." %
+                           (message['request']['args'][0], message['error'])))
         elif 'status' in message:
             if message['status'] == 400:
                 self.error(message['error'])
             if message['status'] == 401:
-                self.error("API Key incorrect, please check and restart.")
+                self.error(_("API Key incorrect, please check and restart."))
         elif action:
 
             if table not in self._data:
@@ -356,7 +357,7 @@ class BitmexWebsocket():
                             self._data[table].remove(item)
 
             elif action == 'delete':
-                logger.debug('%s: deleting %s' % (table, message['data']))
+                logger.debug(_('%s: deleting %s' % (table, message['data'])))
                 # Locate the item in the collection and remove it.
 
                 if message['table'] == "orderBookL2_25":
@@ -368,5 +369,5 @@ class BitmexWebsocket():
                         item = findItemByKeys(self._keys[table], self._data[table], deleteData)
                         self._data[table].remove(item)
             else:
-                raise Exception("Unknown action: %s" % action)
-        logger.debug("Tick data process time: {}".format(round(time.time() - start, 7)))
+                raise Exception(_("Unknown action: %s" % action))
+        logger.debug(_("Tick data process time: {}".format(round(time.time() - start, 7))))

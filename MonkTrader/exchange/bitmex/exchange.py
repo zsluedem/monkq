@@ -38,6 +38,7 @@ from MonkTrader.exception import (
     AuthError, HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
     NotFoundError, RateLimitError,
 )
+from MonkTrader.utils.i18n import _
 from MonkTrader.exchange.base import BaseExchange
 from MonkTrader.exchange.base.info import ExchangeInfo
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
@@ -61,7 +62,7 @@ def authentication_required(fn):
 
     def wrapped(self, *args, **kwargs):
         if not (self.api_key):
-            raise AuthError("You must be authenticated to use this method")
+            raise AuthError(_("You must be authenticated to use this method"))
         else:
             return fn(self, *args, **kwargs)
 
@@ -506,9 +507,9 @@ class BitmexExchange(BaseExchange):
             logger.info("Retry on remain times {}".format(retry_time))
             retry_time -= 1
             if retry_time < 0:
-                logger.warning(
+                logger.warning(_(
                     "Request with args {}, {}, {}, {}, {}, {} failed "
-                    "with retries".format(path, query, postdict, timeout, method, max_retry))
+                    "with retries".format(path, query, postdict, timeout, method, max_retry)))
                 raise MaxRetryError(url=path, method=method,
                                     body=postdict, headers=headers)
             else:
@@ -526,7 +527,7 @@ class BitmexExchange(BaseExchange):
                 error = content['error']
                 message = error['message'].lower() if error else ''
                 name = error['name'].lower() if error else ''
-                logger.warning("Bitmex request url:{}, method:{}, postdict:{}, "
+                logger.warning(_("Bitmex request url:{}, method:{}, postdict:{}, "
                                "headers:{} error ."
                                "Return with status code:{}, error {} ,"
                                "message: {}".format(resp.request_info.url,
@@ -534,10 +535,10 @@ class BitmexExchange(BaseExchange):
                                                     postdict,
                                                     resp.request_info.headers,
                                                     resp.status, name,
-                                                    message))
+                                                    message)))
                 if resp.status == 400:
                     if 'insufficient available balance' in message:
-                        logger.warning('Account out of funds. The message: {}'.format(error["message"]))
+                        logger.warning(_('Account out of funds. The message: {}'.format(error["message"])))
                         raise MarginNotEnoughError(message)
                 elif resp.status == 401:
                     raise HttpAuthError(self.api_key, self.api_secret)
@@ -547,25 +548,25 @@ class BitmexExchange(BaseExchange):
                                     message=message)
                 elif resp.status == 404:
                     if method == 'DELETE':
-                        logger.warning("Order not found: {}".format(postdict['orderID']))
+                        logger.warning(_("Order not found: {}".format(postdict['orderID'])))
                     raise NotFoundError(url=resp.request_info.url, method=resp.request_info.method,
                                         body=postdict, headers=resp.request_info.headers,
                                         message=message)
                 return resp
                 # exit_or_throw()
             elif resp.status == 429:
-                logger.warning("Ratelimited on current request. Sleeping, "
+                logger.warning(_("Ratelimited on current request. Sleeping, "
                                "then trying again. Try fewer order pairs or"
                                " contact support@bitmex.com to raise your limits. "
-                               "Request: {} \n {}".format(url, postdict))
+                               "Request: {} \n {}".format(url, postdict)))
 
                 # Figure out how long we need to wait.
                 ratelimit_reset = resp.headers['X-RateLimit-Reset']
                 to_sleep = int(ratelimit_reset) - int(time.time())
                 reset_str = datetime.datetime.fromtimestamp(int(ratelimit_reset)).strftime('%X')
 
-                logger.warning("Your ratelimit will reset at {}. "
-                               "Sleeping for {} seconds.".format(reset_str, to_sleep))
+                logger.warning(_("Your ratelimit will reset at {}. "
+                               "Sleeping for {} seconds.".format(reset_str, to_sleep)))
                 raise RateLimitError(url=resp.request_info.url,
                                      method=resp.request_info.method,
                                      body=postdict, headers=resp.request_info.headers,
@@ -573,10 +574,10 @@ class BitmexExchange(BaseExchange):
 
             # 503 - BitMEX temporary downtime, likely due to a deploy. Try again
             elif resp.status == 503:
-                logger.warning("Unable to contact the BitMEX API (503), retrying. "
+                logger.warning(_("Unable to contact the BitMEX API (503), retrying. "
                                "Bitmex is mostly overloaded now"
-                               "Request: {} \n {}".format(url, postdict))
-                logger.warning("Response header :{}".format(resp.headers))
+                               "Request: {} \n {}".format(url, postdict)))
+                logger.warning(_("Response header :{}".format(resp.headers)))
                 return await retry(max_retry)
 
             else:
@@ -586,8 +587,8 @@ class BitmexExchange(BaseExchange):
 
         except asyncio.TimeoutError:
             # Timeout, re-run this request
-            logger.warning("Timed out on request: path:{}, query:{}, "
+            logger.warning(_("Timed out on request: path:{}, query:{}, "
                            "postdict:{}, verb:{}, timeout:{}, retry:{}, "
                            "retrying...".format(path, query, postdict,
-                                                method, timeout, max_retry))
+                                                method, timeout, max_retry)))
             return await retry(max_retry)

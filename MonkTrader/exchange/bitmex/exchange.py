@@ -531,11 +531,11 @@ class BitmexExchange(BaseExchange):
                                  "headers:{} error ."
                                  "Return with status code:{}, error {} ,"
                                  "message: {}").format(resp.request_info.url,
-                                                      resp.request_info.method,
-                                                      postdict,
-                                                      resp.request_info.headers,
-                                                      resp.status, name,
-                                                      message))
+                                                       resp.request_info.method,
+                                                       postdict,
+                                                       resp.request_info.headers,
+                                                       resp.status, name,
+                                                       message))
                 if resp.status == 400:
                     if 'insufficient available balance' in message:
                         logger.warning(_('Account out of funds. The message: {}').format(error["message"]))
@@ -590,5 +590,5 @@ class BitmexExchange(BaseExchange):
             logger.warning(_("Timed out on request: path:{}, query:{}, "
                              "postdict:{}, verb:{}, timeout:{}, retry:{}, "
                              "retrying...").format(path, query, postdict,
-                                                  method, timeout, max_retry))
+                                                   method, timeout, max_retry))
             return await retry(max_retry)

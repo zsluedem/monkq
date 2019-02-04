@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MonkTrader VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-02-04 10:57+0800\n"
+"POT-Creation-Date: 2019-02-04 12:18+0800\n"
 "PO-Revision-Date: 2019-02-04 11:08+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh\n"
@@ -20,237 +20,179 @@ msgstr ""
 
 #: MonkTrader/__main__.py:68
 msgid "You have to provide an exist directory"
-msgstr ""
+msgstr "你必须提供一个已经存在的文件夹"
 
 #: MonkTrader/__main__.py:72
 msgid "The project name has already been used"
-msgstr ""
+msgstr "这个项目名字已经被使用了"
 
 #: MonkTrader/assets/order.py:56
 msgid "order quantity: {}, traded quantity: {}"
-msgstr ""
+msgstr "订单数量: {}, 已经成交数量: {}"
 
 #: MonkTrader/assets/positions.py:233
 msgid "You can not set the margin in cross position"
-msgstr ""
+msgstr "在全仓模式下你不能设置保证金"
 
 #: MonkTrader/assets/positions.py:237
 msgid "Cross position doesn't support to see position leverage"
-msgstr ""
+msgstr "在全仓模式下你不能设置仓位杠杆数"
 
-#: MonkTrader/config/__init__.py:48
+#: MonkTrader/config/__init__.py:49
 msgid ""
 "Can not find settings.py in the current path, we are going to use the "
 "default settings."
-msgstr ""
+msgstr "因为在当前的路径下找不到settings.py,所以我们将会使用默认的设置"
 
 #: MonkTrader/data.py:60
 msgid "some exception occured when you download data at point {}. Check!!"
-msgstr ""
+msgstr "在你下载 {} 的数据的时候，有异常发生了。请检查!!"
 
 #: MonkTrader/exchange/bitmex/data/__init__.py:84
 msgid "Start downloading the data"
-msgstr ""
+msgstr "开始下载数据"
 
 #: MonkTrader/exchange/bitmex/data/__init__.py:133
-msgid ""
-"There is no data in the database. We are going to self.star download data"
-" from scratch"
-msgstr ""
+msgid "There is no data in the database. We are going to download data from scratch"
+msgstr "在数据库中没有数据。我们将会从头下载数据"
 
 #: MonkTrader/exchange/bitmex/data/__init__.py:156
 msgid "Downloading {} data on {}"
-msgstr ""
+msgstr "下载在数据 {} 在 {} "
 
 #: MonkTrader/exchange/bitmex/data/__init__.py:160
 msgid "Finished downloading {} data on {}"
-msgstr ""
+msgstr "完成下载 {} 数据在 {}"
 
 #: MonkTrader/exchange/bitmex/data/download.py:100
 msgid "Exception #{}# happened when process {} {}"
-msgstr ""
+msgstr "异常 #{} 在处理{} {}的时候发生了"
 
 #: MonkTrader/exchange/bitmex/data/download.py:104
-msgid "Remove the not complete file {}"
-msgstr ""
+msgid "Rollback!Remove the not complete file {}"
+msgstr "回滚！删除不完整的文件 {}"
 
 #: MonkTrader/exchange/bitmex/data/download.py:181
 msgid "Exception {} happened when process {} data"
-msgstr ""
+msgstr "异常 {} 在处理{}日期的时候发生了"
 
 #: MonkTrader/exchange/bitmex/data/download.py:226
-msgid "Rollback result: {}"
-msgstr ""
+msgid "Rollback MongoDb ,return result: {}"
+msgstr "回滚MongoDb,返回结果: {}"
 
 #: MonkTrader/exchange/bitmex/data/download.py:301
 msgid "Rollback : Remove the not complete dir {}"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:79
-msgid ""
-"Your rate is too fast and remaining is {}, retry after {}s, rate reset at"
-" {}"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:85
-msgid ""
-"Your frequency is so fast that they won't let you access.Just rest for a "
-"while"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:115
-msgid "The {} of Total {}"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:117
-msgid "DOWNLOAD PROGRESS {} "
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:123
-msgid "UPDATE_SYMBOL {} Trying updating {} from {} to {}"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:128
-msgid "NEW_SYMBOL {} Trying downloading {} from {} to {}"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:134
-msgid "SYMBOL {} from {} to {} has no data"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:145
-msgid "SYMBOLS are already existed and no more to update"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:147
-msgid "Delete the original symbols collections"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:149
-msgid "Downloading the new symbols"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/data/kline.py:151
-msgid "Symbols download is done! Thank you man!"
-msgstr ""
+msgstr "回滚：删除不完整的文件夹 {}"
 
 #: MonkTrader/exchange/bitmex/exchange.py:65
 msgid "You must be authenticated to use this method"
-msgstr ""
+msgstr "使用这个方法你必须先认证"
 
 #: MonkTrader/exchange/bitmex/exchange.py:512
 msgid "Request with args {}, {}, {}, {}, {}, {} failed with retries"
-msgstr ""
+msgstr "请求 {}, {}, {}, {}, {}, {}，失败，重试"
 
 #: MonkTrader/exchange/bitmex/exchange.py:533
 msgid ""
-"Bitmex request url:{}, method:{}, postdict:{}, headers:{} error .Return "
-"with status code:{}, error {} ,message: {}"
-msgstr ""
+"Bitmex request url:{}, method:{}, postdict:{}, headers:{} error .Return with"
+" status code:{}, error {} ,message: {}"
+msgstr "Bitmex请求url:{}, method:{}, postdict:{}, headers:{} 出错。返回状态: {}，错误 {}, 信息: {}"
 
 #: MonkTrader/exchange/bitmex/exchange.py:541
 msgid "Account out of funds. The message: {}"
-msgstr ""
+msgstr "账户资金不足。具体信息：{}"
 
 #: MonkTrader/exchange/bitmex/exchange.py:551
 msgid "Order not found: {}"
-msgstr ""
+msgstr "无法找到订单: {}"
 
 #: MonkTrader/exchange/bitmex/exchange.py:561
 msgid ""
-"Ratelimited on current request. Sleeping, then trying again. Try fewer "
-"order pairs or contact support@bitmex.com to raise your limits. Request: "
-"{} \n"
-" {}"
+"Ratelimited on current request. Sleeping, then trying again. Try fewer order"
+" pairs or contact support@bitmex.com to raise your limits. Request: {}  "
+"postdict: {}"
 msgstr ""
+"当前请求频率过于频繁。睡眠，然后再尝试。如果你想要提高你的请求速率。可以联系support@bitmex.com。原请求: {}, postdict: "
+"{}"
 
 #: MonkTrader/exchange/bitmex/exchange.py:569
 msgid "Your ratelimit will reset at {}. Sleeping for {} seconds."
-msgstr ""
+msgstr "你的频率限制将在 {} 重置。睡眠 {} 秒"
 
 #: MonkTrader/exchange/bitmex/exchange.py:580
 msgid ""
 "Unable to contact the BitMEX API (503), retrying. Bitmex is mostly "
-"overloaded nowRequest: {} \n"
-" {} \n"
-"Response header :{}"
-msgstr ""
+"overloaded now,Request: {} {} Response header :{}"
+msgstr "无法连接到BitMex API(503)，重试中.Bitmex很可能现在已经过载了,现在请求是: {} {}返回header: {}"
 
 #: MonkTrader/exchange/bitmex/exchange.py:592
 msgid ""
-"Timed out on request: path:{}, query:{}, postdict:{}, verb:{}, "
-"timeout:{}, retry:{}, retrying..."
-msgstr ""
+"Timed out on request: path:{}, query:{}, postdict:{}, verb:{}, timeout:{}, "
+"retry:{}, retrying..."
+msgstr "请求超时: path:{}, query:{}, postdict:{},verb:{},timeout:{}, retry:{},重试中..."
 
 #: MonkTrader/exchange/bitmex/websocket.py:134
-msgid ""
-"No communication during {} seconds. Send ping signal to keep connection "
-"open"
-msgstr ""
+msgid "No communication during {} seconds. Send ping signal to keep connection open"
+msgstr "在 {} 秒内没有通信。发送Ping信号保持连接。"
 
 #: MonkTrader/exchange/bitmex/websocket.py:140
 msgid "Your bitmex ping task has been stopped"
-msgstr ""
+msgstr "Bitmex ping任务已经被停止了"
 
 #: MonkTrader/exchange/bitmex/websocket.py:146
 msgid "Receive message from bitmex:{}"
-msgstr ""
+msgstr "从bitmex中收到信息: {}"
 
 #: MonkTrader/exchange/bitmex/websocket.py:162
 msgid "User on_trade process time: {}"
-msgstr ""
+msgstr "用户 on_trade 处理时间: {}"
 
 #: MonkTrader/exchange/bitmex/websocket.py:168
 msgid "User tick process time: {}"
-msgstr ""
+msgstr "用户 tick 处理时间: {}"
 
 #: MonkTrader/exchange/bitmex/websocket.py:170
 msgid "Your bitmex handler has been stopped"
-msgstr ""
+msgstr "Bitmex 处理器已经被停止了"
 
 #: MonkTrader/exchange/bitmex/websocket.py:209
 msgid "Unable to find instrument or index with symbol: {}"
-msgstr ""
+msgstr "无法使用symbol: {} 找到 instrument"
 
 #: MonkTrader/exchange/bitmex/websocket.py:248
-#, python-format
-msgid "Subscribed to %s.subscribe"
-msgstr ""
+msgid "Subscribed to {}"
+msgstr "订阅{}"
 
-#: MonkTrader/exchange/bitmex/websocket.py:251
-#, python-format
-msgid "Unable to subscribe to %s. Error: \"%s\" Please check and restart."
-msgstr ""
+#: MonkTrader/exchange/bitmex/websocket.py:250
+#: MonkTrader/exchange/bitmex/websocket.py:256
+msgid "Unable to subscribe to {}. Error: \"{}\" Please check and restart."
+msgstr "无法订阅{}, 错误： {}.请检查和重启。"
 
 #: MonkTrader/exchange/bitmex/websocket.py:254
-#, python-format
-msgid "Unsubscribed to %s.unsubscribe"
-msgstr ""
-
-#: MonkTrader/exchange/bitmex/websocket.py:257
-#, python-format
-msgid "Unable to unsubscribe to %s. Error: \"%s\" Please check and restart."
-msgstr ""
+msgid "Unsubscribed to {}."
+msgstr "无法订阅{}"
 
 #: MonkTrader/exchange/bitmex/websocket.py:262
 msgid "API Key incorrect, please check and restart."
-msgstr ""
+msgstr "API Key不正确，请检查和重启。"
+
+#: MonkTrader/exchange/bitmex/websocket.py:322
+msgid "{}: updating {}"
+msgstr "{}: 更新 {}"
 
 #: MonkTrader/exchange/bitmex/websocket.py:360
-#, python-format
-msgid "%s: deleting %s"
-msgstr ""
+msgid "{}: deleting {}"
+msgstr "{}: 删除 {}"
 
 #: MonkTrader/exchange/bitmex/websocket.py:372
-#, python-format
-msgid "Unknown action: %s"
-msgstr ""
+msgid "Unknown action: {}"
+msgstr "未知动作: {}"
 
 #: MonkTrader/exchange/bitmex/websocket.py:373
 msgid "Tick data process time: {}"
-msgstr ""
+msgstr "Tick数据处理时间: {}"
 
 #: MonkTrader/ticker.py:40
 msgid "START TIME can not bigger than END TIME"
-msgstr ""
+msgstr "START TIME不能比END TIME大"
 

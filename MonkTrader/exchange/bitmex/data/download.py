@@ -101,7 +101,7 @@ class RawStreamRequest(StreamRequest):
             raise DataDownloadError()
 
     def rollback(self):
-        logger.info(_("Remove the not complete file {}".format(self.dst_file)))
+        logger.info(_("Rollback!Remove the not complete file {}".format(self.dst_file)))
         os.remove(self.dst_file)
 
 
@@ -223,7 +223,7 @@ class MongoStream(_CsvStreamRequest):
     def rollback(self):
         col = self._cli['bitmex'][self.collection_name]
         result = col.delete_many({'timestamp': {"$gte": self.date}})
-        logger.info(_("Rollback result: {}".format(result.raw_result)))
+        logger.info(_("Rollback MongoDb ,return result: {}".format(result.raw_result)))
 
 
 class QuoteMongoStream(MongoStream):

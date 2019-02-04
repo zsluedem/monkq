@@ -130,7 +130,7 @@ class BitMexDownloader(DataDownloader):
                 self.start = item['timestamp'] + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
             except StopIteration:
                 logger.info(
-                    _('There is no data in the database. We are going to self.star download data from scratch'))
+                    _('There is no data in the database. We are going to download data from scratch'))
                 self.start = START_DATE
         elif mode == 'csv':
             dones = os.listdir(dst_dir)

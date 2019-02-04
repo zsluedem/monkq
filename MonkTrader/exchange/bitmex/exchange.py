@@ -558,7 +558,7 @@ class BitmexExchange(BaseExchange):
                 logger.warning(_("Ratelimited on current request. Sleeping, "
                                  "then trying again. Try fewer order pairs or"
                                  " contact support@bitmex.com to raise your limits. "
-                                 "Request: {} \n {}".format(url, postdict)))
+                                 "Request: {}  postdict: {}".format(url, postdict)))
 
                 # Figure out how long we need to wait.
                 ratelimit_reset = resp.headers['X-RateLimit-Reset']
@@ -575,8 +575,8 @@ class BitmexExchange(BaseExchange):
             # 503 - BitMEX temporary downtime, likely due to a deploy. Try again
             elif resp.status == 503:
                 logger.warning(_("Unable to contact the BitMEX API (503), retrying. "
-                                 "Bitmex is mostly overloaded now"
-                                 "Request: {} \n {} \n"
+                                 "Bitmex is mostly overloaded now,"
+                                 "Request: {} {} "
                                  "Response header :{}".format(url, postdict, resp.headers)))
                 return await retry(max_retry)
 

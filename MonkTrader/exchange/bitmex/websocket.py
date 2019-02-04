@@ -245,16 +245,16 @@ class BitmexWebsocket():
         action = message['action'] if 'action' in message else None
         if 'subscribe' in message:
             if message['success']:
-                logger.debug(_("Subscribed to %s." % message['subscribe']))
+                logger.debug(_("Subscribed to {}".format(message['subscribe'])))
             else:
-                self.error(_("Unable to subscribe to %s. Error: \"%s\" Please check and restart." %
-                           (message['request']['args'][0], message['error'])))
+                self.error(_("Unable to subscribe to {}. Error: \"{}\" Please check and restart.".format(
+                           message['request']['args'][0], message['error'])))
         elif 'unsubscribe' in message:
             if message['success']:
-                logger.debug(_("Unsubscribed to %s." % message['unsubscribe']))
+                logger.debug(_("Unsubscribed to {}.".format(message['unsubscribe'])))
             else:
-                self.error(_("Unable to unsubscribe to %s. Error: \"%s\" Please check and restart." %
-                           (message['request']['args'][0], message['error'])))
+                self.error(_("Unable to subscribe to {}. Error: \"{}\" Please check and restart.".format(
+                           message['request']['args'][0], message['error'])))
         elif 'status' in message:
             if message['status'] == 400:
                 self.error(message['error'])
@@ -274,7 +274,7 @@ class BitmexWebsocket():
             # 'update'  - update row
             # 'delete'  - delete row
             if action == 'partial':
-                logger.debug("%s: partial" % table)
+                logger.debug("{}: partial".format(table))
                 if message['table'] == "quote":
                     for data in message['data']:
                         self.quote_data[data['symbol']] = data
@@ -296,7 +296,7 @@ class BitmexWebsocket():
                     # an item. We use it for updates.
                     self._keys[table] = message.get('keys')
             elif action == 'insert':
-                logger.debug('%s: inserting %s' % (table, message['data']))
+                logger.debug('{}: inserting {}'.format(table, message['data']))
                 if message['table'] == 'quote':
                     for data in message['data']:
                         self.quote_data[data['symbol']] = data
@@ -319,7 +319,7 @@ class BitmexWebsocket():
                         self._data[table] = self._data[table][(BitmexWebsocket.MAX_TABLE_LEN // 2):]
 
             elif action == 'update':
-                logger.debug('%s: updating %s' % (table, message['data']))
+                logger.debug(_('{}: updating {}'.format(table, message['data'])))
                 # Locate the item in the collection and update it.
                 if message['table'] == "orderBookL2_25":
                     for data in message['data']:
@@ -357,7 +357,7 @@ class BitmexWebsocket():
                             self._data[table].remove(item)
 
             elif action == 'delete':
-                logger.debug(_('%s: deleting %s' % (table, message['data'])))
+                logger.debug(_('{}: deleting {}'.format(table, message['data'])))
                 # Locate the item in the collection and remove it.
 
                 if message['table'] == "orderBookL2_25":
@@ -369,5 +369,5 @@ class BitmexWebsocket():
                         item = findItemByKeys(self._keys[table], self._data[table], deleteData)
                         self._data[table].remove(item)
             else:
-                raise Exception(_("Unknown action: %s" % action))
+                raise Exception(_("Unknown action: {}".format(action)))
         logger.debug(_("Tick data process time: {}".format(round(time.time() - start, 7))))

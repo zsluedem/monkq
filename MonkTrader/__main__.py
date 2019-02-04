@@ -30,6 +30,7 @@ import MonkTrader
 from MonkTrader.exception import CommandError
 from MonkTrader.exchange.bitmex.data import BitMexDownloader
 from MonkTrader.utils import assure_dir, make_writable
+from MonkTrader.utils.i18n import _
 
 USERHOME = os.path.join(os.path.expanduser('~'), '.monk')
 
@@ -64,11 +65,11 @@ def download(ctx: click.Context, kind: str, mode: str, dst_dir: str):
 @click.pass_context
 def startstrategy(ctx: click.Context, name: str, directory: str):
     directory = os.path.abspath(directory)
-    assert os.path.isdir(directory), 'You have to provide an exist directory'
+    assert os.path.isdir(directory), _('You have to provide an exist directory')
     template_dir = os.path.join(MonkTrader.__path__[0], 'config', 'project_template')
     target_dir = os.path.join(directory, name)
     if os.path.exists(target_dir):
-        raise CommandError("The project name has already been used")
+        raise CommandError(_("The project name has already been used"))
     assure_dir(target_dir)
     prefix_length = len(template_dir) + 1
 

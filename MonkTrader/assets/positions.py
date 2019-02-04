@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.exception import MarginError, MarginNotEnoughError
+from MonkTrader.utils.i18n import _
 
 if TYPE_CHECKING:
     from MonkTrader.assets.trade import Trade
@@ -229,11 +230,11 @@ class CrossPosition(FutureBasePosition):
 
     @maint_margin.setter
     def maint_margin(self, value: float) -> float:
-        raise MarginError("You can not set the margin in cross position")
+        raise MarginError(_("You can not set the margin in cross position"))
 
     @property
     def leverage(self) -> float:
-        raise MarginError("Cross position doesn't support to see position leverage")
+        raise MarginError(_("Cross position doesn't support to see position leverage"))
 
     @property
     def position_margin(self) -> float:

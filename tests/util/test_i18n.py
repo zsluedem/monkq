@@ -21,30 +21,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
 
-from dateutil.rrule import DAILY, MINUTELY, rrule
-from MonkTrader.exception import SettingError
-from MonkTrader.utils import is_aware_datetime
-from MonkTrader.utils.i18n import _
+import os
+from unittest.mock import MagicMock, patch
 
-FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
+from MonkTrader.utils.i18n import LazyTranslation
 
 
-class FrequencyTicker():
-    def __init__(self, start_time: datetime.datetime, end_time: datetime.datetime, frequency: str):
-        assert is_aware_datetime(start_time)
-        assert is_aware_datetime(end_time)
+def test_lazytranslation_not_setting() -> None:
+    with patch("MonkTrader.utils.i18n.gettext", MagicMock()) as mockg:
+        mockg.find.return_value = None
+        trans = LazyTranslation()
+        trans.setup("CN")
 
-        if start_time >= end_time:
-            raise SettingError(_("START TIME can not bigger than END TIME"))
-        self.start_time = start_time
-        self.end_time = end_time
-        self.frequency = FREQ_DICT.get(frequency)
+        trans.gettext("hello")
+        mockg.NullTranslations().gettext.assert_called()
 
-        self.current = start_time
 
-    def timer(self):
-        for current_datetime in rrule(self.frequency, dtstart=self.start_time, until=self.end_time):
-            self.current = current_datetime
-            yield self.current
+def test_lazytranslation() -> None:
+    with patch("MonkTrader.utils.i18n.gettext", MagicMock()) as mockg:
+        mockg.find.return_value = os.path.abspath(__file__)
+        trans = LazyTranslation()
+        trans.setup("CN")
+
+        trans.gettext("hello")
+        mockg.GNUTranslations().gettext.assert_called()

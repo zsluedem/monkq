@@ -21,30 +21,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
 
-from dateutil.rrule import DAILY, MINUTELY, rrule
-from MonkTrader.exception import SettingError
-from MonkTrader.utils import is_aware_datetime
-from MonkTrader.utils.i18n import _
+import gettext
+import os
+from typing import IO, Optional
+from warnings import warn
 
-FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
+locale_dir = os.path.join(os.path.split(os.path.abspath(__file__))[0], "translations")
 
 
-class FrequencyTicker():
-    def __init__(self, start_time: datetime.datetime, end_time: datetime.datetime, frequency: str):
-        assert is_aware_datetime(start_time)
-        assert is_aware_datetime(end_time)
+class LazyTranslation():
+    def __init__(self) -> None:
+        self._translation: Optional[gettext.NullTranslations] = None
+        self._fp: Optional[IO] = None
 
-        if start_time >= end_time:
-            raise SettingError(_("START TIME can not bigger than END TIME"))
-        self.start_time = start_time
-        self.end_time = end_time
-        self.frequency = FREQ_DICT.get(frequency)
+    def setup(self, language: str) -> None:
+        mofile = gettext.find("MonkTrader", locale_dir, [language])
+        if mofile is None:
+            warn("MonkTrader doesn't support the language {}. It would use English".format(language))
+            self._translation = gettext.NullTranslations()
+        else:
+            self._fp = open(mofile, 'rb')
+            self._translation = gettext.GNUTranslations(self._fp)  # type: ignore
+            self._fp.close()
 
-        self.current = start_time
+    def gettext(self, message: str) -> str:
+        if self._translation is None:
+            return message
+        else:
+            return self._translation.gettext(message=message)
 
-    def timer(self):
-        for current_datetime in rrule(self.frequency, dtstart=self.start_time, until=self.end_time):
-            self.current = current_datetime
-            yield self.current
+
+translation: LazyTranslation = LazyTranslation()
+
+_ = translation.gettext

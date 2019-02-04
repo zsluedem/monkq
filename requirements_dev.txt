@@ -14,3 +14,4 @@ pytest-cov
 codecov
 isort
 flake8==3.6
+babel

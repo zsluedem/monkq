@@ -57,7 +57,7 @@ class DataDownloader(ABC):
             for point in self.process_point():
                 self.download_one_point(point)
         except DataDownloadError:
-            logger.info(_('some exception occured when you download data at point {}. Check!!'.format(point.value)))
+            logger.info(_('some exception occured when you download data at point {}. Check!!').format(point.value))
 
 
 class DataLoader(ABC):

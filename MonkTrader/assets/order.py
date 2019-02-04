@@ -53,7 +53,7 @@ class BaseOrder():
             return ORDER_STATUS.PARTLY_TRADED
         else:
             raise ImpossibleError(_(
-                "order quantity: {}, traded quantity: {}".format(self.quantity, self.traded_quantity)))
+                "order quantity: {}, traded quantity: {}").format(self.quantity, self.traded_quantity))
 
     @property
     def side(self) -> SIDE:

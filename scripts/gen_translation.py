@@ -17,7 +17,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'compile':
         CommandLineInterface().run(
             ['pybabel', 'compile', '-d', 'MonkTrader/utils/translations',
-             '-D', 'MonkTrader', '-w' ,width])
+             '-D', 'MonkTrader'])
     elif sys.argv[1] == 'update':
         CommandLineInterface().run(
             ['pybabel', 'update', '-i',

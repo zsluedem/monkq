@@ -97,11 +97,11 @@ class RawStreamRequest(StreamRequest):
                     f.write(chunk)
         except Exception as e:
             self.rollback()
-            logger.exception(_("Exception #{}# happened when process {} {}".format(e, self.url, self.dst_file)))
+            logger.exception(_("Exception #{}# happened when process {} {}").format(e, self.url, self.dst_file))
             raise DataDownloadError()
 
     def rollback(self):
-        logger.info(_("Rollback!Remove the not complete file {}".format(self.dst_file)))
+        logger.info(_("Rollback!Remove the not complete file {}").format(self.dst_file))
         os.remove(self.dst_file)
 
 
@@ -178,7 +178,7 @@ class _CsvStreamRequest(StreamRequest):
                 self.process_chunk()
         except BaseException as e:
             self.rollback()
-            logger.exception(_("Exception {} happened when process {} data".format(e, self.date)))
+            logger.exception(_("Exception {} happened when process {} data").format(e, self.date))
             raise DataDownloadError()
         self.cleanup()
 
@@ -223,7 +223,7 @@ class MongoStream(_CsvStreamRequest):
     def rollback(self):
         col = self._cli['bitmex'][self.collection_name]
         result = col.delete_many({'timestamp': {"$gte": self.date}})
-        logger.info(_("Rollback MongoDb ,return result: {}".format(result.raw_result)))
+        logger.info(_("Rollback MongoDb ,return result: {}").format(result.raw_result))
 
 
 class QuoteMongoStream(MongoStream):
@@ -298,7 +298,7 @@ class _FileStream(_CsvStreamRequest):
         return row
 
     def rollback(self):
-        logger.info(_("Rollback : Remove the not complete dir {}".format(self.dst_dir)))
+        logger.info(_("Rollback : Remove the not complete dir {}").format(self.dst_dir))
         self.csv_file_writers.close()
         shutil.rmtree(self.dst_dir)
 

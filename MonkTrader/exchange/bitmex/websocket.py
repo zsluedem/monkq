@@ -34,9 +34,9 @@ from typing import Dict, Union
 from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
 from dataclasses import dataclass, field
 from logbook import Logger
-from MonkTrader.utils.i18n import _
 from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
+from MonkTrader.utils.i18n import _
 
 from .log import logger_group
 

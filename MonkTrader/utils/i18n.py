@@ -31,21 +31,21 @@ locale_dir = os.path.join(os.path.split(os.path.abspath(__file__))[0], "translat
 
 
 class LazyTranslation():
-    def __init__(self):
-        self._translation: Optional[gettext.GNUTranslations] = None
+    def __init__(self) -> None:
+        self._translation: Optional[gettext.NullTranslations] = None
         self._fp: Optional[IO] = None
 
-    def setup(self, language: str):
+    def setup(self, language: str) -> None:
         mofile = gettext.find("MonkTrader", locale_dir, [language])
         if mofile is None:
             warn("MonkTrader doesn't support the language {}. It would use English".format(language))
             self._translation = gettext.NullTranslations()
         else:
             self._fp = open(mofile, 'rb')
-            self._translation = gettext.GNUTranslations(self._fp)
+            self._translation = gettext.GNUTranslations(self._fp)  # type: ignore
             self._fp.close()
 
-    def gettext(self, message: str):
+    def gettext(self, message: str) -> str:
         if self._translation is None:
             return message
         else:

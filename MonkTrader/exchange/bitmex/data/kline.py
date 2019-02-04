@@ -76,9 +76,10 @@ def fetch_bitmex_kline(symbol: str, start_time: datetime.datetime, end_time: dat
             ratelimit_reset = req.headers['X-RateLimit-Reset']
             retry_after = float(req.headers['Retry-After'])
             warnings.warn(
-                _("Your rate is too fast and remaining is {}, retry after {}s, rate reset at {}".format(remaining,
-                                                                                                      retry_after,
-                                                                                                      ratelimit_reset)))
+                _("Your rate is too fast and remaining is {}, retry after {}s, rate reset at {}".
+                  format(remaining,
+                         retry_after,
+                         ratelimit_reset)))
             time.sleep(retry_after + 3)  # just sleep 3 more seconds to make safe
             continue
         elif req.status_code == 403:
@@ -112,9 +113,9 @@ def save_kline(db_cli: pymongo.MongoClient, frequency: str, active: bool = True)
 
     for index, symbol_info in enumerate(symbol_list):
         logger.info(_('The {} of Total {}'
-                    .format(symbol_info['symbol'], len(symbol_list))))
+                      .format(symbol_info['symbol'], len(symbol_list))))
         logger.info(_('DOWNLOAD PROGRESS {} '
-                    .format(str(float(index / len(symbol_list) * 100))[0:4] + '%')))
+                      .format(str(float(index / len(symbol_list) * 100))[0:4] + '%')))
         ref = col.find({"symbol": symbol_info['symbol']}).sort("timestamp", -1)
 
         if ref.count() > 0:

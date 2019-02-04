@@ -30,7 +30,6 @@ from dateutil.rrule import DAILY, rrule
 from logbook import Logger
 from MonkTrader.config import settings
 from MonkTrader.data import DataDownloader, Point, ProcessPoints
-from MonkTrader.utils.i18n import _
 from MonkTrader.exchange.bitmex.const import (
     QUOTE_LINK, SYMBOL_LINK, TARFILETYPE, TRADE_LINK,
 )
@@ -38,6 +37,7 @@ from MonkTrader.exchange.bitmex.data.download import (
     START_DATE, QuoteMongoStream, QuoteZipFileStream, SymbolsStreamRequest,
     TarStreamRequest, TradeMongoStream, TradeZipFileStream,
 )
+from MonkTrader.utils.i18n import _
 
 from ..log import logger_group
 

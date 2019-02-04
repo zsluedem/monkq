@@ -34,9 +34,9 @@ import requests
 from logbook import Logger
 from MonkTrader.config import settings
 from MonkTrader.exception import DataDownloadError
-from MonkTrader.utils.i18n import _
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 from MonkTrader.utils import CsvFileDefaultDict, CsvZipDefaultDict, assure_dir
+from MonkTrader.utils.i18n import _
 
 from ..log import logger_group
 

@@ -26,8 +26,8 @@ from abc import ABC, abstractmethod, abstractproperty
 from typing import Any, Iterator
 
 from logbook import Logger
-from MonkTrader.utils.i18n import _
 from MonkTrader.exception import DataDownloadError
+from MonkTrader.utils.i18n import _
 
 logger = Logger('data')
 

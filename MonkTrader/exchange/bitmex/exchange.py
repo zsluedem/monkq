@@ -38,7 +38,6 @@ from MonkTrader.exception import (
     AuthError, HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
     NotFoundError, RateLimitError,
 )
-from MonkTrader.utils.i18n import _
 from MonkTrader.exchange.base import BaseExchange
 from MonkTrader.exchange.base.info import ExchangeInfo
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
@@ -48,6 +47,7 @@ from MonkTrader.exchange.bitmex.const import (
 )
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
+from MonkTrader.utils.i18n import _
 from yarl import URL
 
 from .log import logger_group
@@ -528,14 +528,14 @@ class BitmexExchange(BaseExchange):
                 message = error['message'].lower() if error else ''
                 name = error['name'].lower() if error else ''
                 logger.warning(_("Bitmex request url:{}, method:{}, postdict:{}, "
-                               "headers:{} error ."
-                               "Return with status code:{}, error {} ,"
-                               "message: {}".format(resp.request_info.url,
-                                                    resp.request_info.method,
-                                                    postdict,
-                                                    resp.request_info.headers,
-                                                    resp.status, name,
-                                                    message)))
+                                 "headers:{} error ."
+                                 "Return with status code:{}, error {} ,"
+                                 "message: {}".format(resp.request_info.url,
+                                                      resp.request_info.method,
+                                                      postdict,
+                                                      resp.request_info.headers,
+                                                      resp.status, name,
+                                                      message)))
                 if resp.status == 400:
                     if 'insufficient available balance' in message:
                         logger.warning(_('Account out of funds. The message: {}'.format(error["message"])))
@@ -556,9 +556,9 @@ class BitmexExchange(BaseExchange):
                 # exit_or_throw()
             elif resp.status == 429:
                 logger.warning(_("Ratelimited on current request. Sleeping, "
-                               "then trying again. Try fewer order pairs or"
-                               " contact support@bitmex.com to raise your limits. "
-                               "Request: {} \n {}".format(url, postdict)))
+                                 "then trying again. Try fewer order pairs or"
+                                 " contact support@bitmex.com to raise your limits. "
+                                 "Request: {} \n {}".format(url, postdict)))
 
                 # Figure out how long we need to wait.
                 ratelimit_reset = resp.headers['X-RateLimit-Reset']
@@ -566,7 +566,7 @@ class BitmexExchange(BaseExchange):
                 reset_str = datetime.datetime.fromtimestamp(int(ratelimit_reset)).strftime('%X')
 
                 logger.warning(_("Your ratelimit will reset at {}. "
-                               "Sleeping for {} seconds.".format(reset_str, to_sleep)))
+                                 "Sleeping for {} seconds.".format(reset_str, to_sleep)))
                 raise RateLimitError(url=resp.request_info.url,
                                      method=resp.request_info.method,
                                      body=postdict, headers=resp.request_info.headers,
@@ -575,9 +575,9 @@ class BitmexExchange(BaseExchange):
             # 503 - BitMEX temporary downtime, likely due to a deploy. Try again
             elif resp.status == 503:
                 logger.warning(_("Unable to contact the BitMEX API (503), retrying. "
-                               "Bitmex is mostly overloaded now"
-                               "Request: {} \n {}".format(url, postdict)))
-                logger.warning(_("Response header :{}".format(resp.headers)))
+                                 "Bitmex is mostly overloaded now"
+                                 "Request: {} \n {} \n"
+                                 "Response header :{}".format(url, postdict, resp.headers)))
                 return await retry(max_retry)
 
             else:
@@ -588,7 +588,7 @@ class BitmexExchange(BaseExchange):
         except asyncio.TimeoutError:
             # Timeout, re-run this request
             logger.warning(_("Timed out on request: path:{}, query:{}, "
-                           "postdict:{}, verb:{}, timeout:{}, retry:{}, "
-                           "retrying...".format(path, query, postdict,
-                                                method, timeout, max_retry)))
+                             "postdict:{}, verb:{}, timeout:{}, retry:{}, "
+                             "retrying...".format(path, query, postdict,
+                                                  method, timeout, max_retry)))
             return await retry(max_retry)

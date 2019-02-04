@@ -1,6 +1,7 @@
 #! python
-from babel.messages.frontend import CommandLineInterface
 import sys
+
+from babel.messages.frontend import CommandLineInterface
 
 if __name__ == '__main__':
     if sys.argv[1] == "extract":

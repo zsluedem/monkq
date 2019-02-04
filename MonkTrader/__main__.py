@@ -27,10 +27,10 @@ import shutil
 
 import click
 import MonkTrader
-from MonkTrader.utils.i18n import _
 from MonkTrader.exception import CommandError
 from MonkTrader.exchange.bitmex.data import BitMexDownloader
 from MonkTrader.utils import assure_dir, make_writable
+from MonkTrader.utils.i18n import _
 
 USERHOME = os.path.join(os.path.expanduser('~'), '.monk')
 

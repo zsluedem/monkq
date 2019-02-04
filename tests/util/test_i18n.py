@@ -22,23 +22,25 @@
 # SOFTWARE.
 #
 
-from MonkTrader.utils.i18n import LazyTranslation
-from unittest.mock import patch, MagicMock
 import os
+from unittest.mock import MagicMock, patch
+
+from MonkTrader.utils.i18n import LazyTranslation
 
 
-def test_lazytranslation_not_setting():
+def test_lazytranslation_not_setting() -> None:
     with patch("MonkTrader.utils.i18n.gettext", MagicMock()) as mockg:
-        mockg.find.return_value =None
+        mockg.find.return_value = None
         trans = LazyTranslation()
         trans.setup("CN")
 
         trans.gettext("hello")
         mockg.NullTranslations().gettext.assert_called()
 
-def test_lazytranslation():
+
+def test_lazytranslation() -> None:
     with patch("MonkTrader.utils.i18n.gettext", MagicMock()) as mockg:
-        mockg.find.return_value =os.path.abspath(__file__)
+        mockg.find.return_value = os.path.abspath(__file__)
         trans = LazyTranslation()
         trans.setup("CN")
 

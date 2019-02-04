@@ -12,3 +12,4 @@ ignore_errors = True
 omit =
     tests/*
     MonkTrader/config/project_template/*
+    scripts/*

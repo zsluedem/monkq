@@ -21,37 +21,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-import gettext
-import os
-from typing import IO, Optional
-from warnings import warn
-
-locale_dir = os.path.join(os.path.split(os.path.abspath(__file__))[0], "translations")
-
-
-class LazyTranslation():
-    def __init__(self):
-        self._translation: Optional[gettext.GNUTranslations] = None
-        self._fp: Optional[IO] = None
-
-    def setup(self, language: str):
-        mofile = gettext.find("MonkTrader", locale_dir, [language])
-        if mofile is None:
-            warn("MonkTrader doesn't support the language {}. It would use English".format(language))
-            self._translation = gettext.NullTranslations()
-        else:
-            self._fp = open(mofile, 'rb')
-            self._translation = gettext.GNUTranslations(self._fp)
-            self._fp.close()
-
-    def gettext(self, message: str):
-        if self._translation is None:
-            return message
-        else:
-            return self._translation.gettext(message=message)
-
-
-translation: LazyTranslation = LazyTranslation()
-
-_ = translation.gettext

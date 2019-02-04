@@ -22,36 +22,25 @@
 # SOFTWARE.
 #
 
-import gettext
+from MonkTrader.utils.i18n import LazyTranslation
+from unittest.mock import patch, MagicMock
 import os
-from typing import IO, Optional
-from warnings import warn
-
-locale_dir = os.path.join(os.path.split(os.path.abspath(__file__))[0], "translations")
 
 
-class LazyTranslation():
-    def __init__(self):
-        self._translation: Optional[gettext.GNUTranslations] = None
-        self._fp: Optional[IO] = None
+def test_lazytranslation_not_setting():
+    with patch("MonkTrader.utils.i18n.gettext", MagicMock()) as mockg:
+        mockg.find.return_value =None
+        trans = LazyTranslation()
+        trans.setup("CN")
 
-    def setup(self, language: str):
-        mofile = gettext.find("MonkTrader", locale_dir, [language])
-        if mofile is None:
-            warn("MonkTrader doesn't support the language {}. It would use English".format(language))
-            self._translation = gettext.NullTranslations()
-        else:
-            self._fp = open(mofile, 'rb')
-            self._translation = gettext.GNUTranslations(self._fp)
-            self._fp.close()
+        trans.gettext("hello")
+        mockg.NullTranslations().gettext.assert_called()
 
-    def gettext(self, message: str):
-        if self._translation is None:
-            return message
-        else:
-            return self._translation.gettext(message=message)
+def test_lazytranslation():
+    with patch("MonkTrader.utils.i18n.gettext", MagicMock()) as mockg:
+        mockg.find.return_value =os.path.abspath(__file__)
+        trans = LazyTranslation()
+        trans.setup("CN")
 
-
-translation: LazyTranslation = LazyTranslation()
-
-_ = translation.gettext
+        trans.gettext("hello")
+        mockg.GNUTranslations().gettext.assert_called()

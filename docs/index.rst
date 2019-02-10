@@ -4,9 +4,11 @@ MonkTrader documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-
+   intro
+   install
+   tutorial
+   refs/index
 
 Indices and tables
 ==================

@@ -8,4 +8,5 @@ Assets
     order
     position
     trade
+    instrument
 

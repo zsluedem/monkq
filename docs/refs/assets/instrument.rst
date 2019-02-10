@@ -45,7 +45,7 @@ Instrument
 
         pass
 
-    .. attribut:: maker_fee
+    .. attribute:: maker_fee
 
         pass
 

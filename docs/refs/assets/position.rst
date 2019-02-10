@@ -54,7 +54,7 @@ FutureBasePosition
 
         pass
 
-    .. attriubte:: open_init_margin
+    .. attribute:: open_init_margin
 
         pass
 

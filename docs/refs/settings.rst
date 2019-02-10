@@ -60,4 +60,4 @@ Core Settings
     .. attribute:: SSL_PATH
 
         If you want to use a specific ssl for you request, you can set your
-        ssl path here. More info you can see :py:module:`~ssl`
+        ssl path here. More info you can see :py:mod:`~ssl`

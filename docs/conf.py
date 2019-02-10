@@ -39,6 +39,9 @@ release = ''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.extlinks',
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -68,7 +71,16 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
+# Links to Python's docs should reference the most recent version of the 3.x
+# branch, which is located at this URL.
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'sphinx': ('http://www.sphinx-doc.org/en/master/', None),
+    'psycopg2': ('http://initd.org/psycopg/docs/', None),
+}
 
+locale_dirs = ['locale/']   # path is example but recommended.
+gettext_compact = False     # optional.
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

@@ -1,3 +1,5 @@
+.. _asset_account:
+
 ============
 Account
 ============

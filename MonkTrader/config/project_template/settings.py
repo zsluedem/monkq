@@ -2,15 +2,6 @@ import os
 
 from MonkTrader.const import RUN_TYPE
 
-# Mongodb uri which is used to load data or download data in.
-DATABASE_URI = "mongodb://127.0.0.1:27017"
-
-# HTTP Proxy
-HTTP_PROXY = ""
-
-# used only for testing
-SSL_PATH = ''
-
 FREQUENCY = 'tick'  # tick, 1m
 
 LOG_LEVEL = 'INFO'  # DEBUG, INFO, NOTICE, WARNING, ERROR
@@ -42,3 +33,12 @@ BUILTIN_PLUGINS = {
 INSTALLED_PLUGINS = {
 
 }
+
+# Mongodb uri which is used to load data or download data in.
+DATABASE_URI = "mongodb://127.0.0.1:27017"
+
+# HTTP Proxy
+HTTP_PROXY = ""
+
+# used only for testing
+SSL_PATH = ''

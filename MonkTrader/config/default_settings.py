@@ -20,8 +20,6 @@ END_TIME = '2018-06-01T00:00:00Z'
 
 RUN_TYPE = RUN_TYPE.BACKTEST  # type: ignore
 
-TICK_TYPE = 'tick'  # tick , bar
-
 STRATEGY = "strategy.MyStrategy"
 
 DATA_DIR = os.path.expanduser("~/.monk/data")
@@ -33,12 +31,4 @@ EXCHANGES = {  # type: ignore
         "API_KEY": '',
         "API_SECRET": ''
     }
-}
-
-BUILTIN_PLUGINS = {  # type: ignore
-
-}
-
-INSTALLED_PLUGINS = {  # type: ignore
-
 }

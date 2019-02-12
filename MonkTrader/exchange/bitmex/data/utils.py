@@ -26,6 +26,7 @@ import os
 
 import numpy as np
 import pandas
+from MonkTrader.assets.const import SIDE
 from MonkTrader.exchange.bitmex.data import TRADES_DATA_F
 
 from . import HDF_FILE_NAME
@@ -33,7 +34,7 @@ from . import HDF_FILE_NAME
 dtypes_trades = {
     "timestamp": np.object,
     "symbol": np.str,
-    "side": np.bool,
+    "side": np.int8,
     "size": np.int64,
     "price": np.float64,
     "tickDirection": np.str,
@@ -45,6 +46,14 @@ dtypes_trades = {
 
 def _date_parse(one):
     return pandas.to_datetime(one, format="%Y-%m-%dD%H:%M:%S.%f")
+
+def _side_converters(side):
+    if side == 'Buy':
+        return SIDE.BUY.value
+    elif side == 'Sell':
+        return SIDE.SELL.value
+    else:
+        return SIDE.UNKNOWN.value
 
 
 def _read_trade_tar(path, with_detailed=False, with_symbol=True, index=None):
@@ -63,6 +72,7 @@ def _read_trade_tar(path, with_detailed=False, with_symbol=True, index=None):
                               usecols=usecols,
                               dtype=dtypes_trades,
                               false_values=['Buy'], true_values=['Sell'],
+                              converters={'side':_side_converters},
                               engine='c', low_memory=True, date_parser=_date_parse)
     if index:
         t_frame.set_index(index, inplace=True)

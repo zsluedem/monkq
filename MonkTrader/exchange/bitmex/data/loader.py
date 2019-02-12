@@ -24,7 +24,7 @@
 
 import json
 import os
-from typing import Dict, Type, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Type
 
 from MonkTrader.assets.instrument import (
     DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
@@ -33,12 +33,12 @@ from MonkTrader.assets.instrument import (
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataError
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
-from .utils import _trade_to_kline, _read_trade_tar
+from MonkTrader.exchange.bitmex.data import TRADES_DATA_F
+
+from .utils import _read_trade_tar
+
 if TYPE_CHECKING:
     from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange
-
-TRADES_DATA_F = 'csv#trade'
-
 
 instrument_map = {
     'symbol': 'symbol',

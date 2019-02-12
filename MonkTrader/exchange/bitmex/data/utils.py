@@ -22,11 +22,13 @@
 # SOFTWARE.
 #
 
-import pandas
-import numpy as np
 import os
+
+import numpy as np
+import pandas
+from MonkTrader.exchange.bitmex.data import TRADES_DATA_F
+
 from . import HDF_FILE_NAME
-from .loader import TRADES_DATA_F
 
 dtypes_trades = {
     "timestamp": np.object,

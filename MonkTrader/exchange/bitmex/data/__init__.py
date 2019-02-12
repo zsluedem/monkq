@@ -45,6 +45,8 @@ logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
 
 HDF_FILE_NAME = 'Bitmex_trade.hdf'
+TRADES_DATA_F = 'csv#trade'
+
 
 class DatePoint(Point):
     def __init__(self, date: datetime.datetime):

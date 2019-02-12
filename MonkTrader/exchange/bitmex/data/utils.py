@@ -27,6 +27,7 @@ import os
 import numpy as np
 import pandas
 from MonkTrader.assets.const import SIDE
+from MonkTrader.const import TICK_DIRECTIONN
 from MonkTrader.exchange.bitmex.data import TRADES_DATA_F
 
 from . import HDF_FILE_NAME
@@ -37,15 +38,17 @@ dtypes_trades = {
     "side": np.int8,
     "size": np.int64,
     "price": np.float64,
-    "tickDirection": np.str,
+    "tickDirection": np.int8,
     "trdMatchID": np.str,
     "grossValue": np.int64,
     "homeNotional": np.float64,
     "foreignNotional": np.float64
 }
 
+
 def _date_parse(one):
     return pandas.to_datetime(one, format="%Y-%m-%dD%H:%M:%S.%f")
+
 
 def _side_converters(side):
     if side == 'Buy':
@@ -56,22 +59,39 @@ def _side_converters(side):
         return SIDE.UNKNOWN.value
 
 
+def _tick_direction(tick_direction):
+    if tick_direction == 'MinusTick':
+        return TICK_DIRECTIONN.MINUS_TICK.value
+    elif tick_direction == 'PlusTick':
+        return TICK_DIRECTIONN.PLUS_TICK.value
+    elif tick_direction == 'ZeroMinusTick':
+        return TICK_DIRECTIONN.ZERO_MINUS_TICK.value
+    elif tick_direction == 'ZeroPlusTick':
+        return TICK_DIRECTIONN.ZERO_PLUS_TICK.value
+    else:
+        return TICK_DIRECTIONN.UNKNOWN.value
+
+
 def _read_trade_tar(path, with_detailed=False, with_symbol=True, index=None):
     if with_detailed:
         usecols = ["timestamp", "side", "size", "price",
-                   "tickDirection","trdMatchID", "grossValue",
+                   "tickDirection", "trdMatchID", "grossValue",
                    "homeNotional", "foreignNotional"]
     else:
-        usecols = ["timestamp", "side", "size", "price",
+        usecols = ["timestamp", "side", "size", "price", "tickDirection",
                    "grossValue", "homeNotional", "foreignNotional"]
     if with_symbol:
         usecols.append("symbol")
+    use_dtypes = {}
+    for col in usecols:
+        use_dtypes[col] = dtypes_trades[col]
     t_frame = pandas.read_csv(path, compression='gzip',
                               parse_dates=[0],
                               infer_datetime_format=True,
                               usecols=usecols,
-                              dtype=dtypes_trades,
-                              converters={'side':_side_converters},
+                              dtype=use_dtypes,
+                              converters={'side': _side_converters,
+                                          'tickDirection': _tick_direction},
                               engine='c', low_memory=True, date_parser=_date_parse)
     if index:
         t_frame.set_index(index, inplace=True)
@@ -94,10 +114,12 @@ def tar_to_kline(path, frequency):
 
     return klines
 
+
 def tarcsv2hdf(csv_file, key, output=''):
-    frame = _read_trade_tar(csv_file, True)
+    frame = _read_trade_tar(csv_file, False, False)
     frame.to_hdf(os.path.join(output, HDF_FILE_NAME), key, mode='a', format='table',
-                 complib='blosc')
+                 complib='blosc', append=True)
+
 
 def convert_all_trade_data2hdf(data_dir, output=''):
     base = os.path.join(data_dir, TRADES_DATA_F)

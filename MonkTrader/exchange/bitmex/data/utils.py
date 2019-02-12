@@ -83,12 +83,12 @@ def tar_to_kline(path, frequency):
 
     return klines
 
-def tarcsv2hdf(csv_file, target):
+def tarcsv2hdf(csv_file, key, output=''):
     frame = _read_trade_tar(csv_file, True)
-    frame.to_hdf(HDF_FILE_NAME, target, mode='a', format='table',
+    frame.to_hdf(os.path.join(output, HDF_FILE_NAME), key, mode='a', format='table',
                  complib='blosc')
 
-def convert_all_trade_data2hdf(data_dir):
+def convert_all_trade_data2hdf(data_dir, output=''):
     base = os.path.join(data_dir, TRADES_DATA_F)
     directories = os.listdir(base)
     directories.sort()
@@ -99,4 +99,4 @@ def convert_all_trade_data2hdf(data_dir):
         for path in symbols_files:
             print(path)
             symbol = path.split('.')[0]
-            tarcsv2hdf(os.path.join(date_file, path), symbol)
+            tarcsv2hdf(os.path.join(date_file, path), symbol, output)

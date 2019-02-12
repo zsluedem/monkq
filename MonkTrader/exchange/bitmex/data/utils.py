@@ -23,20 +23,47 @@
 #
 
 import pandas
+import numpy as np
+import os
+from . import HDF_FILE_NAME
+from .loader import TRADES_DATA_F
 
+dtypes_trades = {
+    "timestamp": np.object,
+    "symbol": np.str,
+    "side": np.bool,
+    "size": np.int64,
+    "price": np.float64,
+    "tickDirection": np.str,
+    "trdMatchID": np.str,
+    "grossValue": np.int64,
+    "homeNotional": np.float64,
+    "foreignNotional": np.float64
+}
 
 def _date_parse(one):
     return pandas.to_datetime(one, format="%Y-%m-%dD%H:%M:%S.%f")
 
 
-def _read_trade_tar(path):
+def _read_trade_tar(path, with_detailed=False, with_symbol=True, index=None):
+    if with_detailed:
+        usecols = ["timestamp", "side", "size", "price",
+                   "tickDirection","trdMatchID", "grossValue",
+                   "homeNotional", "foreignNotional"]
+    else:
+        usecols = ["timestamp", "side", "size", "price",
+                   "grossValue", "homeNotional", "foreignNotional"]
+    if with_symbol:
+        usecols.append("symbol")
     t_frame = pandas.read_csv(path, compression='gzip',
                               parse_dates=[0],
                               infer_datetime_format=True,
-                              usecols=["timestamp", "symbol", "side", "size", "price", "tickDirection",
-                                       "trdMatchID", "grossValue", "homeNotional", "foreignNotional"],
+                              usecols=usecols,
+                              dtype=dtypes_trades,
+                              false_values=['Buy'], true_values=['Sell'],
                               engine='c', low_memory=True, date_parser=_date_parse)
-    t_frame.set_index('timestamp', inplace=True)
+    if index:
+        t_frame.set_index(index, inplace=True)
     return t_frame
 
 
@@ -55,3 +82,21 @@ def tar_to_kline(path, frequency):
         klines[symbol] = _trade_to_kline(obj, frequency)
 
     return klines
+
+def tarcsv2hdf(csv_file, target):
+    frame = _read_trade_tar(csv_file, True)
+    frame.to_hdf(HDF_FILE_NAME, target, mode='a', format='table',
+                 complib='blosc')
+
+def convert_all_trade_data2hdf(data_dir):
+    base = os.path.join(data_dir, TRADES_DATA_F)
+    directories = os.listdir(base)
+    directories.sort()
+    for directory in directories:
+        print('date {}'.format(directory))
+        date_file = os.path.join(base, directory)
+        symbols_files = os.listdir(date_file)
+        for path in symbols_files:
+            print(path)
+            symbol = path.split('.')[0]
+            tarcsv2hdf(os.path.join(date_file, path), symbol)

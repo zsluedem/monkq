@@ -71,7 +71,6 @@ def _read_trade_tar(path, with_detailed=False, with_symbol=True, index=None):
                               infer_datetime_format=True,
                               usecols=usecols,
                               dtype=dtypes_trades,
-                              false_values=['Buy'], true_values=['Sell'],
                               converters={'side':_side_converters},
                               engine='c', low_memory=True, date_parser=_date_parse)
     if index:

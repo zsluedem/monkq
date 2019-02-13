@@ -36,7 +36,8 @@ class RUN_TYPE(Enum):
     BACKTEST = 1
     REALTIME = 2
 
-class TICK_DIRECTIONN(Enum):
+
+class TICK_DIRECTION(Enum):
     PLUS_TICK = 1
     ZERO_PLUS_TICK = 2
     MINUS_TICK = 3

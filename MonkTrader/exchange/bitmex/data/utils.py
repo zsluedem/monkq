@@ -27,7 +27,7 @@ import os
 import numpy as np
 import pandas
 from MonkTrader.assets.const import SIDE
-from MonkTrader.const import TICK_DIRECTIONN
+from MonkTrader.const import TICK_DIRECTION
 from MonkTrader.exchange.bitmex.data import TRADES_DATA_F
 
 from . import HDF_FILE_NAME
@@ -61,15 +61,15 @@ def _side_converters(side):
 
 def _tick_direction(tick_direction):
     if tick_direction == 'MinusTick':
-        return TICK_DIRECTIONN.MINUS_TICK.value
+        return TICK_DIRECTION.MINUS_TICK.value
     elif tick_direction == 'PlusTick':
-        return TICK_DIRECTIONN.PLUS_TICK.value
+        return TICK_DIRECTION.PLUS_TICK.value
     elif tick_direction == 'ZeroMinusTick':
-        return TICK_DIRECTIONN.ZERO_MINUS_TICK.value
+        return TICK_DIRECTION.ZERO_MINUS_TICK.value
     elif tick_direction == 'ZeroPlusTick':
-        return TICK_DIRECTIONN.ZERO_PLUS_TICK.value
+        return TICK_DIRECTION.ZERO_PLUS_TICK.value
     else:
-        return TICK_DIRECTIONN.UNKNOWN.value
+        return TICK_DIRECTION.UNKNOWN.value
 
 
 def _read_trade_tar(path, with_detailed=False, with_symbol=True, index=None):
@@ -84,6 +84,8 @@ def _read_trade_tar(path, with_detailed=False, with_symbol=True, index=None):
         usecols.append("symbol")
     use_dtypes = {}
     for col in usecols:
+        if col in ('side', "tickDirection"):
+            continue
         use_dtypes[col] = dtypes_trades[col]
     t_frame = pandas.read_csv(path, compression='gzip',
                               parse_dates=[0],
@@ -116,9 +118,10 @@ def tar_to_kline(path, frequency):
 
 
 def tarcsv2hdf(csv_file, key, output=''):
-    frame = _read_trade_tar(csv_file, False, False)
-    frame.to_hdf(os.path.join(output, HDF_FILE_NAME), key, mode='a', format='table',
-                 complib='blosc', append=True)
+    frame = _read_trade_tar(csv_file, False, False, 'timestamp')
+    frame.to_hdf(os.path.join(output, HDF_FILE_NAME), key, mode='a',
+                 format='table', data_columns=True, index=False,
+                 complib='blosc:blosclz', complevel=9, append=True)
 
 
 def convert_all_trade_data2hdf(data_dir, output=''):

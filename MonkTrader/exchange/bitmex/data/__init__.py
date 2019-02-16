@@ -31,8 +31,8 @@ from MonkTrader.exchange.bitmex.const import (
     QUOTE_LINK, SYMBOL_LINK, TRADE_LINK,
 )
 from MonkTrader.exchange.bitmex.data.download import (
-    QuoteZipFileStream, SymbolsStreamRequest,
-    TarStreamRequest, TradeZipFileStream, HDFQuoteStream, HDFTradeStream
+    HDFQuoteStream, HDFTradeStream, QuoteZipFileStream, SymbolsStreamRequest,
+    TarStreamRequest, TradeZipFileStream,
 )
 from MonkTrader.utils.i18n import _
 

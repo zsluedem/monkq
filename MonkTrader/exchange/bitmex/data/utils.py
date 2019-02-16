@@ -23,13 +23,12 @@
 #
 
 import os
+from typing import Dict, Optional
 
 import numpy as np
 import pandas
-from typing import Optional, Dict
 from MonkTrader.assets.const import SIDE
 from MonkTrader.const import TICK_DIRECTION
-
 from MonkTrader.exchange.bitmex.const import HDF_FILE_NAME, TRADES_DATA_F
 
 dtypes_trades = {

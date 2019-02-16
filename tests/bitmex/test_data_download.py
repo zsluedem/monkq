@@ -22,29 +22,28 @@
 # SOFTWARE.
 #
 import datetime
-import os
+import gzip
 import io
+import os
 import random
 import tempfile
 import zlib
-import gzip
-import pandas
 from unittest.mock import MagicMock, patch
 
+import pandas
 import pytest
 from dateutil.relativedelta import relativedelta
+from MonkTrader.assets.const import SIDE
+from MonkTrader.const import TICK_DIRECTION
 from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 from MonkTrader.exchange.bitmex.data import (
     BitMexDownloader, BitMexProcessPoints, DatePoint,
 )
 from MonkTrader.exchange.bitmex.data.download import (
-    QuoteZipFileStream, START_DATE,
-    SymbolsStreamRequest, TarStreamRequest,
-    TradeZipFileStream, HDFTradeStream, HDFQuoteStream
+    START_DATE, HDFQuoteStream, HDFTradeStream, QuoteZipFileStream,
+    SymbolsStreamRequest, TarStreamRequest, TradeZipFileStream,
 )
-from MonkTrader.const import TICK_DIRECTION
-from MonkTrader.assets.const import SIDE
 
 stream_b = b"""c1,c2,c3,c4
 1,2,3,4

@@ -27,19 +27,19 @@ import io
 import os
 import shutil
 import zlib
-import pandas
 from typing import Generator
 
+import pandas
 import requests
-from logbook import Logger
 from dateutil.relativedelta import relativedelta
+from logbook import Logger
 from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME, TARFILETYPE
 from MonkTrader.utils import CsvFileDefaultDict, CsvZipDefaultDict, assure_dir
 from MonkTrader.utils.i18n import _
 
 from ..log import logger_group
-from .utils import read_trade_tar, classify_df, read_quote_tar
+from .utils import classify_df, read_quote_tar, read_trade_tar
 
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)

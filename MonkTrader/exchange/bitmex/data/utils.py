@@ -26,11 +26,11 @@ import os
 
 import numpy as np
 import pandas
+from typing import Optional, Dict
 from MonkTrader.assets.const import SIDE
 from MonkTrader.const import TICK_DIRECTION
-from MonkTrader.exchange.bitmex.data import TRADES_DATA_F
 
-from . import HDF_FILE_NAME
+from MonkTrader.exchange.bitmex.const import HDF_FILE_NAME, TRADES_DATA_F
 
 dtypes_trades = {
     "timestamp": np.object,
@@ -45,12 +45,21 @@ dtypes_trades = {
     "foreignNotional": np.float64
 }
 
+dtypes_quote = {
+    "timestamp": np.object,
+    "symbol": np.str,
+    "bidSize": np.float64,
+    "bidPrice": np.float64,
+    "askPrice": np.float64,
+    "askSize": np.float64
+}
 
-def _date_parse(one):
+
+def _date_parse(one: str) -> pandas.Timestamp:
     return pandas.to_datetime(one, format="%Y-%m-%dD%H:%M:%S.%f")
 
 
-def _side_converters(side):
+def _side_converters(side: str) -> SIDE:
     if side == 'Buy':
         return SIDE.BUY.value
     elif side == 'Sell':
@@ -59,7 +68,7 @@ def _side_converters(side):
         return SIDE.UNKNOWN.value
 
 
-def _tick_direction(tick_direction):
+def _tick_direction(tick_direction: str) -> TICK_DIRECTION:
     if tick_direction == 'MinusTick':
         return TICK_DIRECTION.MINUS_TICK.value
     elif tick_direction == 'PlusTick':
@@ -72,7 +81,8 @@ def _tick_direction(tick_direction):
         return TICK_DIRECTION.UNKNOWN.value
 
 
-def _read_trade_tar(path, with_detailed=False, with_symbol=True, index=None):
+def read_trade_tar(path: str, with_detailed: bool = False, with_symbol: bool = True,
+                   index: Optional[str] = None) -> pandas.DataFrame:
     if with_detailed:
         usecols = ["timestamp", "side", "size", "price",
                    "tickDirection", "trdMatchID", "grossValue",
@@ -100,14 +110,44 @@ def _read_trade_tar(path, with_detailed=False, with_symbol=True, index=None):
     return t_frame
 
 
-def _trade_to_kline(frame, frequency):
+def read_quote_tar(path: str, with_symbol: bool = True, index: Optional[str] = None) -> pandas.DataFrame:
+    usecols = ["timestamp", "bidSize", "bidPrice", "askPrice", "askSize"]
+    if with_symbol:
+        usecols.append("symbol")
+
+    use_dtypes = {}
+    for col in usecols:
+        use_dtypes[col] = dtypes_quote[col]
+    t_frame = pandas.read_csv(path, compression='gzip',
+                              parse_dates=[0],
+                              infer_datetime_format=True,
+                              usecols=usecols,
+                              dtype=use_dtypes,
+                              engine='c', low_memory=True, date_parser=_date_parse)
+    if index:
+        t_frame.set_index(index, inplace=True)
+    return t_frame
+
+
+def _trade_to_kline(frame: pandas.DataFrame, frequency: str) -> pandas.DataFrame:
     kline = frame['price'].resample(frequency).ohlc()
     kline['value'] = frame['grossValue'].resample(frequency).sum()
     return kline
 
 
-def tar_to_kline(path, frequency):
-    t_frame = _read_trade_tar(path)
+def classify_df(df: pandas.DataFrame, column: str, delete_column: bool = True) -> pandas.DataFrame:
+    out = {}
+    uniques = df[column].unique()
+    for one in uniques:
+        new = df[df[column] == one]
+        if delete_column:
+            del new[column]
+        out[one] = new
+    return out
+
+
+def tar_to_kline(path: str, frequency: str) -> Dict[str, pandas.DataFrame]:
+    t_frame = read_trade_tar(path)
     symbols = t_frame['symbol'].unique()
     klines = {}
     for symbol in symbols:
@@ -117,14 +157,14 @@ def tar_to_kline(path, frequency):
     return klines
 
 
-def tarcsv2hdf(csv_file, key, output=''):
-    frame = _read_trade_tar(csv_file, False, False, 'timestamp')
+def tarcsv2hdf(csv_file: str, key: str, output: str = '') -> None:
+    frame = read_trade_tar(csv_file, False, False, 'timestamp')
     frame.to_hdf(os.path.join(output, HDF_FILE_NAME), key, mode='a',
                  format='table', data_columns=True, index=False,
                  complib='blosc:blosclz', complevel=9, append=True)
 
 
-def convert_all_trade_data2hdf(data_dir, output=''):
+def convert_all_trade_data2hdf(data_dir: str, output: str = '') -> None:
     base = os.path.join(data_dir, TRADES_DATA_F)
     directories = os.listdir(base)
     directories.sort()

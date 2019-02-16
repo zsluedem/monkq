@@ -27,23 +27,28 @@ import io
 import os
 import shutil
 import zlib
+import pandas
 from typing import Generator
 
-import pymongo
 import requests
 from logbook import Logger
-from MonkTrader.config import settings
+from dateutil.relativedelta import relativedelta
 from MonkTrader.exception import DataDownloadError
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
+from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME, TARFILETYPE
 from MonkTrader.utils import CsvFileDefaultDict, CsvZipDefaultDict, assure_dir
 from MonkTrader.utils.i18n import _
 
 from ..log import logger_group
+from .utils import read_trade_tar, classify_df, read_quote_tar
 
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
 
 START_DATE = datetime.datetime(2014, 11, 22)  # bitmex open date
+
+
+def _hdf_file(name: str):
+    return "{}.hdf".format(name)
 
 
 class StreamRequest():
@@ -53,22 +58,107 @@ class StreamRequest():
         for chunk in response.iter_content(chunk_size=io.DEFAULT_BUFFER_SIZE):
             yield chunk
 
+
+class FileObjRequest():
+    def _stream_requests(self, url: str):
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        return response.raw
+
+
+class _DownloadProcess():
+    """
+    Each download process should include two method -- "process" and "rollback".
+    The "process" is to do the download main function.If there are any exceptions happened in
+    "process"， "rollback" should be trigger and clean up the data in "process".
+
+    classmethod "get_start" is used to get the start point from history.
+    """
+
     def process(self):
         """
         process the data after the raw_process data
         :return:
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def rollback(self):
         """
         If there is anything wrong happening in the process, the whole process would rollback
         :return:
         """
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    @classmethod
+    def get_start(cls, *args, **kwargs):
+        raise NotImplementedError()
 
 
-class RawStreamRequest(StreamRequest):
+class _HDFStream(FileObjRequest, _DownloadProcess):
+    kind = None
+
+    def __init__(self, url: str, dst_dir: str, *args, **kwargs):
+        self.url = url
+        assure_dir(dst_dir)
+        self.dst_dir = dst_dir
+
+        self.dst_file = os.path.join(self.dst_dir, _hdf_file(self.kind))
+        self.process_point = kwargs.get("point")
+
+        self.processed_key = set()
+
+    def process(self):
+        try:
+            if self.kind == 'trade':
+                dataframe = read_trade_tar(self._stream_requests(self.url), index='timestamp')
+            elif self.kind == 'quote':
+                dataframe = read_quote_tar(self._stream_requests(self.url), index='timestamp')
+            cla_df = classify_df(dataframe, 'symbol')
+            for key, df in cla_df.items():
+                self.processed_key.add(key)
+                df.to_hdf(self.dst_file, key, mode='a',
+                          format='table', data_columns=True, index=False,
+                          complib='blosc:blosclz', complevel=9, append=True)
+        except Exception as e:
+            self.rollback()
+            logger.exception(_("Exception #{}# happened when process {} {}").format(e, self.url, self.dst_file))
+            raise DataDownloadError()
+
+    def rollback(self):
+        date = self.process_point.value
+        with pandas.HDFStore(self.dst_file) as store:
+            for key in self.processed_key:
+                store.remove(key, "index>=datetime.datetime({},{},{})".format(date.year, date.month, date.day))
+
+    @classmethod
+    def get_start(cls, dst_dir: str):
+        try:
+            with pandas.HDFStore(os.path.join(dst_dir, _hdf_file(cls.kind)), 'r') as store:
+                keys = store.keys()
+                max_date = None
+                for key in keys:
+                    index = store.select_column(key, 'index')
+                    last = max(index)
+                    if max_date is None:
+                        max_date = last
+                    else:
+                        max_date = max(max_date, last)
+                last_date = datetime.datetime(max_date.year, max_date.month, max_date.day)
+                return last_date + relativedelta(days=+1)
+
+        except (KeyError, OSError):
+            return START_DATE
+
+
+class HDFTradeStream(_HDFStream):
+    kind = 'trade'
+
+
+class HDFQuoteStream(_HDFStream):
+    kind = 'quote'
+
+
+class RawStreamRequest(StreamRequest, _DownloadProcess):
     """
     Stream a url request and save the raw contents to local.
     The child class has to be configured the `FILENAME`
@@ -79,7 +169,7 @@ class RawStreamRequest(StreamRequest):
     :param url: the url used to stream, the url should be response
         content not just header.
     :param dst_dir: the content would save to the dst_dir directory
-        with the `FILENAMe`.
+        with the `FILENAME`.
     """
     FILENAME = None
 
@@ -104,6 +194,15 @@ class RawStreamRequest(StreamRequest):
         logger.info(_("Rollback!Remove the not complete file {}").format(self.dst_file))
         os.remove(self.dst_file)
 
+    @classmethod
+    def get_start(cls, dst_dir: str):
+        dones = os.listdir(dst_dir)
+        if dones:
+            current = max(dones)
+            return datetime.datetime.strptime(current, "%Y%m%d" + TARFILETYPE) + relativedelta(days=+1)
+        else:
+            return START_DATE
+
 
 class TarStreamRequest(RawStreamRequest):
     def __init__(self, date: datetime.datetime, url: str, dst_dir: str):
@@ -114,8 +213,12 @@ class TarStreamRequest(RawStreamRequest):
 class SymbolsStreamRequest(RawStreamRequest):
     FILENAME = INSTRUMENT_FILENAME
 
+    @classmethod
+    def get_start(cls, dst_dir: str):
+        return datetime.datetime.utcnow() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
 
-class _CsvStreamRequest(StreamRequest):
+
+class _CsvStreamRequest(StreamRequest, _DownloadProcess):
     """
     A base class to process the stream a url request
     which would return a zip csv file.
@@ -195,64 +298,6 @@ class _CsvStreamRequest(StreamRequest):
         return row
 
 
-class MongoStream(_CsvStreamRequest):
-    """
-    The class used to save the zip stream csv into MongoDB.
-    The child class has to be configured the collection name
-    and if you want to create an index for the collections, you
-    have to configure the index, too.
-    """
-    collection_name = None
-    index = None
-
-    def __init__(self, *args, **kwargs):
-        super(MongoStream, self).__init__(chunk_process=True, *args, **kwargs)
-        self._cli = pymongo.MongoClient(settings.DATABASE_URI)
-
-    def setup(self):
-        col = self._cli['bitmex'][self.collection_name]
-        col.create_index(self.index)
-
-    def process_chunk(self):
-        col = self._cli['bitmex'][self.collection_name]
-        col.insert_many(self.cache)
-
-    def process_row(self, row):
-        return row
-
-    def rollback(self):
-        col = self._cli['bitmex'][self.collection_name]
-        result = col.delete_many({'timestamp': {"$gte": self.date}})
-        logger.info(_("Rollback MongoDb ,return result: {}").format(result.raw_result))
-
-
-class QuoteMongoStream(MongoStream):
-    collection_name = "quote"
-    index = [("timestamp", pymongo.DESCENDING), ('symbol', pymongo.DESCENDING)]
-
-    def process_row(self, row: dict):
-        row['timestamp'] = datetime.datetime.strptime(row['timestamp'][:26], '%Y-%m-%dD%H:%M:%S.%f')  # utc time
-        row['bidSize'] = float(row['bidSize']) if row['bidSize'] else 0
-        row['bidPrice'] = float(row['bidPrice']) if row['bidPrice'] else 0
-        row['askPrice'] = float(row['askPrice']) if row['askPrice'] else 0
-        row['askSize'] = float(row['askSize']) if row['askSize'] else 0
-        return row
-
-
-class TradeMongoStream(MongoStream):
-    collection_name = "trade"
-    index = [("timestamp", pymongo.DESCENDING), ('symbol', pymongo.DESCENDING)]
-
-    def process_row(self, row):
-        row['timestamp'] = datetime.datetime.strptime(row['timestamp'][:26], '%Y-%m-%dD%H:%M:%S.%f')  # utc time
-        row['size'] = float(row['size']) if row['size'] else 0
-        row['price'] = float(row['price']) if row['price'] else 0
-        row['grossValue'] = float(row['grossValue']) if row['grossValue'] else 0
-        row['foreignNotional'] = float(row['foreignNotional']) if row['foreignNotional'] else 0
-        row['homeNotional'] = float(row['homeNotional']) if row['homeNotional'] else 0
-        return row
-
-
 class _FileStream(_CsvStreamRequest):
     """
     The child class which inherit this class has to be configured
@@ -305,16 +350,14 @@ class _FileStream(_CsvStreamRequest):
     def cleanup(self):
         self.csv_file_writers.close()
 
-
-class TradeFileStream(_FileStream):
-    # depreciated because it takes too much storage
-    fieldnames = ["timestamp", "symbol", "side", "size", "price", "tickDirection", "trdMatchID", "grossValue",
-                  "homeNotional", "foreignNotional"]
-
-
-class QuoteFileStream(_FileStream):
-    # depreciated because it takes too much storage
-    fieldnames = ["timestamp", "symbol", "bidSize", "bidPrice", "askPrice", "askSize"]
+    @classmethod
+    def get_start(cls, dst_dir: str):
+        dones = os.listdir(dst_dir)
+        if dones:
+            current = max(dones)
+            return datetime.datetime.strptime(current, "%Y%m%d") + relativedelta(days=+1)
+        else:
+            return START_DATE
 
 
 class _ZipFileStream(_FileStream):

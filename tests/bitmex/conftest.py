@@ -21,14 +21,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-import pymongo
-import pytest
-
-
-@pytest.yield_fixture(scope="function")
-def mongo_cli() -> pymongo.MongoClient:
-    cli = pymongo.MongoClient()
-    yield cli
-
-    cli.drop_database('bitmex')

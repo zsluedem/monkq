@@ -32,3 +32,5 @@ BITMEX_TESTNET_WEBSOCKET_URL = "wss://testnet.bitmex.com/realtime"
 SYMBOL_LINK = urljoin(BITMEX_API_URL, "instrument")
 TARFILETYPE = '.csv.gz'
 INSTRUMENT_FILENAME = 'instruments.json'
+HDF_FILE_NAME = "BitmexData.hdf"
+TRADES_DATA_F = 'csv#trade'

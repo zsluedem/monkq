@@ -22,20 +22,17 @@
 # SOFTWARE.
 #
 import datetime
-import os
 
-import pymongo
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import DAILY, rrule
 from logbook import Logger
-from MonkTrader.config import settings
 from MonkTrader.data import DataDownloader, Point, ProcessPoints
 from MonkTrader.exchange.bitmex.const import (
-    QUOTE_LINK, SYMBOL_LINK, TARFILETYPE, TRADE_LINK,
+    QUOTE_LINK, SYMBOL_LINK, TRADE_LINK,
 )
 from MonkTrader.exchange.bitmex.data.download import (
-    START_DATE, QuoteMongoStream, QuoteZipFileStream, SymbolsStreamRequest,
-    TarStreamRequest, TradeMongoStream, TradeZipFileStream,
+    QuoteZipFileStream, SymbolsStreamRequest,
+    TarStreamRequest, TradeZipFileStream, HDFQuoteStream, HDFTradeStream
 )
 from MonkTrader.utils.i18n import _
 
@@ -43,9 +40,6 @@ from ..log import logger_group
 
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
-
-HDF_FILE_NAME = 'Bitmex_trade.hdf'
-TRADES_DATA_F = 'csv#trade'
 
 
 class DatePoint(Point):
@@ -89,7 +83,7 @@ class BitMexDownloader(DataDownloader):
         self.kind = kind
         self.dst_dir = dst_dir
         self.init_kind(mode, kind)
-        self.init_mode(mode, dst_dir, kind)
+        self.init_mode(dst_dir)
 
     def init_kind(self, mode: str, kind: str):
         if kind == 'quote':
@@ -98,8 +92,8 @@ class BitMexDownloader(DataDownloader):
                 Streamer = QuoteZipFileStream
             elif mode == 'tar':
                 Streamer = TarStreamRequest
-            elif mode == 'mongo':
-                Streamer = QuoteMongoStream
+            elif mode == 'hdf':
+                Streamer = HDFQuoteStream
             else:
                 raise ValueError
         elif kind == 'trade':
@@ -108,8 +102,8 @@ class BitMexDownloader(DataDownloader):
                 Streamer = TradeZipFileStream
             elif mode == 'tar':
                 Streamer = TarStreamRequest
-            elif mode == 'mongo':
-                Streamer = TradeMongoStream
+            elif mode == 'hdf':
+                Streamer = HDFTradeStream
             else:
                 raise ValueError
         elif kind == 'instruments':
@@ -119,38 +113,9 @@ class BitMexDownloader(DataDownloader):
             raise ValueError()
         self.Streamer = Streamer
 
-    def init_mode(self, mode: str, dst_dir: str, kind: str):
+    def init_mode(self, dst_dir: str):
         self.end = datetime.datetime.utcnow() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
-        if kind == 'instruments':
-            self.start = datetime.datetime.utcnow() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
-            return
-        if mode == 'mongo':
-            cli = pymongo.MongoClient(settings.DATABASE_URI)
-            col = cli['bitmex'][kind]
-            cur = col.find().sort("timestamp", pymongo.DESCENDING)
-            try:
-                item = cur.next()
-                self.start = item['timestamp'] + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
-            except StopIteration:
-                logger.info(
-                    _('There is no data in the database. We are going to download data from scratch'))
-                self.start = START_DATE
-        elif mode == 'csv':
-            dones = os.listdir(dst_dir)
-            if dones:
-                current = max(dones)
-                self.start = datetime.datetime.strptime(current, "%Y%m%d") + relativedelta(days=+1)
-            else:
-                self.start = START_DATE
-        elif mode == 'tar':
-            dones = os.listdir(dst_dir)
-            if dones:
-                current = max(dones)
-                self.start = datetime.datetime.strptime(current, "%Y%m%d" + TARFILETYPE) + relativedelta(days=+1)
-            else:
-                self.start = START_DATE
-        else:
-            raise ValueError
+        self.start = self.Streamer.get_start(dst_dir=dst_dir)
 
     def process_point(self) -> BitMexProcessPoints:
         return BitMexProcessPoints(self.start, self.end)
@@ -158,6 +123,6 @@ class BitMexDownloader(DataDownloader):
     def download_one_point(self, point: DatePoint) -> None:
         logger.info(_('Downloading {} data on {}').format(self.kind, point.value.isoformat()))
         qstream = self.Streamer(date=point.value, url=self.link.format(point.value.strftime("%Y%m%d")),
-                                dst_dir=self.dst_dir)
+                                dst_dir=self.dst_dir, point=point)
         qstream.process()
         logger.info(_('Finished downloading {} data on {}').format(self.kind, point.value.isoformat()))

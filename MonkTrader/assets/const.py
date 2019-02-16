@@ -47,4 +47,3 @@ class ORDER_STATUS(Enum):
     NOT_TRADED = 1
     FULL_TRADED = 2
     PARTLY_TRADED = 3
-

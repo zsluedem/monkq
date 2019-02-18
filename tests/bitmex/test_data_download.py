@@ -36,13 +36,18 @@ from dateutil.relativedelta import relativedelta
 from MonkTrader.assets.const import SIDE
 from MonkTrader.const import TICK_DIRECTION
 from MonkTrader.exception import DataDownloadError
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
+from MonkTrader.exchange.bitmex.const import (
+    INSTRUMENT_FILENAME, QUOTE_FILE_NAME, START_DATE, TRADE_FILE_NAME,
+)
 from MonkTrader.exchange.bitmex.data import (
     BitMexDownloader, BitMexProcessPoints, DatePoint,
 )
 from MonkTrader.exchange.bitmex.data.download import (
-    START_DATE, HDFQuoteStream, HDFTradeStream, QuoteZipFileStream,
-    SymbolsStreamRequest, TarStreamRequest, TradeZipFileStream,
+    HDFQuoteStream, HDFTradeStream, QuoteZipFileStream, SymbolsStreamRequest,
+    TarStreamRequest, TradeZipFileStream,
+)
+from tests.bitmex.conftest import (
+    random_quote_frame, random_quote_hdf, random_trade_frame, random_trade_hdf,
 )
 
 stream_b = b"""c1,c2,c3,c4
@@ -100,7 +105,7 @@ def test_datepoint():
 
 
 def test_bitmex_process_points():
-    p = BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 5))
+    p = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 5)))
     assert next(p).value == datetime.datetime(2018, 1, 1)
     assert next(p).value == datetime.datetime(2018, 1, 2)
     assert next(p).value == datetime.datetime(2018, 1, 3)
@@ -110,18 +115,22 @@ def test_bitmex_process_points():
     with pytest.raises(StopIteration):
         next(p)
 
-    p_list = list(p)
+    p2 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 5)))
+    p_list = list(iter(p2))
     assert p_list[0] == DatePoint(datetime.datetime(2018, 1, 1))
     assert p_list[1] == DatePoint(datetime.datetime(2018, 1, 2))
     assert p_list[2] == DatePoint(datetime.datetime(2018, 1, 3))
     assert p_list[3] == DatePoint(datetime.datetime(2018, 1, 4))
     assert p_list[4] == DatePoint(datetime.datetime(2018, 1, 5))
 
-    p2 = BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1))
-    assert next(p2).value == datetime.datetime(2018, 1, 1)
+    p3 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1)))
+    assert next(p3).value == datetime.datetime(2018, 1, 1)
     with pytest.raises(StopIteration):
-        next(p2)
-    p2_list = list(p2)
+        next(p3)
+
+    p4 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1)))
+
+    p2_list = list(p4)
     assert p2_list[0] == DatePoint(datetime.datetime(2018, 1, 1))
     with pytest.raises(IndexError):
         p2_list[1]
@@ -130,52 +139,6 @@ def test_bitmex_process_points():
 def mkfile(filename):
     with open(filename, 'w') as f:
         f.write('1')
-
-
-def random_quote_frame(length, timestamp=pandas.Timestamp(2018, 1, 3)):
-    r = lambda: random.randint(1, 1000)  # noqa: E731
-
-    df = pandas.DataFrame(
-        [(timestamp, r(), r(), r(), r()) for i in range(length)],
-        columns=['timestamp', "bidSize", "bidPrice", "askPrice", "askSize"])
-    df.set_index('timestamp', inplace=True)
-    return df
-
-
-def random_trade_frame(length, timestamp=pandas.Timestamp(2018, 1, 3)):
-    r = lambda: random.randint(1, 1000)  # noqa: E731
-
-    columns = ["timestamp", "side", "size", "price", "tickDirection",
-               "grossValue", "homeNotional", "foreignNotional"]
-    df = pandas.DataFrame(
-        [(timestamp, r(), r(), r(), r(), r(), r(), r()) for i in range(length)],
-        columns=columns)
-    df.set_index('timestamp', inplace=True)
-    return df
-
-
-def random_quote_hdf(path, length=3):
-    tmp_df = random_quote_frame(length=length)
-    tmp_df2 = random_quote_frame(length=length)
-
-    tmp_df.to_hdf(path, '/XBTUSD',
-                  data_columns=True, index=False, complib='blosc:blosclz',
-                  complevel=9, append=True, format='table')
-    tmp_df2.to_hdf(path, '/ETHUSD',
-                   data_columns=True, index=False, complib='blosc:blosclz',
-                   complevel=9, append=True, format='table')
-
-
-def random_trade_hdf(path, length=3):
-    tmp_df = random_trade_frame(length=length)
-    tmp_df2 = random_trade_frame(length=length)
-
-    tmp_df.to_hdf(path, '/XBTUSD',
-                  data_columns=True, index=False, complib='blosc:blosclz',
-                  complevel=9, append=True, format='table')
-    tmp_df2.to_hdf(path, '/ETHUSD',
-                   data_columns=True, index=False, complib='blosc:blosclz',
-                   complevel=9, append=True, format='table')
 
 
 def test_bitmex_downloader() -> None:
@@ -239,13 +202,13 @@ def test_bitmex_downloader() -> None:
         assert b.start == START_DATE
 
     with tempfile.TemporaryDirectory() as tmp:
-        random_quote_hdf(os.path.join(tmp, 'quote.hdf'))
+        random_quote_hdf(os.path.join(tmp, QUOTE_FILE_NAME))
         b = BitMexDownloader(kind='quote', mode='hdf', dst_dir=tmp)
         assert b.Streamer == HDFQuoteStream
         assert b.start == datetime.datetime(2018, 1, 4)
 
     with tempfile.TemporaryDirectory() as tmp:
-        random_trade_hdf(os.path.join(tmp, 'trade.hdf'))
+        random_trade_hdf(os.path.join(tmp, TRADE_FILE_NAME))
         b = BitMexDownloader(kind='trade', mode='hdf', dst_dir=tmp)
         assert b.Streamer == HDFTradeStream
         assert b.start == datetime.datetime(2018, 1, 4)
@@ -438,7 +401,7 @@ def test_quote_hdf_stream():
             stream = HDFQuoteStream('test_url', tmp, point=point)
             stream.process()
 
-            with pandas.HDFStore(os.path.join(tmp, 'quote.hdf'), 'r') as store:
+            with pandas.HDFStore(os.path.join(tmp, QUOTE_FILE_NAME), 'r') as store:
                 XBTz18 = store['XBTZ18']
 
                 assert XBTz18['bidSize'][0] == 256083
@@ -466,7 +429,7 @@ def test_quote_hdf_stream_exception():
     point = DatePoint(d)
 
     with tempfile.TemporaryDirectory() as tmp:
-        random_quote_hdf(os.path.join(tmp, 'quote.hdf'), 4)
+        random_quote_hdf(os.path.join(tmp, QUOTE_FILE_NAME), 4)
         stream = HDFTradeStream('test_url', tmp, point=point)
         append = random_quote_frame(3, d)
         with pytest.raises(DataDownloadError):
@@ -478,7 +441,7 @@ def test_quote_hdf_stream_exception():
                             ("ETHUSD", 's')]
                     stream.process()
 
-        with pandas.HDFStore(os.path.join(tmp, 'quote.hdf'), 'r') as store:
+        with pandas.HDFStore(os.path.join(tmp, QUOTE_FILE_NAME), 'r') as store:
             XBT = store['XBTUSD']
             assert len(XBT) == 4
 
@@ -487,7 +450,7 @@ def test_trade_hdf_stream_exception():
     d = datetime.datetime(2018, 1, 5)
     point = DatePoint(d)
     with tempfile.TemporaryDirectory() as tmp:
-        random_trade_hdf(os.path.join(tmp, 'trade.hdf'), 4)
+        random_trade_hdf(os.path.join(tmp, TRADE_FILE_NAME), 4)
 
         stream = HDFTradeStream('test_url', tmp, point=point)
         append = random_trade_frame(3, d)
@@ -500,7 +463,7 @@ def test_trade_hdf_stream_exception():
                             ("ETHUSD", 's')]
                         stream.process()
 
-        with pandas.HDFStore(os.path.join(tmp, 'trade.hdf'), 'r') as store:
+        with pandas.HDFStore(os.path.join(tmp, TRADE_FILE_NAME), 'r') as store:
             XBT = store['XBTUSD']
             assert len(XBT) == 4
 
@@ -515,7 +478,7 @@ def test_trade_hdf_stream():
             stream = HDFTradeStream('test_url', tmp, point=point)
             stream.process()
 
-            with pandas.HDFStore(os.path.join(tmp, 'trade.hdf'), 'r') as store:
+            with pandas.HDFStore(os.path.join(tmp, TRADE_FILE_NAME), 'r') as store:
                 XBTz18 = store['XBTZ18']
 
                 assert XBTz18['side'][0] == SIDE.SELL.value

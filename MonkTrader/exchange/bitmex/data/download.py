@@ -33,8 +33,14 @@ import pandas
 import requests
 from dateutil.relativedelta import relativedelta
 from logbook import Logger
+from MonkTrader.config.global_settings import (
+    HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
+)
 from MonkTrader.exception import DataDownloadError
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME, TARFILETYPE
+from MonkTrader.exchange.bitmex.const import (
+    INSTRUMENT_FILENAME, QUOTE_FILE_NAME, START_DATE, TARFILETYPE,
+    TRADE_FILE_NAME,
+)
 from MonkTrader.utils import CsvFileDefaultDict, CsvZipDefaultDict, assure_dir
 from MonkTrader.utils.i18n import _
 
@@ -43,12 +49,6 @@ from .utils import classify_df, read_quote_tar, read_trade_tar
 
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
-
-START_DATE = datetime.datetime(2014, 11, 22)  # bitmex open date
-
-
-def _hdf_file(name: str):
-    return "{}.hdf".format(name)
 
 
 class StreamRequest():
@@ -102,7 +102,10 @@ class _HDFStream(FileObjRequest, _DownloadProcess):
         assure_dir(dst_dir)
         self.dst_dir = dst_dir
 
-        self.dst_file = os.path.join(self.dst_dir, _hdf_file(self.kind))
+        if self.kind == 'trade':
+            self.dst_file = os.path.join(self.dst_dir, TRADE_FILE_NAME)
+        elif self.kind == 'quote':
+            self.dst_file = os.path.join(self.dst_dir, QUOTE_FILE_NAME)
         self.process_point = kwargs.get("point")
 
         self.processed_key = set()
@@ -118,7 +121,7 @@ class _HDFStream(FileObjRequest, _DownloadProcess):
                 self.processed_key.add(key)
                 df.to_hdf(self.dst_file, key, mode='a',
                           format='table', data_columns=True, index=False,
-                          complib='blosc:blosclz', complevel=9, append=True)
+                          complib=HDF_FILE_COMPRESS_LIB, complevel=HDF_FILE_COMPRESS_LEVEL, append=True)
         except Exception as e:
             self.rollback()
             logger.exception(_("Exception #{}# happened when process {} {}").format(e, self.url, self.dst_file))
@@ -132,8 +135,14 @@ class _HDFStream(FileObjRequest, _DownloadProcess):
 
     @classmethod
     def get_start(cls, dst_dir: str):
+        if cls.kind == 'quote':
+            filename = QUOTE_FILE_NAME
+        elif cls.kind == 'trade':
+            filename = TRADE_FILE_NAME
+        else:
+            raise Exception("kind should be quote or trade")
         try:
-            with pandas.HDFStore(os.path.join(dst_dir, _hdf_file(cls.kind)), 'r') as store:
+            with pandas.HDFStore(os.path.join(dst_dir, filename), 'r') as store:
                 keys = store.keys()
                 max_date = None
                 for key in keys:

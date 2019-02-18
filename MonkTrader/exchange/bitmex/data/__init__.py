@@ -67,14 +67,6 @@ class BitMexProcessPoints(ProcessPoints):
         for date in rrule(freq=DAILY, dtstart=self.start, until=self.end):
             yield DatePoint(date)
 
-    def __next__(self):
-        if self.current <= self.end:
-            date = self.current
-            self.current += relativedelta(days=1)
-            return DatePoint(date)
-        else:
-            raise StopIteration()
-
 
 class BitMexDownloader(DataDownloader):
     def __init__(self, kind: str, mode: str, dst_dir: str):

@@ -23,13 +23,12 @@
 #
 
 import os
-from typing import Dict, Optional
+from typing import Optional
 
 import numpy as np
 import pandas
 from MonkTrader.assets.const import SIDE
 from MonkTrader.const import TICK_DIRECTION
-from MonkTrader.exchange.bitmex.const import HDF_FILE_NAME, TRADES_DATA_F
 
 dtypes_trades = {
     "timestamp": np.object,
@@ -134,6 +133,14 @@ def _trade_to_kline(frame: pandas.DataFrame, frequency: str) -> pandas.DataFrame
     return kline
 
 
+def trades_to_1m_kline(frame: pandas.DataFrame) -> pandas.DataFrame:
+    kline = frame['price'].resample('1Min', label='right', closed='right').ohlc()
+    kline['volume'] = frame['homeNotional'].resample('1Min', label='right', closed='right').sum()
+    kline['turnover'] = frame['foreignNotional'].resample('1Min', label='right', closed='right').sum()
+    kline.fillna(method='ffill', inplace=True)
+    return kline
+
+
 def classify_df(df: pandas.DataFrame, column: str, delete_column: bool = True) -> pandas.DataFrame:
     out = {}
     uniques = df[column].unique()
@@ -145,26 +152,15 @@ def classify_df(df: pandas.DataFrame, column: str, delete_column: bool = True) -
     return out
 
 
-def tar_to_kline(path: str, frequency: str) -> Dict[str, pandas.DataFrame]:
-    t_frame = read_trade_tar(path)
-    symbols = t_frame['symbol'].unique()
-    klines = {}
-    for symbol in symbols:
-        obj = t_frame.loc[t_frame['symbol'] == symbol]
-        klines[symbol] = _trade_to_kline(obj, frequency)
-
-    return klines
-
-
 def tarcsv2hdf(csv_file: str, key: str, output: str = '') -> None:
     frame = read_trade_tar(csv_file, False, False, 'timestamp')
-    frame.to_hdf(os.path.join(output, HDF_FILE_NAME), key, mode='a',
+    frame.to_hdf(os.path.join(output, 'trade.hdf'), key, mode='a',
                  format='table', data_columns=True, index=False,
                  complib='blosc:blosclz', complevel=9, append=True)
 
 
 def convert_all_trade_data2hdf(data_dir: str, output: str = '') -> None:
-    base = os.path.join(data_dir, TRADES_DATA_F)
+    base = os.path.join(data_dir, '')
     directories = os.listdir(base)
     directories.sort()
     for directory in directories:

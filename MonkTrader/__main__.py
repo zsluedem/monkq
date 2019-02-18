@@ -24,11 +24,14 @@
 
 import os
 import shutil
+import sys
 
 import click
 import MonkTrader
+from logbook import StreamHandler
 from MonkTrader.exception import CommandError
 from MonkTrader.exchange.bitmex.data import BitMexDownloader
+from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform
 from MonkTrader.utils import assure_dir, make_writable
 from MonkTrader.utils.i18n import _
 
@@ -39,18 +42,21 @@ USERHOME = os.path.join(os.path.expanduser('~'), '.monk')
 @click.option('-c', '--config', type=str)
 @click.pass_context
 def cmd_main(ctx: click.Context, config):
-    pass
+    StreamHandler(sys.stdout).push_application()
 
 
 @cmd_main.command()
 @click.help_option()
-@click.option('--kind', default='trade', type=click.Choice(['quote', 'trade', 'instruments']))
+@click.option('--kind', default='trade', type=click.Choice(['quote', 'trade', 'instruments', 'kline']))
 @click.option('--mode', default='hdf', type=click.Choice(['csv', 'tar', 'hdf']), help='Define the download mode')
 @click.option('--dst_dir', default=os.path.expanduser('~/.monk/data'), type=str)
 @click.pass_context
 def download(ctx: click.Context, kind: str, mode: str, dst_dir: str):
-    assure_dir(dst_dir)
-    b = BitMexDownloader(kind, mode, dst_dir)
+    if kind == 'kline':
+        b = BitMexKlineTransform(dst_dir, dst_dir)
+    else:
+        assure_dir(dst_dir)
+        b = BitMexDownloader(kind, mode, dst_dir)
     b.do_all()
 
 

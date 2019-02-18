@@ -32,7 +32,9 @@ from MonkTrader.assets.instrument import (
 )
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataError
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME, TRADES_DATA_F
+from MonkTrader.exchange.bitmex.const import (
+    INSTRUMENT_FILENAME, TRADE_FILE_NAME,
+)
 
 from .utils import read_trade_tar
 
@@ -90,7 +92,7 @@ class BitmexDataloader(DataLoader):
             self.instruments[instrument.symbol] = instrument
 
     def load_trades(self) -> None:
-        base = os.path.join(self.data_dir, TRADES_DATA_F)
+        base = os.path.join(self.data_dir, TRADE_FILE_NAME)
         directories = os.listdir(base)
         directories.sort()
         for directory in directories:

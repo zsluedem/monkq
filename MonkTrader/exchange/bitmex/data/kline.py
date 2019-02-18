@@ -23,6 +23,8 @@
 #
 import os
 from typing import Iterator, Optional
+from logbook import Logger
+from ..log import logger_group
 
 import pandas
 from dateutil.relativedelta import relativedelta
@@ -35,8 +37,13 @@ from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
     KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME,
 )
+from MonkTrader.utils.i18n import _
 
 from .utils import trades_to_1m_kline
+
+
+logger = Logger('exchange.bitmex.data')
+logger_group.add_logger(logger)
 
 
 class KlinePoint(Point):
@@ -60,12 +67,13 @@ class BitMexKlineProcessPoints(ProcessPoints):
         try:
             trade_hdf = pandas.HDFStore(self.input_file, 'r')
         except OSError:  # not exist
-            raise DataDownloadError("The required trade.hdf doesn't exist. Download the kline data of Bitmex need "
+            raise DataDownloadError(_("The required trade.hdf doesn't exist. Download the kline data of Bitmex need "
                                     "the Bitmex trade data.You have to download the trade data first."
-                                    "Run '{} download --kind trade'".format(COMMAND))
+                                    "Run '{} download --kind trade'").format(COMMAND))
         keys = trade_hdf.keys()
         try:
             kline_hdf = pandas.HDFStore(self.output_file, 'a')
+            logger.info(_("Updating new kline data from new trade data."))
             for key in keys:
                 try:
                     last = kline_hdf.select_column(key, 'index', start=-1)
@@ -74,6 +82,8 @@ class BitMexKlineProcessPoints(ProcessPoints):
                 except KeyError:  # not exist
                     start_time = START_DATE
 
+                logger.info(_("Generating kline data {} now from date {}.")
+                            .format(key, start_time))
                 found = False
                 for df in trade_hdf.select(
                         key,
@@ -85,12 +95,16 @@ class BitMexKlineProcessPoints(ProcessPoints):
                     if found:
                         # finally yield an end point to process the cache last date
                         yield KlinePoint(None, key)
-
+                        logger.info(_("Successfully generate kline data "
+                                      "{}").format(key))
             kline_hdf.close()
         except OSError:  # file not exist
+            logger.info(_("You don't have any kline data. We are going to "
+                          "generate the kline data from scratch"))
             for key in keys:
                 found = False
 
+                logger.info(_("Generating kline data {} now.").format(key))
                 for df in trade_hdf.select(key, chunksize=HDF_TRADE_TO_KLINE_CHUNK_SIZE):
                     yield KlinePoint(df, key)
                     found = True
@@ -98,7 +112,8 @@ class BitMexKlineProcessPoints(ProcessPoints):
                     if found:
                         # finally yield an end point to process the cache last date
                         yield KlinePoint(None, key)
-
+                        logger.info(_("Successfully generate kline data "
+                                      "{}").format(key))
         finally:
             trade_hdf.close()
 

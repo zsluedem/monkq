@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MonkTrader VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-02-04 12:18+0800\n"
+"POT-Creation-Date: 2019-02-18 16:44+0800\n"
 "PO-Revision-Date: 2019-02-04 11:08+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh\n"
@@ -18,15 +18,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: MonkTrader/__main__.py:68
+#: MonkTrader/__main__.py:70
 msgid "You have to provide an exist directory"
 msgstr "你必须提供一个已经存在的文件夹"
 
-#: MonkTrader/__main__.py:72
+#: MonkTrader/__main__.py:74
 msgid "The project name has already been used"
 msgstr "这个项目名字已经被使用了"
 
-#: MonkTrader/assets/order.py:56
+#: MonkTrader/assets/order.py:55
 msgid "order quantity: {}, traded quantity: {}"
 msgstr "订单数量: {}, 已经成交数量: {}"
 
@@ -48,51 +48,76 @@ msgstr "因为在当前的路径下找不到settings.py,所以我们将会使用
 msgid "some exception occured when you download data at point {}. Check!!"
 msgstr "在你下载 {} 的数据的时候，有异常发生了。请检查!!"
 
-#: MonkTrader/exchange/bitmex/data/__init__.py:84
+#: MonkTrader/exchange/bitmex/data/__init__.py:73
 msgid "Start downloading the data"
 msgstr "开始下载数据"
 
-#: MonkTrader/exchange/bitmex/data/__init__.py:133
-msgid "There is no data in the database. We are going to download data from scratch"
-msgstr "在数据库中没有数据。我们将会从头下载数据"
-
-#: MonkTrader/exchange/bitmex/data/__init__.py:156
+#: MonkTrader/exchange/bitmex/data/__init__.py:116
 msgid "Downloading {} data on {}"
 msgstr "下载在数据 {} 在 {} "
 
-#: MonkTrader/exchange/bitmex/data/__init__.py:160
+#: MonkTrader/exchange/bitmex/data/__init__.py:120
 msgid "Finished downloading {} data on {}"
 msgstr "完成下载 {} 数据在 {}"
 
-#: MonkTrader/exchange/bitmex/data/download.py:100
+#: MonkTrader/exchange/bitmex/data/download.py:127
+#: MonkTrader/exchange/bitmex/data/download.py:199
 msgid "Exception #{}# happened when process {} {}"
 msgstr "异常 #{} 在处理{} {}的时候发生了"
 
-#: MonkTrader/exchange/bitmex/data/download.py:104
+#: MonkTrader/exchange/bitmex/data/download.py:203
 msgid "Rollback!Remove the not complete file {}"
 msgstr "回滚！删除不完整的文件 {}"
 
-#: MonkTrader/exchange/bitmex/data/download.py:181
+#: MonkTrader/exchange/bitmex/data/download.py:293
 msgid "Exception {} happened when process {} data"
 msgstr "异常 {} 在处理{}日期的时候发生了"
 
-#: MonkTrader/exchange/bitmex/data/download.py:226
-msgid "Rollback MongoDb ,return result: {}"
-msgstr "回滚MongoDb,返回结果: {}"
-
-#: MonkTrader/exchange/bitmex/data/download.py:301
+#: MonkTrader/exchange/bitmex/data/download.py:355
 msgid "Rollback : Remove the not complete dir {}"
 msgstr "回滚：删除不完整的文件夹 {}"
+
+#: MonkTrader/exchange/bitmex/data/kline.py:70
+msgid ""
+"The required trade.hdf doesn't exist. Download the kline data of Bitmex need"
+" the Bitmex trade data.You have to download the trade data first.Run '{} "
+"download --kind trade'"
+msgstr ""
+"需要的文件trade.hdf不存在，下载Bitmex k线数据需要Bitmex的trade数据。你必须先下载trade数据。运行'{} download"
+" --kind trade'下载数据"
+
+#: MonkTrader/exchange/bitmex/data/kline.py:76
+msgid "Updating new kline data from new trade data."
+msgstr "从最新的交易数据更新最新的k线数据。"
+
+#: MonkTrader/exchange/bitmex/data/kline.py:85
+msgid "Generating kline data {} now from date {}."
+msgstr "正在生成k线数据{} 从日期{}开始。"
+
+#: MonkTrader/exchange/bitmex/data/kline.py:98
+#: MonkTrader/exchange/bitmex/data/kline.py:115
+msgid "Successfully generate kline data {}"
+msgstr "成功生成 {} k线数据"
+
+#: MonkTrader/exchange/bitmex/data/kline.py:102
+msgid ""
+"You don't have any kline data. We are going to generate the kline data from "
+"scratch"
+msgstr "你没有任何k线数据。我们会从头开始生成k线数据。"
+
+#: MonkTrader/exchange/bitmex/data/kline.py:107
+msgid "Generating kline data {} now."
+msgstr "正在生成 {} k线数据。"
 
 #: MonkTrader/exchange/bitmex/exchange.py:65
 msgid "You must be authenticated to use this method"
 msgstr "使用这个方法你必须先认证"
 
-#: MonkTrader/exchange/bitmex/exchange.py:512
+#: MonkTrader/exchange/bitmex/exchange.py:510
 msgid "Request with args {}, {}, {}, {}, {}, {} failed with retries"
 msgstr "请求 {}, {}, {}, {}, {}, {}，失败，重试"
 
-#: MonkTrader/exchange/bitmex/exchange.py:533
+#: MonkTrader/exchange/bitmex/exchange.py:530
 msgid ""
 "Bitmex request url:{}, method:{}, postdict:{}, headers:{} error .Return with"
 " status code:{}, error {} ,message: {}"
@@ -106,7 +131,7 @@ msgstr "账户资金不足。具体信息：{}"
 msgid "Order not found: {}"
 msgstr "无法找到订单: {}"
 
-#: MonkTrader/exchange/bitmex/exchange.py:561
+#: MonkTrader/exchange/bitmex/exchange.py:558
 msgid ""
 "Ratelimited on current request. Sleeping, then trying again. Try fewer order"
 " pairs or contact support@bitmex.com to raise your limits. Request: {}  "
@@ -115,17 +140,17 @@ msgstr ""
 "当前请求频率过于频繁。睡眠，然后再尝试。如果你想要提高你的请求速率。可以联系support@bitmex.com。原请求: {}, postdict: "
 "{}"
 
-#: MonkTrader/exchange/bitmex/exchange.py:569
+#: MonkTrader/exchange/bitmex/exchange.py:568
 msgid "Your ratelimit will reset at {}. Sleeping for {} seconds."
 msgstr "你的频率限制将在 {} 重置。睡眠 {} 秒"
 
-#: MonkTrader/exchange/bitmex/exchange.py:580
+#: MonkTrader/exchange/bitmex/exchange.py:577
 msgid ""
 "Unable to contact the BitMEX API (503), retrying. Bitmex is mostly "
 "overloaded now,Request: {} {} Response header :{}"
 msgstr "无法连接到BitMex API(503)，重试中.Bitmex很可能现在已经过载了,现在请求是: {} {}返回header: {}"
 
-#: MonkTrader/exchange/bitmex/exchange.py:592
+#: MonkTrader/exchange/bitmex/exchange.py:590
 msgid ""
 "Timed out on request: path:{}, query:{}, postdict:{}, verb:{}, timeout:{}, "
 "retry:{}, retrying..."
@@ -195,4 +220,19 @@ msgstr "Tick数据处理时间: {}"
 #: MonkTrader/ticker.py:40
 msgid "START TIME can not bigger than END TIME"
 msgstr "START TIME不能比END TIME大"
+
+#~ msgid ""
+#~ "There is no data in the database. "
+#~ "We are going to download data from"
+#~ " scratch"
+#~ msgstr "在数据库中没有数据。我们将会从头下载数据"
+
+#~ msgid "Rollback MongoDb ,return result: {}"
+#~ msgstr "回滚MongoDb,返回结果: {}"
+
+#~ msgid "Generate new kline data from new trade data."
+#~ msgstr ""
+
+#~ msgid "Successfully generate kline data{}"
+#~ msgstr ""
 

@@ -41,7 +41,6 @@ from MonkTrader.utils.i18n import _
 
 from .utils import trades_to_1m_kline
 
-
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
 
@@ -68,27 +67,32 @@ class BitMexKlineProcessPoints(ProcessPoints):
             trade_hdf = pandas.HDFStore(self.input_file, 'r')
         except OSError:  # not exist
             raise DataDownloadError(_("The required trade.hdf doesn't exist. Download the kline data of Bitmex need "
-                                    "the Bitmex trade data.You have to download the trade data first."
-                                    "Run '{} download --kind trade'").format(COMMAND))
+                                      "the Bitmex trade data.You have to download the trade data first."
+                                      "Run '{} download --kind trade'").format(COMMAND))
         keys = trade_hdf.keys()
-        try:
-            kline_hdf = pandas.HDFStore(self.output_file, 'a')
+        trade_hdf.close()
+
+        if os.path.exists(self.output_file):
             logger.info(_("Updating new kline data from new trade data."))
             for key in keys:
                 try:
+                    kline_hdf = pandas.HDFStore(self.output_file, 'r')
                     last = kline_hdf.select_column(key, 'index', start=-1)
                     last_time = last[0]
                     start_time = last_time + relativedelta(days=1)
+                    kline_hdf.close()
                 except KeyError:  # not exist
                     start_time = START_DATE
 
-                logger.info(_("Generating kline data {} now from date {}.")
-                            .format(key, start_time))
+                logger.info(_("Generating kline data {} now from date {}.").format(key, start_time))
                 found = False
-                for df in trade_hdf.select(
-                        key,
-                        "index>=datetime.datetime({},{},{})".format(start_time.year, start_time.month, start_time.day),
-                        chunksize=HDF_TRADE_TO_KLINE_CHUNK_SIZE):
+                iter_df = pandas.read_hdf(self.input_file, key,
+                                          where="index>=datetime.datetime({},{},{})".format(start_time.year,
+                                                                                            start_time.month,
+                                                                                            start_time.day),
+                                          columns=['price', 'homeNotional', 'foreignNotional'],
+                                          chunksize=HDF_TRADE_TO_KLINE_CHUNK_SIZE, iterator=True)
+                for df in iter_df:
                     yield KlinePoint(df, key)
                     found = True
                 else:
@@ -97,15 +101,17 @@ class BitMexKlineProcessPoints(ProcessPoints):
                         yield KlinePoint(None, key)
                         logger.info(_("Successfully generate kline data "
                                       "{}").format(key))
-            kline_hdf.close()
-        except OSError:  # file not exist
+        else:
             logger.info(_("You don't have any kline data. We are going to "
                           "generate the kline data from scratch"))
             for key in keys:
                 found = False
 
                 logger.info(_("Generating kline data {} now.").format(key))
-                for df in trade_hdf.select(key, chunksize=HDF_TRADE_TO_KLINE_CHUNK_SIZE):
+                iter_df = pandas.read_hdf(self.input_file, key,
+                                          columns=['price', 'homeNotional', 'foreignNotional'],
+                                          chunksize=HDF_TRADE_TO_KLINE_CHUNK_SIZE, iterator=True)
+                for df in iter_df:
                     yield KlinePoint(df, key)
                     found = True
                 else:
@@ -114,8 +120,6 @@ class BitMexKlineProcessPoints(ProcessPoints):
                         yield KlinePoint(None, key)
                         logger.info(_("Successfully generate kline data "
                                       "{}").format(key))
-        finally:
-            trade_hdf.close()
 
 
 class BitMexKlineTransform(DataDownloader):

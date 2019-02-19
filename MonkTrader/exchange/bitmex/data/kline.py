@@ -72,9 +72,9 @@ class BitMexKlineProcessPoints(ProcessPoints):
         keys = trade_hdf.keys()
         trade_hdf.close()
 
-        if os.path.exists(self.output_file):
-            logger.info(_("Updating new kline data from new trade data."))
-            for key in keys:
+        for key in keys:
+            if os.path.exists(self.output_file):
+                logger.info(_("Updating new kline data from new trade data."))
                 try:
                     kline_hdf = pandas.HDFStore(self.output_file, 'r')
                     last = kline_hdf.select_column(key, 'index', start=-1)
@@ -84,44 +84,29 @@ class BitMexKlineProcessPoints(ProcessPoints):
                     start_time = START_DATE
                 finally:
                     kline_hdf.close()
+            else:
+                logger.info(_("You don't have any kline data. We are going to "
+                              "generate the kline data from scratch"))
+                start_time = START_DATE
 
 
-                logger.info(_("Generating kline data {} now from date {}.").format(key, start_time))
-                found = False
-                iter_df = pandas.read_hdf(self.input_file, key,
-                                          where="index>=datetime.datetime({},{},{})".format(start_time.year,
-                                                                                            start_time.month,
-                                                                                            start_time.day),
-                                          columns=['price', 'homeNotional', 'foreignNotional'],
-                                          chunksize=HDF_TRADE_TO_KLINE_CHUNK_SIZE, iterator=True)
-                for df in iter_df:
-                    yield KlinePoint(df, key)
-                    found = True
-                else:
-                    if found:
-                        # finally yield an end point to process the cache last date
-                        yield KlinePoint(None, key)
-                        logger.info(_("Successfully generate kline data "
-                                      "{}").format(key))
-        else:
-            logger.info(_("You don't have any kline data. We are going to "
-                          "generate the kline data from scratch"))
-            for key in keys:
-                found = False
-
-                logger.info(_("Generating kline data {} now.").format(key))
-                iter_df = pandas.read_hdf(self.input_file, key,
-                                          columns=['price', 'homeNotional', 'foreignNotional'],
-                                          chunksize=HDF_TRADE_TO_KLINE_CHUNK_SIZE, iterator=True)
-                for df in iter_df:
-                    yield KlinePoint(df, key)
-                    found = True
-                else:
-                    if found:
-                        # finally yield an end point to process the cache last date
-                        yield KlinePoint(None, key)
-                        logger.info(_("Successfully generate kline data "
-                                      "{}").format(key))
+            logger.info(_("Generating kline data {} now from date {}.").format(key, start_time))
+            found = False
+            iter_df = pandas.read_hdf(self.input_file, key,
+                                      where="index>=datetime.datetime({},{},{})".format(start_time.year,
+                                                                                        start_time.month,
+                                                                                        start_time.day),
+                                      columns=['price', 'homeNotional', 'foreignNotional'],
+                                      chunksize=HDF_TRADE_TO_KLINE_CHUNK_SIZE, iterator=True)
+            for df in iter_df:
+                yield KlinePoint(df, key)
+                found = True
+            else:
+                if found:
+                    # finally yield an end point to process the cache last date
+                    yield KlinePoint(None, key)
+                    logger.info(_("Successfully generate kline data "
+                                  "{}").format(key))
 
 
 class BitMexKlineTransform(DataDownloader):
@@ -143,7 +128,7 @@ class BitMexKlineTransform(DataDownloader):
                 kline.to_hdf(self.output_file, point.key, mode='a',
                              format='table', data_columns=True, index=False,
                              complib=HDF_FILE_COMPRESS_LIB, complevel=HDF_FILE_COMPRESS_LEVEL, append=True)
-
+                logger.debug("Finished data {}".format(point.key))
                 # reset everything for another key
                 self.cache = None
                 self.mark_point = START_DATE
@@ -151,7 +136,7 @@ class BitMexKlineTransform(DataDownloader):
 
         end_time = point.df.index[-1]
         last_date = end_time + relativedelta(hour=0, minute=0, second=0, microsecond=0)
-
+        logger.debug("Process {} data from {} to {}".format(point.key, self.mark_point, last_date))
         if last_date > self.mark_point:
             process_df = point.df.loc[point.df.index < pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
             cache_df = point.df.loc[point.df.index >= pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
@@ -161,6 +146,7 @@ class BitMexKlineTransform(DataDownloader):
 
             if len(process_df) != 0:
                 kline = trades_to_1m_kline(process_df)
+                logger.debug("Write {} data from {} to {} into hdf file".format(point.key, self.mark_point, last_date))
                 kline.to_hdf(self.output_file, point.key, mode='a',
                              format='table', data_columns=True, index=False,
                              complib=HDF_FILE_COMPRESS_LIB, complevel=HDF_FILE_COMPRESS_LEVEL, append=True)

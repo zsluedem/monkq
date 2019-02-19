@@ -80,9 +80,11 @@ class BitMexKlineProcessPoints(ProcessPoints):
                     last = kline_hdf.select_column(key, 'index', start=-1)
                     last_time = last[0]
                     start_time = last_time + relativedelta(days=1)
-                    kline_hdf.close()
                 except KeyError:  # not exist
                     start_time = START_DATE
+                finally:
+                    kline_hdf.close()
+
 
                 logger.info(_("Generating kline data {} now from date {}.").format(key, start_time))
                 found = False
@@ -141,7 +143,10 @@ class BitMexKlineTransform(DataDownloader):
                 kline.to_hdf(self.output_file, point.key, mode='a',
                              format='table', data_columns=True, index=False,
                              complib=HDF_FILE_COMPRESS_LIB, complevel=HDF_FILE_COMPRESS_LEVEL, append=True)
+
+                # reset everything for another key
                 self.cache = None
+                self.mark_point = START_DATE
                 return
 
         end_time = point.df.index[-1]

@@ -24,32 +24,36 @@
 import random
 
 import pandas
+import numpy
 from dateutil.relativedelta import relativedelta
 
 
 def random_quote_frame(length: int, timestamp: pandas.Timestamp = pandas.Timestamp(2018, 1, 3)) -> pandas.DataFrame:
-    r = lambda: random.randint(1, 1000)  # noqa: E731
-
-    df = pandas.DataFrame(
-        [(timestamp, r(), r(), r(), r()) for i in range(length)],
-        columns=['timestamp', "bidSize", "bidPrice", "askPrice", "askSize"])
-    df.set_index('timestamp', inplace=True)
+    df = pandas.DataFrame(numpy.random.uniform(1, 1000, size=(length, 4)),
+                          columns=["bidSize", "bidPrice", "askPrice", "askSize"],
+                          index=pandas.date_range(start=timestamp, periods=length, freq='S'))
     return df
 
 
 def random_trade_frame(length: int, timestamp: pandas.Timestamp = pandas.Timestamp(2018, 1, 3)) -> pandas.DataFrame:
-    r = lambda: random.randint(1, 1000)  # noqa: E731
-    # random side
-    r_s = lambda: random.randint(1, 3)  # noqa: E731
-    # random tick direction
-    r_t = lambda: random.randint(1, 5)  # noqa: E731
+    df = pandas.DataFrame(numpy.random.uniform(1, 1000, size=(length, 5)),
+                          columns=["size", "price", "grossValue", "homeNotional", "foreignNotional"],
+                          index=pandas.date_range(start=timestamp, periods=length, freq='S'))
+    df['side'] = pandas.Series(numpy.random.randint(1, 2),
+                               index=pandas.date_range(start=timestamp, periods=length, freq='S'))
+    df['side'] = df['side'].astype(numpy.float64)
+    df['tickDirection'] = pandas.Series(numpy.random.randint(1, 4),
+                               index=pandas.date_range(start=timestamp, periods=length, freq='S'))
+    df['tickDirection'] = df['tickDirection'].astype(numpy.float64)
 
-    columns = ["timestamp", "side", "size", "price", "tickDirection",
-               "grossValue", "homeNotional", "foreignNotional"]
-    df = pandas.DataFrame(
-        [(timestamp + relativedelta(seconds=i), r_s(), r(), r(), r_t(), r(), r(), r()) for i in range(length)],
-        columns=columns)
-    df.set_index('timestamp', inplace=True)
+    return df
+
+
+def random_kline_data(length: int, endtime: pandas.Timestamp) -> pandas.DataFrame:
+    df = pandas.DataFrame(numpy.random.uniform(1, 1000, size=(length, 6)),
+                          columns=["high", "low", "open", "close", "volume", "turnover"],
+                          index=pandas.date_range(end=endtime, periods=length, freq='S'))
+
     return df
 
 

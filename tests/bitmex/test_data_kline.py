@@ -1,24 +1,12 @@
 import os
-import random
 import tempfile
 
 import pandas
 from MonkTrader.exchange.bitmex.const import TRADE_FILE_NAME
 from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform
+from tests.bitmex.conftest import random_kline_data
 
 from .conftest import random_trade_frame
-
-
-def random_kline_data(length: int, endtime: pandas.Timestamp) -> pandas.DataFrame:
-    r = lambda: random.randint(1, 1000)  # noqa: E731
-
-    columns = ["timestamp", "high", "low", "open", "close", "volume", "turnover"]
-    df = pandas.DataFrame(
-        [(endtime - pandas.Timedelta(minutes=i), r(), r(), r(), r(), r(), r()) for i in range(length)],
-        columns=columns)
-    df.set_index('timestamp', inplace=True)
-    df.sort_index(inplace=True)
-    return df
 
 
 def test_BitMexKlineTransform_from_scratch() -> None:

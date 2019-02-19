@@ -33,12 +33,12 @@ from MonkTrader.const import TICK_DIRECTION
 dtypes_trades = {
     "timestamp": np.object,
     "symbol": np.str,
-    "side": np.int8,
-    "size": np.int64,
+    "side": np.float64,
+    "size": np.float64,
     "price": np.float64,
-    "tickDirection": np.int8,
+    "tickDirection": np.float64,
     "trdMatchID": np.str,
-    "grossValue": np.int64,
+    "grossValue": np.float64,
     "homeNotional": np.float64,
     "foreignNotional": np.float64
 }
@@ -59,24 +59,24 @@ def _date_parse(one: str) -> pandas.Timestamp:
 
 def _side_converters(side: str) -> SIDE:
     if side == 'Buy':
-        return SIDE.BUY.value
+        return np.float64(SIDE.BUY.value)
     elif side == 'Sell':
-        return SIDE.SELL.value
+        return np.float64(SIDE.SELL.value)
     else:
-        return SIDE.UNKNOWN.value
+        return np.float64(SIDE.UNKNOWN.value)
 
 
 def _tick_direction(tick_direction: str) -> TICK_DIRECTION:
     if tick_direction == 'MinusTick':
-        return TICK_DIRECTION.MINUS_TICK.value
+        return np.float64(TICK_DIRECTION.MINUS_TICK.value)
     elif tick_direction == 'PlusTick':
-        return TICK_DIRECTION.PLUS_TICK.value
+        return np.float64(TICK_DIRECTION.PLUS_TICK.value)
     elif tick_direction == 'ZeroMinusTick':
-        return TICK_DIRECTION.ZERO_MINUS_TICK.value
+        return np.float64(TICK_DIRECTION.ZERO_MINUS_TICK.value)
     elif tick_direction == 'ZeroPlusTick':
-        return TICK_DIRECTION.ZERO_PLUS_TICK.value
+        return np.float64(TICK_DIRECTION.ZERO_PLUS_TICK.value)
     else:
-        return TICK_DIRECTION.UNKNOWN.value
+        return np.float64(TICK_DIRECTION.UNKNOWN.value)
 
 
 def read_trade_tar(path: str, with_detailed: bool = False, with_symbol: bool = True,
@@ -134,9 +134,10 @@ def _trade_to_kline(frame: pandas.DataFrame, frequency: str) -> pandas.DataFrame
 
 
 def trades_to_1m_kline(frame: pandas.DataFrame) -> pandas.DataFrame:
-    kline = frame['price'].resample('1Min', label='right', closed='right').ohlc()
-    kline['volume'] = frame['homeNotional'].resample('1Min', label='right', closed='right').sum()
-    kline['turnover'] = frame['foreignNotional'].resample('1Min', label='right', closed='right').sum()
+    re_df = frame.resample('1Min', label='right', closed='right')
+    kline = re_df['price'].ohlc()
+    kline['volume'] = re_df['homeNotional'].sum()
+    kline['turnover'] = re_df['foreignNotional'].sum()
     kline.fillna(method='ffill', inplace=True)
     return kline
 

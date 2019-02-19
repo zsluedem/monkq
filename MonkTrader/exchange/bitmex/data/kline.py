@@ -148,11 +148,11 @@ class BitMexKlineTransform(DataDownloader):
         last_date = end_time + relativedelta(hour=0, minute=0, second=0, microsecond=0)
 
         if last_date > self.mark_point:
-            process_df = point.df[point.df.index < pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
-            cache_df = point.df[point.df.index >= pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
+            process_df = point.df.loc[point.df.index < pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
+            cache_df = point.df.loc[point.df.index >= pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
 
             if self.cache is not None:
-                process_df = self.cache.append(process_df)
+                process_df = pandas.concat([self.cache, process_df], copy=False)
 
             if len(process_df) != 0:
                 kline = trades_to_1m_kline(process_df)
@@ -166,4 +166,4 @@ class BitMexKlineTransform(DataDownloader):
             if self.cache is None:
                 self.cache = point.df
             else:
-                self.cache = self.cache.append(point.df)
+                self.cache = pandas.concat([self.cache, point.df], copy=False)

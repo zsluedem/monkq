@@ -23,11 +23,10 @@
 #
 import os
 from typing import Iterator, Optional
-from logbook import Logger
-from ..log import logger_group
 
 import pandas
 from dateutil.relativedelta import relativedelta
+from logbook import Logger
 from MonkTrader.config.global_settings import (
     COMMAND, HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
     HDF_TRADE_TO_KLINE_CHUNK_SIZE,
@@ -39,6 +38,7 @@ from MonkTrader.exchange.bitmex.const import (
 )
 from MonkTrader.utils.i18n import _
 
+from ..log import logger_group
 from .utils import trades_to_1m_kline
 
 logger = Logger('exchange.bitmex.data')
@@ -89,7 +89,6 @@ class BitMexKlineProcessPoints(ProcessPoints):
                               "generate the kline data from scratch"))
                 start_time = START_DATE
 
-
             logger.info(_("Generating kline data {} now from date {}.").format(key, start_time))
             found = False
             iter_df = pandas.read_hdf(self.input_file, key,
@@ -138,7 +137,8 @@ class BitMexKlineTransform(DataDownloader):
         last_date = end_time + relativedelta(hour=0, minute=0, second=0, microsecond=0)
         logger.debug("Process {} data from {} to {}".format(point.key, self.mark_point, last_date))
         if last_date > self.mark_point:
-            process_df = point.df.loc[point.df.index < pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
+            process_df = point.df.loc[
+                point.df.index < pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
             cache_df = point.df.loc[point.df.index >= pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
 
             if self.cache is not None:

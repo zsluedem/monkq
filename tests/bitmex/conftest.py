@@ -21,11 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import random
 
-import pandas
 import numpy
-from dateutil.relativedelta import relativedelta
+import pandas
 
 
 def random_quote_frame(length: int, timestamp: pandas.Timestamp = pandas.Timestamp(2018, 1, 3)) -> pandas.DataFrame:
@@ -43,7 +41,7 @@ def random_trade_frame(length: int, timestamp: pandas.Timestamp = pandas.Timesta
                                index=pandas.date_range(start=timestamp, periods=length, freq='S'))
     df['side'] = df['side'].astype(numpy.float64)
     df['tickDirection'] = pandas.Series(numpy.random.randint(1, 4),
-                               index=pandas.date_range(start=timestamp, periods=length, freq='S'))
+                                        index=pandas.date_range(start=timestamp, periods=length, freq='S'))
     df['tickDirection'] = df['tickDirection'].astype(numpy.float64)
 
     return df

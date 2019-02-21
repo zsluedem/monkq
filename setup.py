@@ -23,7 +23,6 @@
 #
 # coding=utf8
 
-from MonkTrader.config.global_settings import COMMAND
 from setuptools import find_packages, setup
 
 KEYWORDS = ["MonkTrader", "quant", "finance", "trading"]
@@ -58,7 +57,7 @@ setup(
     ext_modules=[],
     entry_points={
         "console_scripts": [
-            " = MonkTrader.__main__:cmd_main".format(COMMAND)
+            "monktrader = MonkTrader.__main__:cmd_main"
         ]
     },
     classifiers=[

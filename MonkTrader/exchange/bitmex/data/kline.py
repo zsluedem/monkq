@@ -28,7 +28,7 @@ import pandas
 from dateutil.relativedelta import relativedelta
 from logbook import Logger
 from MonkTrader.config.global_settings import (
-    COMMAND, HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
+    HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
     HDF_TRADE_TO_KLINE_CHUNK_SIZE,
 )
 from MonkTrader.data import DataDownloader, Point, ProcessPoints
@@ -68,7 +68,7 @@ class BitMexKlineProcessPoints(ProcessPoints):
         except OSError:  # not exist
             raise DataDownloadError(_("The required trade.hdf doesn't exist. Download the kline data of Bitmex need "
                                       "the Bitmex trade data.You have to download the trade data first."
-                                      "Run '{} download --kind trade'").format(COMMAND))
+                                      "Run 'monktrader download --kind trade'"))
         keys = trade_hdf.keys()
         trade_hdf.close()
 

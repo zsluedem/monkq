@@ -11,34 +11,24 @@ HTTP_PROXY = ""
 # used only for testing
 SSL_PATH = ''
 
-FREQUENCY = 'tick'  # tick, 1m
+FREQUENCY = 'tick'  # tick, 1m ,5m ,1h
 
 LOG_LEVEL = 'INFO'  # DEBUG, INFO, NOTICE, WARNING, ERROR
 
 START_TIME = '2018-01-01T00:00:00Z'
 END_TIME = '2018-06-01T00:00:00Z'
 
-RUN_TYPE = RUN_TYPE.BACKTEST
-
-TICK_TYPE = 'tick'  # tick , bar
+RUN_TYPE = RUN_TYPE.BACKTEST  # type: ignore
 
 STRATEGY = "strategy.MyStrategy"
 
 DATA_DIR = os.path.expanduser("~/.monk/data")
 
-EXCHANGES = {
+EXCHANGES = {  # type: ignore
     'bitmex': {
         'engine': 'MonkTrader.exchange.bitmex',
         "IS_TEST": True,
         "API_KEY": '',
         "API_SECRET": ''
     }
-}
-
-BUILTIN_PLUGINS = {
-
-}
-
-INSTALLED_PLUGINS = {
-
 }

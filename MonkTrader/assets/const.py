@@ -21,7 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import enum
 from enum import Enum
 
 
@@ -38,12 +37,13 @@ class POSITION_EFFECT(Enum):
     CLOSE_AND_OPEN = 5
 
 
-class SIDE(enum.Enum):
+class SIDE(Enum):
     BUY = 1
     SELL = 2
+    UNKNOWN = 3  # this one is only for data parse error.
 
 
-class ORDER_STATUS(enum.Enum):
+class ORDER_STATUS(Enum):
     NOT_TRADED = 1
     FULL_TRADED = 2
     PARTLY_TRADED = 3

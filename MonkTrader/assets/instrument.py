@@ -76,7 +76,7 @@ class Instrument():
 
     @property
     def last_price(self) -> float:
-        return self.exchange.get_last_price(self)
+        return self.exchange.get_last_price(self)  # type:ignore
 
 
 @dataclasses.dataclass(frozen=True)

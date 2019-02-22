@@ -35,3 +35,11 @@ XBtUnit = 100000000
 class RUN_TYPE(Enum):
     BACKTEST = 1
     REALTIME = 2
+
+
+class TICK_DIRECTION(Enum):
+    PLUS_TICK = 1
+    ZERO_PLUS_TICK = 2
+    MINUS_TICK = 3
+    ZERO_MINUS_TICK = 4
+    UNKNOWN = 5  # this one is only for data parse error.

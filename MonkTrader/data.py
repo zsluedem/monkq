@@ -21,9 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
+import datetime
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Iterator
+from typing import Any, Iterable, Iterator
 
 from logbook import Logger
 from MonkTrader.exception import DataDownloadError
@@ -38,26 +38,57 @@ class Point(ABC):
         raise NotImplementedError
 
 
-class ProcessPoints(Iterator[Point]):
+class ProcessPoints(Iterable):
     def __iter__(self) -> Iterator[Point]:
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class DataDownloader(ABC):
     @abstractmethod
     def process_point(self) -> ProcessPoints:
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
-    def download_one_point(self, point: Point) -> None:
-        raise NotImplementedError
+    def download_one_point(self, point: Any) -> None:
+        raise NotImplementedError()
 
     def do_all(self) -> None:
         try:
-            for point in self.process_point():
+            for point in iter(self.process_point()):
                 self.download_one_point(point)
         except DataDownloadError:
             logger.info(_('some exception occured when you download data at point {}. Check!!').format(point.value))
+
+
+class DownloadProcess(ABC):
+    """
+    Each download process should include two method -- "process" and "rollback".
+    The "process" is to do the download main function.If there are any exceptions happened in
+    "process"， "rollback" should be trigger and clean up the data in "process".
+
+    classmethod "get_start" is used to get the start point from history.
+    """
+
+    def __init__(self, point: Point) -> None:
+        ...
+
+    def process(self) -> None:
+        """
+        process the data after the raw_process data
+        :return:
+        """
+        ...
+
+    def rollback(self) -> None:
+        """
+        If there is anything wrong happening in the process, the whole process would rollback
+        :return:
+        """
+        ...
+
+    @classmethod
+    def get_start(cls, obj: str) -> datetime.datetime:
+        ...
 
 
 class DataLoader(ABC):
@@ -67,8 +98,3 @@ class DataLoader(ABC):
 
     def load(self) -> None:
         self.load_instruments()
-
-
-class DataFeeder():
-    def loaddata(self) -> None:
-        pass

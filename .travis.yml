@@ -1,12 +1,16 @@
 language: python
 os: linux
 sudo: required
-services: mongodb
+#services: mongodb
 dist: xenial
 python:
   - "3.7"
   - "3.6"
-
+addons:
+  apt:
+    packages:
+    - hdf5-tools
+    - libhdf5-dev
 branches:
   only:
   - master

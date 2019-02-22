@@ -22,6 +22,8 @@
 # SOFTWARE.
 #
 
+from typing import Optional
+
 
 class MonkError(BaseException):
     pass
@@ -44,7 +46,8 @@ class RequestError(MonkError):
 
 
 class HttpError(RequestError):
-    def __init__(self, url: str, method: str, body: str, headers: dict, message: str = ''):
+    def __init__(self, url: str, method: Optional[str], body: Optional[str], headers: Optional[dict],
+                 message: str = ''):
         self.url = url
         self.method = method
         self.body = body

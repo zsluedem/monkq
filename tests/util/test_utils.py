@@ -36,7 +36,7 @@ from MonkTrader.utils import (
 )
 
 
-def test_assure_home():
+def test_assure_home() -> None:
     tmp_dir = tempfile.gettempdir()
     assert assure_dir(tmp_dir)
 
@@ -54,7 +54,7 @@ def test_assure_home():
         assert assure_dir(new_p)
 
 
-def test_csv_file_defaultdict():
+def test_csv_file_defaultdict() -> None:
     with tempfile.TemporaryDirectory() as tdir:
         headers = ['1', '2', '3']
         csv_d = CsvFileDefaultDict(tdir, headers)
@@ -74,7 +74,7 @@ def test_csv_file_defaultdict():
         assert content == "1,2,3{}3,2,1{}".format(CsvFileDefaultDict.CSVNEWLINE, CsvFileDefaultDict.CSVNEWLINE)
 
 
-def test_csv_zip_default_dict():
+def test_csv_zip_default_dict() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         csv_d = CsvZipDefaultDict(tmp, ['1', '2', '3'])
 
@@ -89,7 +89,7 @@ def test_csv_zip_default_dict():
         assert content == b"1,2,3\n1,2,3\n"
 
 
-def test_aware_datetime():
+def test_aware_datetime() -> None:
     d1 = datetime.datetime(2018, 1, 1, 12, 0, 0)
     assert not is_aware_datetime(d1)
 
@@ -97,7 +97,7 @@ def test_aware_datetime():
     assert is_aware_datetime(d2)
 
 
-def test_get_resource_path():
+def test_get_resource_path() -> None:
     current_file_path = os.path.abspath(__file__)
     dir_path = os.path.dirname(current_file_path)
     g = get_resource_path('test.txt')

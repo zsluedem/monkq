@@ -24,7 +24,7 @@
 
 import json
 import os
-from typing import Dict, Type
+from typing import TYPE_CHECKING, Dict, Type
 
 from MonkTrader.assets.instrument import (
     DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
@@ -32,13 +32,15 @@ from MonkTrader.assets.instrument import (
 )
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataError
-from MonkTrader.exchange.base import BaseExchange
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
+from MonkTrader.exchange.bitmex.const import (
+    INSTRUMENT_FILENAME, TRADE_FILE_NAME,
+)
 
-# instrument , bitmex instrument key to monk instrument key map
-#
-# {monk instrument key:bitmex key ,...}
-#
+from .utils import read_trade_tar
+
+if TYPE_CHECKING:
+    from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange
+
 instrument_map = {
     'symbol': 'symbol',
     "rootSymbol": 'root_symbol',
@@ -72,10 +74,11 @@ class BitmexDataloader(DataLoader):
         'FFWCSX': PerpetualInstrument,  # perpetual  futures contracts
     }
 
-    def __init__(self, exchange: BaseExchange, data_dir: str) -> None:
+    def __init__(self, exchange: 'BitmexSimulateExchange', data_dir: str) -> None:
         self.data_dir = data_dir
         self.instruments: Dict[str, Instrument] = dict()
         self.exchange = exchange
+        self.trade_data: Dict = dict()
 
     def load_instruments(self) -> None:
         instruments_file = os.path.join(self.data_dir, INSTRUMENT_FILENAME)
@@ -87,3 +90,21 @@ class BitmexDataloader(DataLoader):
                 raise LoadDataError()
             instrument = instrument_cls.create(instrument_map, instrument_raw, self.exchange)
             self.instruments[instrument.symbol] = instrument
+
+    def load_trades(self) -> None:
+        base = os.path.join(self.data_dir, TRADE_FILE_NAME)
+        directories = os.listdir(base)
+        directories.sort()
+        for directory in directories:
+            date_file = os.path.join(base, directory)
+            symbols_files = os.listdir(date_file)
+            for path in symbols_files:
+                symbol = path.split('.')[0]
+                data = read_trade_tar(os.path.join(date_file, path), False, False)
+                if self.trade_data.get(symbol) is None:
+                    self.trade_data[symbol] = data
+                else:
+                    self.trade_data[symbol] = self.trade_data[symbol].append(data, ignore_index=True)
+
+    def resample_trades(self, freq: str) -> None:
+        pass

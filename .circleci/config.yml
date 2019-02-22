@@ -12,7 +12,11 @@ jobs:
           - v1-dependencies-{{ checksum "requirements.txt" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-
+      - run:
+          name: install HDF5
+          command: |
+            sudo apt-get update
+            sudo apt-get install hdf5-tools libhdf5-dev
       - run:
           name: Activate venv and install requirements
           command: |
@@ -28,7 +32,7 @@ jobs:
 
       - run:
           name: test
-          command: "~/venv/bin/python -m pytest --mypy -m mypy tests"
+          command: "~/venv/bin/python -m mypy MonkTrader tests"
 
       - store_artifacts:
           path: test-reports
@@ -45,7 +49,11 @@ jobs:
           - v1-dependencies-{{ checksum "requirements.txt" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-
+      - run:
+          name: install HDF5
+          command: |
+            sudo apt-get update
+            sudo apt-get install hdf5-tools libhdf5-dev
       - run:
           name: Activate venv and install requirements
           command: |
@@ -61,7 +69,7 @@ jobs:
 
       - run:
           name: test
-          command: "~/venv/bin/python -m pytest --mypy -m mypy tests"
+          command: "~/venv/bin/python -m mypy MonkTrader tests"
 
       - store_artifacts:
           path: test-reports

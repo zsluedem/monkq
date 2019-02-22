@@ -21,29 +21,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import inspect
-
-from MonkTrader.ticker import FrequencyTicker
-
-
-class Trading():
-    pass
+# import inspect
+#
+# from MonkTrader.ticker import FrequencyTicker
 
 
-class BarTradingSimulator():
-    def __init__(self, start_time, end_time, frequency, strategy, datafeeder):
-        self.start_time = start_time
-        self.end_time = end_time
-        self.frequency = frequency
-
-        self.ticker = FrequencyTicker(start_time, end_time, frequency)
-        assert inspect.ismethod(getattr(strategy, 'handle_bar'))
-
-        self.strategy = strategy
-
-        self.datafeeder = datafeeder
-
-    def run(self):
-        for time in self.ticker.timer():
-            self.datafeeder.update_date(time)
-            self.strategy.handle_bar()
+# class Trading():
+#     pass
+#
+#
+# class BarTradingSimulator():
+#     def __init__(self, start_time, end_time, frequency, strategy, datafeeder):
+#         self.start_time = start_time
+#         self.end_time = end_time
+#         self.frequency = frequency
+#
+#         self.ticker = FrequencyTicker(start_time, end_time, frequency)
+#         assert inspect.ismethod(getattr(strategy, 'handle_bar'))
+#
+#         self.strategy = strategy
+#
+#         self.datafeeder = datafeeder
+#
+#     def run(self):
+#         for time in self.ticker.timer():
+#             self.datafeeder.update_date(time)
+#             self.strategy.handle_bar()

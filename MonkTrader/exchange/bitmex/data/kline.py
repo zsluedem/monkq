@@ -21,138 +21,140 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-# import datetime
-# import json
-# import time
-# import warnings
-# from typing import List
-# from urllib.parse import urljoin
-#
-# import pandas as pd
-# import pymongo
-# import requests
-# from dateutil.parser import parse
-# from dateutil.relativedelta import relativedelta
-# from dateutil.tz import tzutc
-# from logbook import Logger
-# from MonkTrader.const import CHINA_CONNECT_TIMEOUT, CHINA_WARNING, MAX_HISTORY
-# from MonkTrader.exchange.bitmex.const import BITMEX_API_URL
-# from MonkTrader.utils.i18n import _
-# from requests.exceptions import ConnectTimeout
-#
-# from ..log import logger_group
-#
-# logger = Logger("exchange.bitmex.data")
-# logger_group.add_logger(logger)
-#
-#
-# def fetch_bitmex_symbols(active: bool = False):
-#     if active:
-#         url = urljoin(BITMEX_API_URL, "instrument/active")
-#     else:
-#         url = urljoin(BITMEX_API_URL, "instrument")
-#     try:
-#         req = requests.get(url, params={"count": 500}, timeout=CHINA_CONNECT_TIMEOUT)
-#     except ConnectTimeout:
-#         raise ConnectTimeout(CHINA_WARNING)
-#     body = json.loads(req.content)
-#     return body
-#
-#
-# def fetch_bitmex_kline(symbol: str, start_time: datetime.datetime, end_time: datetime.datetime, frequency: str):
-#     datas = list()
-#     while start_time < end_time:
-#         url = urljoin(BITMEX_API_URL, "trade/bucketed")
-#         try:
-#             req = requests.get(url, params={"symbol": symbol, "binSize": frequency,
-#                                             "startTime": start_time.isoformat(),
-#                                             "endTime": end_time.isoformat(),
-#                                             "count": MAX_HISTORY}, timeout=CHINA_CONNECT_TIMEOUT)
-#         except ConnectTimeout:
-#             raise ConnectTimeout(CHINA_WARNING)
-#         # 防止频率过快被断连
-#         if req.status_code == 429:
-#             remaining = int(req.headers['x-ratelimit-remaining'])
-#             ratelimit_reset = req.headers['X-RateLimit-Reset']
-#             retry_after = float(req.headers['Retry-After'])
-#             warnings.warn(
-#                 _("Your rate is too fast and remaining is {}, retry after {}s, rate reset at {}".
-#                   format(remaining,
-#                          retry_after,
-#                          ratelimit_reset)))
-#             time.sleep(retry_after + 3)  # just sleep 3 more seconds to make safe
-#             continue
-#         elif req.status_code == 403:
-#             warnings.warn(_("Your frequency is so fast that they won't let you access.Just rest for a while"))
-#             exit(1)
-#
-#         klines = json.loads(req.content)
-#         if len(klines) == 0:
-#             break
-#         datas.extend(klines)
-#         start_time = parse(klines[-1].get("timestamp")) + relativedelta(second=+1)
-#     if len(datas) == 0:
-#         return None
-#     return datas
-#
-#
-# def to_json(datas: List):
-#     frame = pd.DataFrame(datas)
-#     frame['timestamp'] = pd.to_datetime(frame['timestamp'])
-#     return json.loads(frame.to_json(orient='records'))
-#
-#
-# def save_kline(db_cli: pymongo.MongoClient, frequency: str, active: bool = True):
-#     symbol_list = fetch_bitmex_symbols(active=active)
-#     symbol_list = symbol_list
-#     col = db_cli.bitmex[frequency]
-#     col.create_index(
-#         [("symbol", pymongo.ASCENDING), ("timestamp", pymongo.ASCENDING)], unique=True)
-#
-#     end = datetime.datetime.now(tzutc()) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
-#
-#     for index, symbol_info in enumerate(symbol_list):
-#         logger.info(_('The {} of Total {}'
-#                       .format(symbol_info['symbol'], len(symbol_list))))
-#         logger.info(_('DOWNLOAD PROGRESS {} '
-#                       .format(str(float(index / len(symbol_list) * 100))[0:4] + '%')))
-#         ref = col.find({"symbol": symbol_info['symbol']}).sort("timestamp", -1)
-#
-#         if ref.count() > 0:
-#             start_stamp = ref.next()['timestamp'] / 1000
-#             start_time = datetime.datetime.fromtimestamp(start_stamp + 1, tz=tzutc())
-#             logger.info(_('UPDATE_SYMBOL {} Trying updating {} from {} to {}'.format(
-#                 frequency, symbol_info['symbol'], start_time, end)))
-#         else:
-#             start_time = symbol_info.get('listing', "2018-01-01T00:00:00Z")
-#             start_time = parse(start_time)
-#             logger.info(_('NEW_SYMBOL {} Trying downloading {} from {} to {}'.format(
-#                 frequency, symbol_info['symbol'], start_time, end)))
-#
-#         data = fetch_bitmex_kline(symbol_info['symbol'],
-#                                   start_time, end, frequency)
-#         if data is None:
-#             logger.info(_('SYMBOL {} from {} to {} has no data'.format(
-#                 symbol_info['symbol'], start_time, end)))
-#             continue
-#         data = to_json(data)
-#         col.insert_many(data)
-#
-#
-# def save_symbols_mongo(db_cli: pymongo.MongoClient, active: bool):
-#     symbols = fetch_bitmex_symbols(active)
-#     col = db_cli.bitmex.symbols
-#     if col.find().count() == len(symbols):
-#         logger.info(_("SYMBOLS are already existed and no more to update"))
-#     else:
-#         logger.info(_("Delete the original symbols collections"))
-#         db_cli.bitmex.drop_collection("symbols")
-#         logger.info(_("Downloading the new symbols"))
-#         col.insert_many(symbols)
-#         logger.info(_("Symbols download is done! Thank you man!"))
-#
-#
-# def save_symbols_json(active: bool, dst_path: str):
-#     symbols = fetch_bitmex_symbols(active)
-#     with open(dst_path, 'w') as f:
-#         json.dumps(symbols, f)
+import os
+from typing import Iterator, Optional
+
+import pandas
+from dateutil.relativedelta import relativedelta
+from logbook import Logger
+from MonkTrader.config.global_settings import (
+    HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
+    HDF_TRADE_TO_KLINE_CHUNK_SIZE,
+)
+from MonkTrader.data import DataDownloader, Point, ProcessPoints
+from MonkTrader.exception import DataDownloadError
+from MonkTrader.exchange.bitmex.const import (
+    KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME,
+)
+from MonkTrader.utils.i18n import _
+
+from ..log import logger_group
+from .utils import trades_to_1m_kline
+
+logger = Logger('exchange.bitmex.data')
+logger_group.add_logger(logger)
+
+
+class KlinePoint(Point):
+    __slots__ = ('df', 'key')
+
+    def __init__(self, df: Optional[pandas.DataFrame], key: str) -> None:
+        self.df = df  # if df is None, then it is an end point
+        self.key = key
+
+    @property
+    def value(self) -> pandas.DataFrame:
+        return self.df
+
+
+class BitMexKlineProcessPoints(ProcessPoints):
+    def __init__(self, input_file: str, output_file: str) -> None:
+        self.input_file = input_file
+        self.output_file = output_file
+
+    def __iter__(self) -> Iterator[KlinePoint]:
+        try:
+            trade_hdf = pandas.HDFStore(self.input_file, 'r')
+        except OSError:  # not exist
+            raise DataDownloadError(_("The required trade.hdf doesn't exist. Download the kline data of Bitmex need "
+                                      "the Bitmex trade data.You have to download the trade data first."
+                                      "Run 'monktrader download --kind trade'"))
+        keys = trade_hdf.keys()
+        trade_hdf.close()
+
+        for key in keys:
+            if os.path.exists(self.output_file):
+                logger.info(_("Updating new kline data from new trade data."))
+                try:
+                    kline_hdf = pandas.HDFStore(self.output_file, 'r')
+                    last = kline_hdf.select_column(key, 'index', start=-1)
+                    last_time = last[0]
+                    start_time = last_time + relativedelta(days=1)
+                except KeyError:  # not exist
+                    start_time = START_DATE
+                finally:
+                    kline_hdf.close()
+            else:
+                logger.info(_("You don't have any kline data. We are going to "
+                              "generate the kline data from scratch"))
+                start_time = START_DATE
+
+            logger.info(_("Generating kline data {} now from date {}.").format(key, start_time))
+            found = False
+            iter_df = pandas.read_hdf(self.input_file, key,
+                                      where="index>=datetime.datetime({},{},{})".format(start_time.year,
+                                                                                        start_time.month,
+                                                                                        start_time.day),
+                                      columns=['price', 'homeNotional', 'foreignNotional'],
+                                      chunksize=HDF_TRADE_TO_KLINE_CHUNK_SIZE, iterator=True)
+            for df in iter_df:
+                yield KlinePoint(df, key)
+                found = True
+            else:
+                if found:
+                    # finally yield an end point to process the cache last date
+                    yield KlinePoint(None, key)
+                    logger.info(_("Successfully generate kline data "
+                                  "{}").format(key))
+
+
+class BitMexKlineTransform(DataDownloader):
+    def __init__(self, input_dir: str, output_dir: str) -> None:
+        self.input_file = os.path.join(input_dir, TRADE_FILE_NAME)
+        self.output_file = os.path.join(output_dir, KLINE_FILE_NAME)
+
+        self.mark_point = START_DATE
+        self.cache = None
+
+    def process_point(self) -> BitMexKlineProcessPoints:
+        return BitMexKlineProcessPoints(self.input_file, self.output_file)
+
+    def download_one_point(self, point: KlinePoint) -> None:
+        # if df is None, it is an end point
+        if point.df is None:
+            if self.cache is not None:
+                kline = trades_to_1m_kline(self.cache)
+                kline.to_hdf(self.output_file, point.key, mode='a',
+                             format='table', data_columns=True, index=False,
+                             complib=HDF_FILE_COMPRESS_LIB, complevel=HDF_FILE_COMPRESS_LEVEL, append=True)
+                logger.debug("Finished data {}".format(point.key))
+                # reset everything for another key
+                self.cache = None
+                self.mark_point = START_DATE
+            return
+
+        end_time = point.df.index[-1]
+        last_date = end_time + relativedelta(hour=0, minute=0, second=0, microsecond=0)
+        logger.debug("Process {} data from {} to {}".format(point.key, self.mark_point, last_date))
+        if last_date > self.mark_point:
+            process_df = point.df.loc[
+                point.df.index < pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
+            cache_df = point.df.loc[point.df.index >= pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
+
+            if self.cache is not None:
+                process_df = pandas.concat([self.cache, process_df], copy=False)
+
+            if len(process_df) != 0:
+                kline = trades_to_1m_kline(process_df)
+                logger.debug("Write {} data from {} to {} into hdf file".format(point.key, self.mark_point, last_date))
+                kline.to_hdf(self.output_file, point.key, mode='a',
+                             format='table', data_columns=True, index=False,
+                             complib=HDF_FILE_COMPRESS_LIB, complevel=HDF_FILE_COMPRESS_LEVEL, append=True)
+
+            self.cache = cache_df
+            self.mark_point = last_date
+        else:
+            if self.cache is None:
+                self.cache = point.df
+            else:
+                self.cache = pandas.concat([self.cache, point.df], copy=False)

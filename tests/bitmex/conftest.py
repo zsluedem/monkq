@@ -22,13 +22,58 @@
 # SOFTWARE.
 #
 
-import pymongo
-import pytest
+import numpy
+import pandas
 
 
-@pytest.yield_fixture(scope="function")
-def mongo_cli() -> pymongo.MongoClient:
-    cli = pymongo.MongoClient()
-    yield cli
+def random_quote_frame(length: int, timestamp: pandas.Timestamp = pandas.Timestamp(2018, 1, 3)) -> pandas.DataFrame:
+    df = pandas.DataFrame(numpy.random.uniform(1, 1000, size=(length, 4)),
+                          columns=["bidSize", "bidPrice", "askPrice", "askSize"],
+                          index=pandas.date_range(start=timestamp, periods=length, freq='S'))
+    return df
 
-    cli.drop_database('bitmex')
+
+def random_trade_frame(length: int, timestamp: pandas.Timestamp = pandas.Timestamp(2018, 1, 3)) -> pandas.DataFrame:
+    df = pandas.DataFrame(numpy.random.uniform(1, 1000, size=(length, 5)),
+                          columns=["size", "price", "grossValue", "homeNotional", "foreignNotional"],
+                          index=pandas.date_range(start=timestamp, periods=length, freq='S'))
+    df['side'] = pandas.Series(numpy.random.randint(1, 2),
+                               index=pandas.date_range(start=timestamp, periods=length, freq='S'))
+    df['side'] = df['side'].astype(numpy.float64)
+    df['tickDirection'] = pandas.Series(numpy.random.randint(1, 4),
+                                        index=pandas.date_range(start=timestamp, periods=length, freq='S'))
+    df['tickDirection'] = df['tickDirection'].astype(numpy.float64)
+
+    return df
+
+
+def random_kline_data(length: int, endtime: pandas.Timestamp) -> pandas.DataFrame:
+    df = pandas.DataFrame(numpy.random.uniform(1, 1000, size=(length, 6)),
+                          columns=["high", "low", "open", "close", "volume", "turnover"],
+                          index=pandas.date_range(end=endtime, periods=length, freq='S'))
+
+    return df
+
+
+def random_quote_hdf(path: str, length: int = 3) -> None:
+    tmp_df = random_quote_frame(length=length)
+    tmp_df2 = random_quote_frame(length=length)
+
+    tmp_df.to_hdf(path, '/XBTUSD',
+                  data_columns=True, index=False, complib='blosc:blosclz',
+                  complevel=9, append=True, format='table')
+    tmp_df2.to_hdf(path, '/ETHUSD',
+                   data_columns=True, index=False, complib='blosc:blosclz',
+                   complevel=9, append=True, format='table')
+
+
+def random_trade_hdf(path: str, length: int = 3) -> None:
+    tmp_df = random_trade_frame(length=length)
+    tmp_df2 = random_trade_frame(length=length)
+
+    tmp_df.to_hdf(path, '/XBTUSD',
+                  data_columns=True, index=False, complib='blosc:blosclz',
+                  complevel=9, append=True, format='table')
+    tmp_df2.to_hdf(path, '/ETHUSD',
+                   data_columns=True, index=False, complib='blosc:blosclz',
+                   complevel=9, append=True, format='table')

@@ -58,13 +58,13 @@ def is_aware_datetime(t: datetime.datetime) -> bool:
     return t.tzinfo is not None and t.tzinfo.utcoffset(t) is not None
 
 
-class CsvFileDefaultDict(defaultdict):
+class CsvFileDefaultDict(dict):
     CSVNEWLINE = '\n'  # type: str
 
-    def __init__(self, dir: str, fieldnames: List[str], *args: Any, **kwargs: Any) -> None:
-        super(CsvFileDefaultDict, self).__init__(*args, **kwargs)
+    def __init__(self, dir: str, fieldnames: List[str]) -> None:
+        super(CsvFileDefaultDict, self).__init__()
         self.dir = dir
-        self.default_factory: Type[csv.DictWriter] = csv.DictWriter
+        self.default_factory = csv.DictWriter
         self.fieldnames = fieldnames
         self.file_set: Set = set()
 
@@ -75,16 +75,16 @@ class CsvFileDefaultDict(defaultdict):
         ret.writeheader()
         return ret
 
-    def close(self):
+    def close(self) -> None:
         for f in self.file_set:
             f.close()
 
 
-class CsvZipDefaultDict(defaultdict):
+class CsvZipDefaultDict(dict):
     CSVNEWLINE = '\n'  # type: str
 
-    def __init__(self, dir: str, fieldnames: List[str], level: int = -1, *args, **kwargs):
-        super(CsvZipDefaultDict, self).__init__(*args, **kwargs)
+    def __init__(self, dir: str, fieldnames: List[str], level: int = -1):
+        super(CsvZipDefaultDict, self).__init__()
         self.dir = dir
         self.fieldnames = fieldnames
         self._level = level
@@ -92,34 +92,37 @@ class CsvZipDefaultDict(defaultdict):
 
         self.file_set = set()  # type: Set[IO]
 
-    def __missing__(self, key):
+    def __missing__(self, key:str) -> IO:
         f = gzip.open(os.path.join(self.dir, '{}.csv.gz'.format(key)), 'wb')
         self.writerow(f, self.fieldnames)
         self.file_set.add(f)
         ret = self[key] = f
         return ret
 
-    def writerow(self, f: IO, row: List):
+    def writerow(self, f: IO, row: List[str]) -> None:
         data = ','.join(row)
         data += self.CSVNEWLINE
-        data = data.encode('utf8')
-        f.write(data)
+        b_data = data.encode('utf8')
+        f.write(b_data)
 
-    def close(self):
+    def close(self) -> None:
         for f in self.file_set:
             f.close()
 
 
-def local_tz_offset():
+def local_tz_offset()->Optional[datetime.timedelta]:
     now = datetime.datetime.now(tzlocal())
     return now.utcoffset()
 
 
 local_offset = local_tz_offset()
-local_offset_seconds = local_offset.total_seconds()
+if local_offset is None:
+    local_offset_seconds = 0.
+else:
+    local_offset_seconds = local_offset.total_seconds()
 
 
-def get_resource_path(file: Optional[str] = None, prefix='resource') -> str:
+def get_resource_path(file: Optional[str] = None, prefix:str='resource') -> str:
     """
     This function would get the file path from the module which use this
     function. Supposed that:
@@ -146,7 +149,7 @@ def get_resource_path(file: Optional[str] = None, prefix='resource') -> str:
         return os.path.join(dir_path, prefix, file)
 
 
-def make_writable(filename):
+def make_writable(filename:str) ->None:
     if not os.access(filename, os.W_OK):
         st = os.stat(filename)
         new_permissions = stat.S_IMODE(st.st_mode) | stat.S_IWUSR

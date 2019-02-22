@@ -23,7 +23,7 @@
 #
 
 import os
-from typing import Optional
+from typing import Optional, IO, Union
 
 import numpy as np
 import pandas
@@ -79,7 +79,7 @@ def _tick_direction(tick_direction: str) -> TICK_DIRECTION:
         return np.float64(TICK_DIRECTION.UNKNOWN.value)
 
 
-def read_trade_tar(path: str, with_detailed: bool = False, with_symbol: bool = True,
+def read_trade_tar(path: Union[str,IO], with_detailed: bool = False, with_symbol: bool = True,
                    index: Optional[str] = None) -> pandas.DataFrame:
     if with_detailed:
         usecols = ["timestamp", "side", "size", "price",
@@ -108,7 +108,7 @@ def read_trade_tar(path: str, with_detailed: bool = False, with_symbol: bool = T
     return t_frame
 
 
-def read_quote_tar(path: str, with_symbol: bool = True, index: Optional[str] = None) -> pandas.DataFrame:
+def read_quote_tar(path: Union[str, IO], with_symbol: bool = True, index: Optional[str] = None) -> pandas.DataFrame:
     usecols = ["timestamp", "bidSize", "bidPrice", "askPrice", "askSize"]
     if with_symbol:
         usecols.append("symbol")

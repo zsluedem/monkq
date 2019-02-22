@@ -25,23 +25,26 @@
 import os
 import shutil
 import sys
+from typing import TypeVar
 
 import click
 import MonkTrader
 from logbook import StreamHandler
+from MonkTrader.data import DataDownloader
 from MonkTrader.exception import CommandError
-from MonkTrader.exchange.bitmex.data import BitMexDownloader
+from MonkTrader.exchange.bitmex.data.download import BitMexDownloader
 from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform
 from MonkTrader.utils import assure_dir, make_writable
 from MonkTrader.utils.i18n import _
 
 USERHOME = os.path.join(os.path.expanduser('~'), '.monk')
 
+T_D = TypeVar("T_D",bound=DataDownloader)
 
 @click.group()
 @click.option('-c', '--config', type=str)
 @click.pass_context
-def cmd_main(ctx: click.Context, config):
+def cmd_main(ctx: click.Context, config: str) -> None:
     StreamHandler(sys.stdout).push_application()
 
 
@@ -51,7 +54,8 @@ def cmd_main(ctx: click.Context, config):
 @click.option('--mode', default='hdf', type=click.Choice(['csv', 'tar', 'hdf']), help='Define the download mode')
 @click.option('--dst_dir', default=os.path.expanduser('~/.monk/data'), type=str)
 @click.pass_context
-def download(ctx: click.Context, kind: str, mode: str, dst_dir: str):
+def download(ctx: click.Context, kind: str, mode: str, dst_dir: str) -> None:
+    b: DataDownloader
     if kind == 'kline':
         b = BitMexKlineTransform(dst_dir, dst_dir)
     else:
@@ -65,10 +69,10 @@ def download(ctx: click.Context, kind: str, mode: str, dst_dir: str):
 @click.option('--name', '-n', type=str)
 @click.option('--directory', '-d', default=lambda: os.getcwd(), type=str)
 @click.pass_context
-def startstrategy(ctx: click.Context, name: str, directory: str):
+def startstrategy(ctx: click.Context, name: str, directory: str) -> None:
     directory = os.path.abspath(directory)
     assert os.path.isdir(directory), _('You have to provide an exist directory')
-    template_dir = os.path.join(MonkTrader.__path__[0], 'config', 'project_template')
+    template_dir = os.path.join(MonkTrader.__path__[0], 'config', 'project_template')  # type: ignore
     target_dir = os.path.join(directory, name)
     if os.path.exists(target_dir):
         raise CommandError(_("The project name has already been used"))

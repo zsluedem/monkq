@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 import datetime
-
+from typing import Generator
 from dateutil.rrule import DAILY, MINUTELY, rrule
 from MonkTrader.exception import SettingError
 from MonkTrader.utils import is_aware_datetime
@@ -44,7 +44,7 @@ class FrequencyTicker():
 
         self.current = start_time
 
-    def timer(self):
+    def timer(self) -> Generator[datetime.datetime, None, None]:
         for current_datetime in rrule(self.frequency, dtstart=self.start_time, until=self.end_time):
             self.current = current_datetime
             yield self.current

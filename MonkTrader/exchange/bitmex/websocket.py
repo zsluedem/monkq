@@ -29,9 +29,9 @@ import time
 from collections import defaultdict, namedtuple
 from decimal import Decimal
 from functools import wraps
-from typing import Dict, Union
+from typing import Dict, Optional, List, Any,Callable, TypeVar, cast, Union
 
-from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
+from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType  # type: ignore
 from dataclasses import dataclass, field
 from logbook import Logger
 from MonkTrader.base_strategy import BaseStrategy
@@ -47,8 +47,11 @@ INTERVAL_FACTOR = 3
 logger = Logger("exchange.bitmex.websocket")
 logger_group.add_logger(logger)
 
+FuncType = Callable[..., Any]
+F = TypeVar('F', bound=FuncType)
+MESSAGE = Dict[str, Union[List, str, Dict]]
 
-def findItemByKeys(keys: list, table: list, matchData: dict):
+def findItemByKeys(keys: list, table: list, matchData: dict) -> Optional[Dict]:
     for item in table:
         matched = True
         for key in keys:
@@ -56,9 +59,10 @@ def findItemByKeys(keys: list, table: list, matchData: dict):
                 matched = False
         if matched:
             return item
+    return None
 
 
-def toNearest(num: float, tickSize: float):
+def toNearest(num: float, tickSize: float) -> float:
     """Given a number, round it to the nearest tick. Very useful for sussing float error
        out of numbers: e.g. toNearest(401.46, 0.01) -> 401.46, whereas processing is
        normally with floats would give you 401.46000000000004.
@@ -67,14 +71,13 @@ def toNearest(num: float, tickSize: float):
     return float((Decimal(round(num / tickSize, 0)) * tickDec))
 
 
-def timestamp_update(func):
+def timestamp_update(func:F) ->F:
     @wraps(func)
-    def wrapped(self, *args, **kwargs):
+    def wrapped(self:"BitmexWebsocket", *args:Any, **kwargs:Any) -> F:
         self._last_comm_time = time.time()
         ret = func(self, *args, **kwargs)
         return ret
-
-    return wrapped
+    return cast(F,wrapped)
 
 
 @dataclass()
@@ -87,7 +90,7 @@ class BitmexWebsocket():
     MAX_TABLE_LEN = 200
 
     def __init__(self, strategy: BaseStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession, ws_url: str,
-                 api_key: str, api_secret: str, ssl: ssl.SSLContext = None, http_proxy=None):
+                 api_key: str, api_secret: str, ssl: Optional[ssl.SSLContext] = None, http_proxy:Optional[str]=None):
         self._loop = loop
 
         self._ws: ClientWebSocketResponse = None
@@ -99,20 +102,20 @@ class BitmexWebsocket():
         self.background_task = BackgroundTask()
         self.strategy = strategy
         self.session: ClientSession = session
-        self._last_comm_time = 0  # this is used for a mark point for ping
+        self._last_comm_time = 0.  # this is used for a mark point for ping
 
         # below is used for data store, it depends on what kind of data it subscribe
 
         # normal data
-        self._data = dict()
-        self._keys = dict()
+        self._data:Dict = dict()
+        self._keys:Dict = dict()
 
-        self.quote_data = defaultdict(dict)
-        self.order_book: Dict[str, OrderBook[Dict, Dict]] = defaultdict(lambda: OrderBook(Buy=dict(), Sell=dict()))
+        self.quote_data:Dict[str, Dict] = defaultdict(dict)
+        self.order_book: Dict[str, OrderBook[Dict, Dict]] = defaultdict(lambda: OrderBook(Buy=dict(), Sell=dict())) # type:ignore
         self.positions: Dict[str, Dict] = defaultdict(dict)
         self.margin: Dict = dict()
 
-    async def setup(self):
+    async def setup(self) -> None:
         headers = gen_header_dict(self._api_key, self._api_secret, 'GET', "/realtime", '')
 
         self._ws = await self.session.ws_connect(self._ws_url, headers=headers, proxy=self._http_proxy, ssl=self._ssl)
@@ -120,13 +123,13 @@ class BitmexWebsocket():
         self.background_task.handler = self._loop.create_task(self._run())
         self.background_task.ping = self._loop.create_task(self._ping())
 
-    async def stop(self):
+    async def stop(self) -> None:
         if not self._ws.closed:
             await self._ws.close()
         await self.background_task.handler
         await self.background_task.ping
 
-    async def _ping(self):
+    async def _ping(self) -> None:
         try:
             while not self._ws.closed:
                 if time.time() - self._last_comm_time > INTERVAL_FACTOR:
@@ -139,7 +142,7 @@ class BitmexWebsocket():
         except asyncio.CancelledError:
             logger.warning(_('Your bitmex ping task has been stopped'))
 
-    async def _run(self):
+    async def _run(self) -> None:
         try:
             while not self._ws.closed:
                 message = await self._ws.receive()
@@ -170,37 +173,37 @@ class BitmexWebsocket():
             logger.warning(_('Your bitmex handler has been stopped'))
 
     @timestamp_update
-    async def subscribe(self, topic, symbol=''):
+    async def subscribe(self, topic:str, symbol:str='') -> None:
         await self._ws.send_json({'op': 'subscribe', "args": [':'.join((topic, symbol))]})
 
     @timestamp_update
-    async def subscribe_multiple(self, topics: list):
+    async def subscribe_multiple(self, topics: List[str]) -> None:
         await self._ws.send_json({'op': 'subscribe', "args": topics})
 
     @timestamp_update
-    async def unsubscribe(self, topic, symbol=''):
+    async def unsubscribe(self, topic:str, symbol:str='') -> None:
         args = ":".join((topic, symbol))
         await self._ws.send_json({'op': 'unsubscribe', "args": [args]})
 
-    def orders(self):
+    def orders(self) -> List[dict]:
         return self._data['order']
 
-    def recent_trades(self):
+    def recent_trades(self) -> List[dict]:
         return self._data['trade']
 
-    def get_position(self, symbol: str):
+    def get_position(self, symbol: str) -> dict:
         return self.positions[symbol]
 
-    def get_quote(self, symbol: str):
+    def get_quote(self, symbol: str) -> dict:
         return self.quote_data[symbol]
 
-    def get_order_book(self, symbol: str):
+    def get_order_book(self, symbol: str) -> OrderBook:
         return self.order_book[symbol]
 
-    def error(self, error):
+    def error(self, error:str) -> None:
         pass
 
-    def get_instrument(self, symbol: str = None):
+    def get_instrument(self, symbol: Optional[str] = None) -> dict:
         if symbol is None:
             return self._data['instrument']
         instruments = self._data['instrument']
@@ -213,7 +216,7 @@ class BitmexWebsocket():
         instrument['tickLog'] = decimal.Decimal(str(instrument['tickSize'])).as_tuple().exponent * -1
         return instrument
 
-    def get_ticker(self, symbol: str):
+    def get_ticker(self, symbol: str) -> Dict[str, float]:
         '''Return a ticker object. Generated from instrument.'''
 
         instrument = self.get_instrument(symbol)
@@ -237,7 +240,7 @@ class BitmexWebsocket():
         return {k: toNearest(float(v or 0), instrument['tickSize']) for k, v in ticker.items()}
 
     @timestamp_update
-    def _on_message(self, message: Union[dict, list]):
+    def _on_message(self, message: dict) -> None:
         '''Handler for parsing WS messages.'''
         start = time.time()
 

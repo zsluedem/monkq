@@ -78,7 +78,7 @@ class BitmexDataloader(DataLoader):
         self.data_dir = data_dir
         self.instruments: Dict[str, Instrument] = dict()
         self.exchange = exchange
-        self.trade_data = dict()
+        self.trade_data:Dict = dict()
 
     def load_instruments(self) -> None:
         instruments_file = os.path.join(self.data_dir, INSTRUMENT_FILENAME)
@@ -110,5 +110,3 @@ class BitmexDataloader(DataLoader):
         pass
 
 
-if __name__ == '__main__':
-    b = BitmexDataloader('s', 's')

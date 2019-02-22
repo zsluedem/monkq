@@ -76,7 +76,7 @@ class Instrument():
 
     @property
     def last_price(self) -> float:
-        return self.exchange.get_last_price(self)
+        raise NotImplementedError
 
 
 @dataclasses.dataclass(frozen=True)

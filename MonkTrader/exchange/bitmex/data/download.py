@@ -27,19 +27,21 @@ import io
 import os
 import shutil
 import zlib
-from typing import Generator
+from typing import Generator, Iterator, Type, List, Set, IO
 
 import pandas
 import requests
 from dateutil.relativedelta import relativedelta
+from dateutil.rrule import DAILY, rrule
 from logbook import Logger
 from MonkTrader.config.global_settings import (
     HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
 )
+from MonkTrader.data import DataDownloader, Point, ProcessPoints, DownloadProcess
 from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
-    INSTRUMENT_FILENAME, QUOTE_FILE_NAME, START_DATE, TARFILETYPE,
-    TRADE_FILE_NAME,
+    INSTRUMENT_FILENAME, QUOTE_FILE_NAME, QUOTE_LINK, START_DATE, SYMBOL_LINK,
+    TARFILETYPE, TRADE_FILE_NAME, TRADE_LINK,
 )
 from MonkTrader.utils import CsvFileDefaultDict, CsvZipDefaultDict, assure_dir
 from MonkTrader.utils.i18n import _
@@ -51,6 +53,89 @@ logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
 
 
+class DatePoint(Point):
+    def __init__(self, date: datetime.datetime, url: str, dst_dir: str):
+        self.date = date
+        self.url = url
+        self.dst_dir = dst_dir
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, DatePoint):
+            raise NotImplementedError()
+        return self.date == other.date
+
+    @property
+    def value(self) -> datetime.datetime:
+        return self.date
+
+
+class BitMexProcessPoints(ProcessPoints):
+    def __init__(self, start: datetime.datetime, end: datetime.datetime, link: str, dst_dir: str):
+        self.start = start + relativedelta(hour=0, minute=0, second=0, microsecond=0)
+        self.end = end + relativedelta(hour=0, minute=0, second=0, microsecond=0)
+        self.current = start
+
+        self.rruls_date = rrule(freq=DAILY, dtstart=self.start, until=self.end)
+
+        self.link = link
+        self.dst_dir = dst_dir
+
+    def __iter__(self) -> Iterator[DatePoint]:
+        for date in rrule(freq=DAILY, dtstart=self.start, until=self.end):
+            yield DatePoint(date, self.link.format(date.strftime("%Y%m%d")), self.dst_dir)
+
+
+class BitMexDownloader(DataDownloader):
+    def __init__(self, kind: str, mode: str, dst_dir: str):
+        logger.info(_('Start downloading the data'))
+        self.mode = mode
+        self.kind = kind
+        self.dst_dir = dst_dir
+        self.init_kind(mode, kind)
+        self.init_mode(dst_dir)
+        self.Streamer: Type[DownloadProcess]
+
+    def init_kind(self, mode: str, kind: str) -> None:
+        if kind == 'quote':
+            self.link = QUOTE_LINK
+            if mode == 'csv':
+                self.Streamer = QuoteZipFileStream
+            elif mode == 'tar':
+                self.Streamer = TarStreamRequest
+            elif mode == 'hdf':
+                self.Streamer = HDFQuoteStream
+            else:
+                raise ValueError
+        elif kind == 'trade':
+            self.link = TRADE_LINK
+            if mode == 'csv':
+                self.Streamer = TradeZipFileStream
+            elif mode == 'tar':
+                self.Streamer = TarStreamRequest
+            elif mode == 'hdf':
+                self.Streamer = HDFTradeStream
+            else:
+                raise ValueError
+        elif kind == 'instruments':
+            self.link = SYMBOL_LINK
+            self.Streamer = SymbolsStreamRequest
+        else:
+            raise ValueError()
+
+    def init_mode(self, dst_dir: str) -> None:
+        self.end = datetime.datetime.utcnow() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
+        self.start = self.Streamer.get_start(dst_dir)
+
+    def process_point(self) -> BitMexProcessPoints:
+        return BitMexProcessPoints(self.start, self.end, self.link, self.dst_dir)
+
+    def download_one_point(self, point: DatePoint) -> None:
+        logger.info(_('Downloading {} data on {}').format(self.kind, point.value.isoformat()))
+        qstream = self.Streamer(point=point)
+        qstream.process()
+        logger.info(_('Finished downloading {} data on {}').format(self.kind, point.value.isoformat()))
+
+
 class StreamRequest():
     def _stream_requests(self, url: str) -> Generator[bytes, None, None]:
         response = requests.get(url, stream=True)
@@ -60,57 +145,30 @@ class StreamRequest():
 
 
 class FileObjRequest():
-    def _stream_requests(self, url: str):
+    def _stream_requests(self, url: str) -> IO:
         response = requests.get(url, stream=True)
         response.raise_for_status()
         return response.raw
 
 
-class _DownloadProcess():
-    """
-    Each download process should include two method -- "process" and "rollback".
-    The "process" is to do the download main function.If there are any exceptions happened in
-    "process"， "rollback" should be trigger and clean up the data in "process".
+class _HDFStream(FileObjRequest, DownloadProcess):
+    kind:str
 
-    classmethod "get_start" is used to get the start point from history.
-    """
-
-    def process(self):
-        """
-        process the data after the raw_process data
-        :return:
-        """
-        raise NotImplementedError()
-
-    def rollback(self):
-        """
-        If there is anything wrong happening in the process, the whole process would rollback
-        :return:
-        """
-        raise NotImplementedError()
-
-    @classmethod
-    def get_start(cls, *args, **kwargs):
-        raise NotImplementedError()
-
-
-class _HDFStream(FileObjRequest, _DownloadProcess):
-    kind = None
-
-    def __init__(self, url: str, dst_dir: str, *args, **kwargs):
-        self.url = url
-        assure_dir(dst_dir)
-        self.dst_dir = dst_dir
+    def __init__(self, point: DatePoint):
+        super(_HDFStream, self).__init__(point=point)
+        self.url = point.url
+        assure_dir(point.dst_dir)
+        self.dst_dir = point.dst_dir
 
         if self.kind == 'trade':
             self.dst_file = os.path.join(self.dst_dir, TRADE_FILE_NAME)
         elif self.kind == 'quote':
             self.dst_file = os.path.join(self.dst_dir, QUOTE_FILE_NAME)
-        self.process_point = kwargs.get("point")
+        self.process_point = point
 
-        self.processed_key = set()
+        self.processed_key:Set = set()
 
-    def process(self):
+    def process(self) -> None:
         try:
             if self.kind == 'trade':
                 dataframe = read_trade_tar(self._stream_requests(self.url), index='timestamp')
@@ -127,14 +185,14 @@ class _HDFStream(FileObjRequest, _DownloadProcess):
             logger.exception(_("Exception #{}# happened when process {} {}").format(e, self.url, self.dst_file))
             raise DataDownloadError()
 
-    def rollback(self):
+    def rollback(self) -> None:
         date = self.process_point.value
         with pandas.HDFStore(self.dst_file) as store:
             for key in self.processed_key:
                 store.remove(key, "index>=datetime.datetime({},{},{})".format(date.year, date.month, date.day))
 
     @classmethod
-    def get_start(cls, dst_dir: str):
+    def get_start(cls, dst_dir: str) -> datetime.datetime:
         if cls.kind == 'quote':
             filename = QUOTE_FILE_NAME
         elif cls.kind == 'trade':
@@ -144,14 +202,11 @@ class _HDFStream(FileObjRequest, _DownloadProcess):
         try:
             with pandas.HDFStore(os.path.join(dst_dir, filename), 'r') as store:
                 keys = store.keys()
-                max_date = None
+                max_date= START_DATE
                 for key in keys:
                     index = store.select_column(key, 'index')
                     last = max(index)
-                    if max_date is None:
-                        max_date = last
-                    else:
-                        max_date = max(max_date, last)
+                    max_date = max(max_date, last)
                 last_date = datetime.datetime(max_date.year, max_date.month, max_date.day)
                 return last_date + relativedelta(days=+1)
 
@@ -167,7 +222,7 @@ class HDFQuoteStream(_HDFStream):
     kind = 'quote'
 
 
-class RawStreamRequest(StreamRequest, _DownloadProcess):
+class RawStreamRequest(StreamRequest, DownloadProcess):
     """
     Stream a url request and save the raw contents to local.
     The child class has to be configured the `FILENAME`
@@ -180,16 +235,17 @@ class RawStreamRequest(StreamRequest, _DownloadProcess):
     :param dst_dir: the content would save to the dst_dir directory
         with the `FILENAME`.
     """
-    FILENAME = None
+    FILENAME:str
 
-    def __init__(self, url: str, dst_dir: str, *args, **kwargs):
-        self.url = url
-        assure_dir(dst_dir)
-        self.dst_dir = dst_dir
+    def __init__(self, point: DatePoint) :
+        super(RawStreamRequest, self).__init__(point=point)
+        self.url = point.url
+        assure_dir(point.dst_dir)
+        self.dst_dir = point.dst_dir
 
         self.dst_file = os.path.join(self.dst_dir, self.FILENAME)
 
-    def process(self):
+    def process(self) -> None:
         try:
             with open(self.dst_file, 'wb') as f:
                 for chunk in self._stream_requests(self.url):
@@ -199,12 +255,12 @@ class RawStreamRequest(StreamRequest, _DownloadProcess):
             logger.exception(_("Exception #{}# happened when process {} {}").format(e, self.url, self.dst_file))
             raise DataDownloadError()
 
-    def rollback(self):
+    def rollback(self) -> None:
         logger.info(_("Rollback!Remove the not complete file {}").format(self.dst_file))
         os.remove(self.dst_file)
 
     @classmethod
-    def get_start(cls, dst_dir: str):
+    def get_start(cls, dst_dir: str) -> datetime.datetime:
         dones = os.listdir(dst_dir)
         if dones:
             current = max(dones)
@@ -214,20 +270,20 @@ class RawStreamRequest(StreamRequest, _DownloadProcess):
 
 
 class TarStreamRequest(RawStreamRequest):
-    def __init__(self, date: datetime.datetime, url: str, dst_dir: str):
-        self.FILENAME = date.strftime("%Y%m%d") + '.csv.gz'
-        super(TarStreamRequest, self).__init__(url, dst_dir)
+    def __init__(self, point: DatePoint):
+        self.FILENAME = point.date.strftime("%Y%m%d") + '.csv.gz'
+        super(TarStreamRequest, self).__init__(point=point)
 
 
 class SymbolsStreamRequest(RawStreamRequest):
-    FILENAME = INSTRUMENT_FILENAME
+    FILENAME:str = INSTRUMENT_FILENAME
 
     @classmethod
-    def get_start(cls, dst_dir: str):
+    def get_start(cls, dst_dir: str) -> datetime.datetime:
         return datetime.datetime.utcnow() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
 
 
-class _CsvStreamRequest(StreamRequest, _DownloadProcess):
+class _CsvStreamRequest(StreamRequest, DownloadProcess):
     """
     A base class to process the stream a url request
     which would return a zip csv file.
@@ -247,22 +303,22 @@ class _CsvStreamRequest(StreamRequest, _DownloadProcess):
         it would process row by row.
     """
 
-    def __init__(self, date: datetime.datetime, url: str, cache_num: int = 100, chunk_process: bool = False,
-                 csv_reader=csv.DictReader):
-        super(_CsvStreamRequest, self).__init__()
-        self.date = date
-        self.url = url
+    def __init__(self, point: DatePoint, cache_num: int = 100, chunk_process: bool = False,
+                 csv_reader: Type[csv.DictReader]=csv.DictReader):
+        super(_CsvStreamRequest, self).__init__(point=point)
+        self.date = point.date
+        self.url = point.url
         self.cache_num = cache_num
         self.chunk_process = chunk_process
         self.data = bytearray()
-        self.cache = list()
+        self.cache:List = list()
         self.csv_reader = csv_reader
         self.dec = zlib.decompressobj(32 + zlib.MAX_WBITS)
 
-    def setup(self):
+    def setup(self) -> None:
         raise NotImplementedError
 
-    def stream_decompress_requests(self):
+    def stream_decompress_requests(self) -> Generator[str, None, None]:
         for chunk in self._stream_requests(self.url):
             rv = self.dec.decompress(chunk)
             if rv:
@@ -275,7 +331,7 @@ class _CsvStreamRequest(StreamRequest, _DownloadProcess):
                         line, self.data = self.data[:pos + 1], self.data[pos + 1:]
                         yield line.decode('utf8')
 
-    def process(self):
+    def process(self) -> None:
         try:
             self.setup()
             for i, row in enumerate(self.csv_reader(self.stream_decompress_requests())):
@@ -294,16 +350,16 @@ class _CsvStreamRequest(StreamRequest, _DownloadProcess):
             raise DataDownloadError()
         self.cleanup()
 
-    def rollback(self):
+    def rollback(self) -> None:
         pass
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         pass
 
-    def process_chunk(self):
+    def process_chunk(self) -> None:
         raise NotImplementedError
 
-    def process_row(self, row):
+    def process_row(self, row:dict) -> dict:
         return row
 
 
@@ -333,34 +389,34 @@ class _FileStream(_CsvStreamRequest):
 
 
     """
-    fieldnames = list()
+    fieldnames:List = list()
 
-    def __init__(self, dst_dir: str, *args, **kwargs):
-        super(_FileStream, self).__init__(chunk_process=False, *args, **kwargs)
-        assert os.path.isdir(dst_dir)
-        new_dir = os.path.join(dst_dir, self.date.strftime("%Y%m%d"))
+    def __init__(self, point: DatePoint, writer_cls:Type=CsvFileDefaultDict):
+        super(_FileStream, self).__init__(point=point, chunk_process=False)
+        assert os.path.isdir(point.dst_dir)
+        new_dir = os.path.join(point.dst_dir, self.date.strftime("%Y%m%d"))
         self.dst_dir = new_dir
-        self.csv_file_writers = CsvFileDefaultDict(self.dst_dir, self.fieldnames)
+        self.csv_file_writers = writer_cls(self.dst_dir, self.fieldnames)
 
-    def setup(self):
+    def setup(self) -> None:
         if not os.path.exists(self.dst_dir):
             os.mkdir(self.dst_dir)
 
-    def process_row(self, row: dict):
+    def process_row(self, row: dict) -> dict:
         writer = self.csv_file_writers[row['symbol']]
         writer.writerow(row)
         return row
 
-    def rollback(self):
+    def rollback(self) -> None:
         logger.info(_("Rollback : Remove the not complete dir {}").format(self.dst_dir))
         self.csv_file_writers.close()
         shutil.rmtree(self.dst_dir)
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         self.csv_file_writers.close()
 
     @classmethod
-    def get_start(cls, dst_dir: str):
+    def get_start(cls, dst_dir: str) -> datetime.datetime:
         dones = os.listdir(dst_dir)
         if dones:
             current = max(dones)
@@ -376,14 +432,14 @@ class _ZipFileStream(_FileStream):
     """
     DEFAULT = 'DEFAULT'
 
-    def __init__(self, dst_dir: str, *args, **kwargs):
-        super(_ZipFileStream, self).__init__(dst_dir, *args, **kwargs)
-        self.csv_file_writers = CsvZipDefaultDict(self.dst_dir, self.fieldnames)  # type: CsvZipDefaultDict
+    def __init__(self, point: DatePoint, writer_cls:Type=CsvZipDefaultDict):
+        super(_ZipFileStream, self).__init__(point, writer_cls)
 
-    def process_row(self, row: dict):
+    def process_row(self, row: dict) -> dict:
         f = self.csv_file_writers[row['symbol']]
         row_tuple = [row.get(key, self.DEFAULT) for key in self.fieldnames]
         self.csv_file_writers.writerow(f, row_tuple)
+        return row
 
 
 class TradeZipFileStream(_ZipFileStream):

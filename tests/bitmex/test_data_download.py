@@ -39,12 +39,10 @@ from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
     INSTRUMENT_FILENAME, QUOTE_FILE_NAME, START_DATE, TRADE_FILE_NAME,
 )
-from MonkTrader.exchange.bitmex.data import (
-    BitMexDownloader, BitMexProcessPoints, DatePoint,
-)
 from MonkTrader.exchange.bitmex.data.download import (
-    HDFQuoteStream, HDFTradeStream, QuoteZipFileStream, SymbolsStreamRequest,
-    TarStreamRequest, TradeZipFileStream,
+    BitMexDownloader, BitMexProcessPoints, DatePoint, HDFQuoteStream,
+    HDFTradeStream, QuoteZipFileStream, SymbolsStreamRequest, TarStreamRequest,
+    TradeZipFileStream,
 )
 from tests.bitmex.conftest import (
     random_quote_frame, random_quote_hdf, random_trade_frame, random_trade_hdf,
@@ -100,14 +98,22 @@ def _mock_exception_stream(self, url: str):
 
 
 def test_datepoint():
-    d = DatePoint(datetime.datetime(2018, 1, 1))
+    d = DatePoint(datetime.datetime(2018, 1, 1), 'a', 'b')
     assert d.value == datetime.datetime(2018, 1, 1)
+    assert d.url == 'a'
+    assert d.dst_dir == 'b'
 
 
 def test_bitmex_process_points():
-    p = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 5)))
-    assert next(p).value == datetime.datetime(2018, 1, 1)
-    assert next(p).value == datetime.datetime(2018, 1, 2)
+    p = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 5), 'a', 'b'))
+    one = next(p)
+    assert one.value == datetime.datetime(2018, 1, 1)
+    assert one.url == 'a'
+    assert one.dst_dir == 'b'
+    two = next(p)
+    assert two.value == datetime.datetime(2018, 1, 2)
+    assert two.url == 'a'
+    assert two.dst_dir == 'b'
     assert next(p).value == datetime.datetime(2018, 1, 3)
     assert next(p).value == datetime.datetime(2018, 1, 4)
     assert next(p).value == datetime.datetime(2018, 1, 5)
@@ -115,23 +121,23 @@ def test_bitmex_process_points():
     with pytest.raises(StopIteration):
         next(p)
 
-    p2 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 5)))
+    p2 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 5), 'a', 'b'))
     p_list = list(iter(p2))
-    assert p_list[0] == DatePoint(datetime.datetime(2018, 1, 1))
-    assert p_list[1] == DatePoint(datetime.datetime(2018, 1, 2))
-    assert p_list[2] == DatePoint(datetime.datetime(2018, 1, 3))
-    assert p_list[3] == DatePoint(datetime.datetime(2018, 1, 4))
-    assert p_list[4] == DatePoint(datetime.datetime(2018, 1, 5))
+    assert p_list[0] == DatePoint(datetime.datetime(2018, 1, 1), 'a', 'b')
+    assert p_list[1] == DatePoint(datetime.datetime(2018, 1, 2), 'a', 'b')
+    assert p_list[2] == DatePoint(datetime.datetime(2018, 1, 3), 'a', 'b')
+    assert p_list[3] == DatePoint(datetime.datetime(2018, 1, 4), 'a', 'b')
+    assert p_list[4] == DatePoint(datetime.datetime(2018, 1, 5), 'a', 'b')
 
-    p3 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1)))
+    p3 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1), 'a', 'b'))
     assert next(p3).value == datetime.datetime(2018, 1, 1)
     with pytest.raises(StopIteration):
         next(p3)
 
-    p4 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1)))
+    p4 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1), 'a', 'b'))
 
     p2_list = list(p4)
-    assert p2_list[0] == DatePoint(datetime.datetime(2018, 1, 1))
+    assert p2_list[0] == DatePoint(datetime.datetime(2018, 1, 1), 'a', 'b')
     with pytest.raises(IndexError):
         p2_list[1]
 
@@ -271,7 +277,8 @@ class MockSymbolsStream(SymbolsStreamRequest):
 
 def test_symbols_stream_request():
     with tempfile.TemporaryDirectory() as tmp:
-        stream = MockSymbolsStream(mock_url, tmp, stream=stream_symbols)
+        stream = MockSymbolsStream(point=DatePoint(datetime.datetime(2018, 1, 1), mock_url, tmp),
+                                   stream=stream_symbols)
         stream.process()
 
         with open(os.path.join(tmp, INSTRUMENT_FILENAME), 'rb') as f:
@@ -284,7 +291,7 @@ def test_raw_stream_request():
     with tempfile.TemporaryDirectory() as tmp:
         date = datetime.datetime(2018, 1, 1)
         outcome = os.path.join(tmp, date.strftime("%Y%m%d") + '.csv.gz')
-        stream = MockRawStreamRequest(date, mock_url, tmp, stream=stream_b)
+        stream = MockRawStreamRequest(point=DatePoint(date, mock_url, tmp), stream=stream_b)
         stream.process()
 
         with open(outcome, 'rb') as f:
@@ -297,7 +304,7 @@ def test_raw_stream_request_exception():
     with tempfile.TemporaryDirectory() as tmp:
         date = datetime.datetime(2018, 1, 1)
         outcome = os.path.join(tmp, date.strftime("%Y%m%d") + '.csv.gz')
-        stream = MockRawStreamRequest(date, mock_url, tmp, stream=stream_b)
+        stream = MockRawStreamRequest(point=DatePoint(date, mock_url, tmp), stream=stream_b)
         stream._stream_requests = _mock_exception_stream
         with pytest.raises(DataDownloadError):
             stream.process()
@@ -311,7 +318,7 @@ def test_trade_zip_file_stream():
     with tempfile.TemporaryDirectory() as tmp:
         tar_dir = os.path.join(tmp, d.strftime("%Y%m%d"))
 
-        stream = MockTradeZipFileStream(date=d, url=mock_url, dst_dir=tmp, stream=stream_trade)
+        stream = MockTradeZipFileStream(point=DatePoint(date=d, url=mock_url, dst_dir=tmp), stream=stream_trade)
 
         stream.process()
 
@@ -339,7 +346,7 @@ def test_trade_zip_file_stream_exception():
     with tempfile.TemporaryDirectory() as tmp:
         tar_dir = os.path.join(tmp, d.strftime("%Y%m%d"))
 
-        stream = MockTradeZipFileStream(date=d, url=mock_url, dst_dir=tmp, stream=stream_trade)
+        stream = MockTradeZipFileStream(point=DatePoint(date=d, url=mock_url, dst_dir=tmp), stream=stream_trade)
         stream._stream_requests = _mock_exception_stream
 
         with pytest.raises(DataDownloadError):
@@ -354,7 +361,7 @@ def test_quote_zip_file_stream():
     with tempfile.TemporaryDirectory() as tmp:
         tar_dir = os.path.join(tmp, d.strftime("%Y%m%d"))
 
-        stream = MockQuoteZipFileStream(date=d, url=mock_url, dst_dir=tmp, stream=stream_quote)
+        stream = MockQuoteZipFileStream(point=DatePoint(date=d, url=mock_url, dst_dir=tmp), stream=stream_quote)
 
         stream.process()
 
@@ -382,7 +389,7 @@ def test_quote_zip_file_stream_exception():
     with tempfile.TemporaryDirectory() as tmp:
         tar_dir = os.path.join(tmp, d.strftime("%Y%m%d"))
 
-        stream = MockQuoteZipFileStream(date=d, url=mock_url, dst_dir=tmp, stream=stream_quote)
+        stream = MockQuoteZipFileStream(point=DatePoint(date=d, url=mock_url, dst_dir=tmp), stream=stream_quote)
         stream._stream_requests = _mock_exception_stream
 
         with pytest.raises(DataDownloadError):
@@ -392,13 +399,12 @@ def test_quote_zip_file_stream_exception():
 
 
 def test_quote_hdf_stream():
-    point = DatePoint(datetime.datetime(2018, 1, 3))
-
     with patch("MonkTrader.exchange.bitmex.data.download.requests") as m:
         resp = m.get()
         resp.raw = io.BytesIO(stream_quote_gzip)
         with tempfile.TemporaryDirectory() as tmp:
-            stream = HDFQuoteStream('test_url', tmp, point=point)
+            point = DatePoint(datetime.datetime(2018, 1, 3), 'test_url', tmp)
+            stream = HDFQuoteStream(point=point)
             stream.process()
 
             with pandas.HDFStore(os.path.join(tmp, QUOTE_FILE_NAME), 'r') as store:
@@ -426,11 +432,11 @@ def test_quote_hdf_stream():
 
 def test_quote_hdf_stream_exception():
     d = datetime.datetime(2018, 1, 5)
-    point = DatePoint(d)
 
     with tempfile.TemporaryDirectory() as tmp:
+        point = DatePoint(d, 'test_url', tmp)
         random_quote_hdf(os.path.join(tmp, QUOTE_FILE_NAME), 4)
-        stream = HDFTradeStream('test_url', tmp, point=point)
+        stream = HDFTradeStream(point=point)
         append = random_quote_frame(3, d)
         with pytest.raises(DataDownloadError):
             with patch("MonkTrader.exchange.bitmex.data.download.read_quote_tar"):
@@ -448,11 +454,11 @@ def test_quote_hdf_stream_exception():
 
 def test_trade_hdf_stream_exception():
     d = datetime.datetime(2018, 1, 5)
-    point = DatePoint(d)
     with tempfile.TemporaryDirectory() as tmp:
+        point = DatePoint(d, 'test_url', tmp)
         random_trade_hdf(os.path.join(tmp, TRADE_FILE_NAME), 4)
 
-        stream = HDFTradeStream('test_url', tmp, point=point)
+        stream = HDFTradeStream(point=point)
         append = random_trade_frame(3, d)
         with pytest.raises(DataDownloadError):
             with patch("MonkTrader.exchange.bitmex.data.download.read_trade_tar"):
@@ -469,13 +475,12 @@ def test_trade_hdf_stream_exception():
 
 
 def test_trade_hdf_stream():
-    point = DatePoint(datetime.datetime(2018, 1, 3))
-
     with patch("MonkTrader.exchange.bitmex.data.download.requests") as m:
         resp = m.get()
         resp.raw = io.BytesIO(stream_trade_gzip)
         with tempfile.TemporaryDirectory() as tmp:
-            stream = HDFTradeStream('test_url', tmp, point=point)
+            point = DatePoint(datetime.datetime(2018, 1, 3), 'test_url', tmp, )
+            stream = HDFTradeStream(point=point)
             stream.process()
 
             with pandas.HDFStore(os.path.join(tmp, TRADE_FILE_NAME), 'r') as store:

@@ -131,7 +131,8 @@ class BitMexKlineTransform(DataDownloader):
                 # reset everything for another key
                 self.cache = None
                 self.mark_point = START_DATE
-                return
+            return
+
 
         end_time = point.df.index[-1]
         last_date = end_time + relativedelta(hour=0, minute=0, second=0, microsecond=0)

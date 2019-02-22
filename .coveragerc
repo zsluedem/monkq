@@ -1,6 +1,10 @@
 [run]
 branch = True
 source = MonkTrader
+omit =
+    tests/*
+    MonkTrader/config/project_template/*
+    scripts/*
 
 [report]
 exclude_lines =
@@ -8,8 +12,3 @@ exclude_lines =
     pragma: no cover
     raise NotImplementedError
     if __name__ == .__main__.:
-ignore_errors = True
-omit =
-    tests/*
-    MonkTrader/config/project_template/*
-    scripts/*

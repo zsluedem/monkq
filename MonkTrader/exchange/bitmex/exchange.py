@@ -26,7 +26,9 @@ import datetime
 import json
 import ssl
 import time
-from typing import Dict, Optional, TypeVar, Union, ValuesView, Callable, Any, cast, List
+from typing import (
+    Any, Callable, Dict, List, Optional, TypeVar, Union, ValuesView, cast,
+)
 
 import aiohttp
 from aiohttp.helpers import sentinel
@@ -45,7 +47,6 @@ from MonkTrader.exchange.bitmex.const import (
     BITMEX_API_URL, BITMEX_TESTNET_API_URL, BITMEX_TESTNET_WEBSOCKET_URL,
     BITMEX_WEBSOCKET_URL,
 )
-from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
 from MonkTrader.utils.i18n import _
 from yarl import URL
@@ -189,7 +190,7 @@ class BitmexExchange(BaseExchange):
                             info="famous exchange")
 
     async def place_limit_order(self, target: Union[str, Instrument],
-                                price: float, quantity:float, timeout: int = sentinel,
+                                price: float, quantity: float, timeout: int = sentinel,
                                 max_retry: int = 0) -> str:
         if isinstance(target, Instrument):
             target = Instrument.symbol
@@ -222,7 +223,7 @@ class BitmexExchange(BaseExchange):
     async def amend_order(self, order_id: str, quantity: Optional[float] = None,
                           price: Optional[float] = None, timeout: int = sentinel,
                           max_retry: int = 0) -> bool:
-        postdict:Dict[str, Union[str, float]] = {
+        postdict: Dict[str, Union[str, float]] = {
             "orderID": order_id,
         }
         if quantity:
@@ -261,7 +262,6 @@ class BitmexExchange(BaseExchange):
         return await resp.json()
 
     open_orders = open_orders_http
-
 
     async def available_instruments(self, timeout: int = sentinel) -> ValuesView[Instrument]:
         if self._available_instrument_cache:
@@ -449,9 +449,9 @@ class BitmexExchange(BaseExchange):
     #                                    verb="POST",
     #                                    max_retry=max_retry)
 
-    async def _curl_bitmex(self, path:str, query:Optional[dict]=None, postdict:Optional[dict]=None,
-                           timeout:int =sentinel, method:str=None,
-                           max_retry:int=5) -> aiohttp.ClientResponse: # type:ignore
+    async def _curl_bitmex(self, path: str, query: Optional[dict] = None, postdict: Optional[dict] = None,
+                           timeout: int = sentinel, method: str = None,
+                           max_retry: int = 5) -> aiohttp.ClientResponse:  # type:ignore
         url = self.base_url + path
 
         url_obj = URL(url)
@@ -491,7 +491,7 @@ class BitmexExchange(BaseExchange):
         if timeout is not sentinel:
             timeout = aiohttp.ClientTimeout(total=timeout)  # type:ignore
 
-        async def retry(retry_time:int) -> aiohttp.ClientResponse: # type:ignore
+        async def retry(retry_time: int) -> aiohttp.ClientResponse:  # type:ignore
             logger.info("Retry on remain times {}".format(retry_time))
             retry_time -= 1
             if retry_time < 0:

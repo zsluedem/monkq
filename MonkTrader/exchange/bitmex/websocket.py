@@ -29,9 +29,11 @@ import time
 from collections import defaultdict, namedtuple
 from decimal import Decimal
 from functools import wraps
-from typing import Dict, Optional, List, Any,Callable, TypeVar, cast, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 
-from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType  # type: ignore
+from aiohttp import (  # type: ignore
+    ClientSession, ClientWebSocketResponse, WSMsgType,
+)
 from dataclasses import dataclass, field
 from logbook import Logger
 from MonkTrader.base_strategy import BaseStrategy
@@ -50,6 +52,7 @@ logger_group.add_logger(logger)
 FuncType = Callable[..., Any]
 F = TypeVar('F', bound=FuncType)
 MESSAGE = Dict[str, Union[List, str, Dict]]
+
 
 def findItemByKeys(keys: list, table: list, matchData: dict) -> Optional[Dict]:
     for item in table:
@@ -71,13 +74,14 @@ def toNearest(num: float, tickSize: float) -> float:
     return float((Decimal(round(num / tickSize, 0)) * tickDec))
 
 
-def timestamp_update(func:F) ->F:
+def timestamp_update(func: F) -> F:
     @wraps(func)
-    def wrapped(self:"BitmexWebsocket", *args:Any, **kwargs:Any) -> F:
+    def wrapped(self: "BitmexWebsocket", *args: Any, **kwargs: Any) -> F:
         self._last_comm_time = time.time()
         ret = func(self, *args, **kwargs)
         return ret
-    return cast(F,wrapped)
+
+    return cast(F, wrapped)
 
 
 @dataclass()
@@ -90,7 +94,8 @@ class BitmexWebsocket():
     MAX_TABLE_LEN = 200
 
     def __init__(self, strategy: BaseStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession, ws_url: str,
-                 api_key: str, api_secret: str, ssl: Optional[ssl.SSLContext] = None, http_proxy:Optional[str]=None):
+                 api_key: str, api_secret: str, ssl: Optional[ssl.SSLContext] = None,
+                 http_proxy: Optional[str] = None):
         self._loop = loop
 
         self._ws: ClientWebSocketResponse = None
@@ -107,11 +112,12 @@ class BitmexWebsocket():
         # below is used for data store, it depends on what kind of data it subscribe
 
         # normal data
-        self._data:Dict = dict()
-        self._keys:Dict = dict()
+        self._data: Dict = dict()
+        self._keys: Dict = dict()
 
-        self.quote_data:Dict[str, Dict] = defaultdict(dict)
-        self.order_book: Dict[str, OrderBook[Dict, Dict]] = defaultdict(lambda: OrderBook(Buy=dict(), Sell=dict())) # type:ignore
+        self.quote_data: Dict[str, Dict] = defaultdict(dict)
+        self.order_book: Dict[str, OrderBook[Dict, Dict]] = defaultdict(  # type:ignore
+            lambda: OrderBook(Buy=dict(), Sell=dict()))
         self.positions: Dict[str, Dict] = defaultdict(dict)
         self.margin: Dict = dict()
 
@@ -173,7 +179,7 @@ class BitmexWebsocket():
             logger.warning(_('Your bitmex handler has been stopped'))
 
     @timestamp_update
-    async def subscribe(self, topic:str, symbol:str='') -> None:
+    async def subscribe(self, topic: str, symbol: str = '') -> None:
         await self._ws.send_json({'op': 'subscribe', "args": [':'.join((topic, symbol))]})
 
     @timestamp_update
@@ -181,7 +187,7 @@ class BitmexWebsocket():
         await self._ws.send_json({'op': 'subscribe', "args": topics})
 
     @timestamp_update
-    async def unsubscribe(self, topic:str, symbol:str='') -> None:
+    async def unsubscribe(self, topic: str, symbol: str = '') -> None:
         args = ":".join((topic, symbol))
         await self._ws.send_json({'op': 'unsubscribe', "args": [args]})
 
@@ -200,7 +206,7 @@ class BitmexWebsocket():
     def get_order_book(self, symbol: str) -> OrderBook:
         return self.order_book[symbol]
 
-    def error(self, error:str) -> None:
+    def error(self, error: str) -> None:
         pass
 
     def get_instrument(self, symbol: Optional[str] = None) -> dict:
@@ -251,13 +257,13 @@ class BitmexWebsocket():
                 logger.debug(_("Subscribed to {}").format(message['subscribe']))
             else:
                 self.error(_("Unable to subscribe to {}. Error: \"{}\" Please check and restart.").format(
-                           message['request']['args'][0], message['error']))
+                    message['request']['args'][0], message['error']))
         elif 'unsubscribe' in message:
             if message['success']:
                 logger.debug(_("Unsubscribed to {}.").format(message['unsubscribe']))
             else:
                 self.error(_("Unable to subscribe to {}. Error: \"{}\" Please check and restart.").format(
-                           message['request']['args'][0], message['error']))
+                    message['request']['args'][0], message['error']))
         elif 'status' in message:
             if message['status'] == 400:
                 self.error(message['error'])

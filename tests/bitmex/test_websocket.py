@@ -24,10 +24,11 @@
 
 from asyncio import AbstractEventLoop, Lock, sleep
 from functools import partial
+from typing import Any, Callable, Coroutine, Generator
 from unittest.mock import MagicMock
 
 import pytest
-from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
+from aiohttp import ClientSession, ClientTimeout, WSMsgType, web  # type:ignore
 from aiohttp.test_utils import TestServer
 from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.exchange.bitmex.websocket import (
@@ -42,14 +43,14 @@ API_SECRET = "9d9Sjm_vMhWC9BcMOsf9y2hcM37d4sAbUJTyfEumdD3t92qE"
 ws_data_path = get_resource_path("mock_bitmex_ws_data.txt")
 
 
-def ret_data():
+def ret_data() -> Generator[str, None, None]:
     with open(ws_data_path) as f:
         ret_data = f.readlines()
     for data in ret_data:
         yield data
 
 
-async def realtime_handler(request: web.Request, async_lock: Lock, close_lock: Lock):
+async def realtime_handler(request: web.Request, async_lock: Lock, close_lock: Lock) -> web.WebSocketResponse:
     ws_data = ret_data()
 
     await async_lock.acquire()
@@ -90,7 +91,7 @@ async def realtime_handler(request: web.Request, async_lock: Lock, close_lock: L
     return ws
 
 
-async def ping_handler(request, close_lock):
+async def ping_handler(request: web.Request, close_lock: Lock) -> None:
     ws_data = ret_data()
     ws = web.WebSocketResponse(autoping=False)
     await close_lock.acquire()
@@ -109,26 +110,28 @@ async def ping_handler(request, close_lock):
         await sleep(0.2)
 
 
-@pytest.fixture()
-async def async_lock(loop: AbstractEventLoop):
+@pytest.fixture()  # type:ignore
+async def async_lock(loop: AbstractEventLoop) -> Lock:
     yield Lock(loop=loop)
 
 
-@pytest.fixture()
-async def close_lock(loop: AbstractEventLoop):
+@pytest.fixture()  # type:ignore
+async def close_lock(loop: AbstractEventLoop) -> Lock:
     yield Lock(loop=loop)
 
 
-@pytest.fixture()
-async def normal_bitmex_server(aiohttp_server: TestServer, async_lock: Lock, close_lock: Lock):
+@pytest.fixture()  # type:ignore
+async def normal_bitmex_server(aiohttp_server: Callable[[web.Application], Coroutine[TestServer, None, None]],
+                               async_lock: Lock, close_lock: Lock) -> None:
     app = web.Application()
     app.router.add_get('/realtime', partial(realtime_handler, async_lock=async_lock, close_lock=close_lock))
     server = await aiohttp_server(app)
     yield server
 
 
-@pytest.fixture()
-async def ping_bitmex_server(aiohttp_server: TestServer, close_lock: Lock):
+@pytest.fixture()  # type:ignore
+async def ping_bitmex_server(aiohttp_server: Callable[[web.Application], Coroutine[TestServer, None, None]],
+                             close_lock: Lock) -> None:
     app = web.Application()
     app.router.add_get('/realtime', partial(ping_handler, close_lock=close_lock))
     server = await aiohttp_server(app)
@@ -139,10 +142,10 @@ class C(BaseStrategy):
     async def setup(self) -> None:
         pass
 
-    async def on_trade(self, message) -> None:
+    async def on_trade(self, message: Any) -> None:
         pass
 
-    async def tick(self, message) -> None:
+    async def tick(self, message: Any) -> None:
         pass
 
     async def handle_bar(self) -> None:
@@ -150,7 +153,7 @@ class C(BaseStrategy):
 
 
 async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: AbstractEventLoop, async_lock: Lock,
-                                close_lock: Lock):
+                                close_lock: Lock) -> None:
     session = ClientSession(timeout=ClientTimeout(total=60))
     ws = BitmexWebsocket(C(MagicMock()),
                          loop,
@@ -212,7 +215,8 @@ async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: Abstract
     await session.close()
 
 
-async def test_bitmex_websocket_ping(ping_bitmex_server: TestServer, loop: AbstractEventLoop, close_lock: Lock):
+async def test_bitmex_websocket_ping(ping_bitmex_server: TestServer, loop: AbstractEventLoop,
+                                     close_lock: Lock) -> None:
     session = ClientSession()
     ws = BitmexWebsocket(C(MagicMock()),
                          loop,
@@ -229,5 +233,5 @@ async def test_bitmex_websocket_ping(ping_bitmex_server: TestServer, loop: Abstr
 
 
 @pytest.mark.xfail
-def test_bitmex_websocket_lost_connections():
+def test_bitmex_websocket_lost_connections() -> None:
     assert False

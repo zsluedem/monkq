@@ -24,10 +24,12 @@
 import asyncio
 import json
 import time
+from typing import Callable, Coroutine
 from unittest.mock import MagicMock, patch
 
 import pytest
 from aiohttp import web
+from aiohttp.test_utils import TestServer
 from MonkTrader.exception import (
     HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
     NotFoundError, RateLimitError,
@@ -41,9 +43,10 @@ TEST_API_SECRET = "Yl39dzyn5YzuswQ_7qGtEx1LxxnwV5dM2Ex1ihr_EK-4Rs8b"
 TIMEOUT = 3
 
 
-@pytest.fixture()
-async def normal_bitmex_server(aiohttp_server):
-    def instrument_handler(request: web.Request):
+@pytest.fixture()  # type:ignore
+async def normal_bitmex_server(
+        aiohttp_server: Callable[[web.Application], Coroutine[TestServer, None, None]]) -> TestServer:
+    def instrument_handler(request: web.Request) -> web.Response:
         if request.query.get('symbol') == 'XBTUSD':
             body = """[{"symbol": "XBTUSD","rootSymbol": "XBT","state": "Open","typ": "FFWCSX",
             "listing": "2016-05-04T12:00:00.000Z","front": "2016-05-04T12:00:00.000Z","expiry": null,"settle": null,
@@ -90,7 +93,7 @@ async def normal_bitmex_server(aiohttp_server):
         }
         return web.Response(body=body, headers=headers)
 
-    async def order_get_handler(request: web.Request):
+    async def order_get_handler(request: web.Request) -> web.Response:
         params = request.query['filter']
         assert json.loads(params).get('open')
         headers = {
@@ -114,7 +117,7 @@ async def normal_bitmex_server(aiohttp_server):
         "transactTime": "2019-01-23T02:01:46.849Z","timestamp": "2019-01-23T02:01:46.849Z"}]"""
         return web.Response(text=body, headers=headers)
 
-    async def order_post_handler(request: web.Request):
+    async def order_post_handler(request: web.Request) -> web.Response:
         headers = {
             "date": "Wed, 23 Jan 2019 02:01:46 GMT",
             "etag": "W/\"2c0-n4ZDZgcW+jPzvDDtibem17Rjb7E\"",
@@ -137,7 +140,7 @@ async def normal_bitmex_server(aiohttp_server):
 
         return web.Response(body=body, headers=headers)
 
-    async def order_put_handler(request: web.Request):
+    async def order_put_handler(request: web.Request) -> web.Response:
         headers = {
             "date": "Wed, 23 Jan 2019 02:24:19 GMT",
             "etag": "W/\"2e1-FgU6zAWULAr8QvcDhZgaCXsd/lQ\"",
@@ -159,7 +162,7 @@ async def normal_bitmex_server(aiohttp_server):
         "transactTime": "2019-01-23T02:24:19.745Z","timestamp": "2019-01-23T02:24:19.745Z"}"""
         return web.Response(body=body, headers=headers)
 
-    async def order_delete_handler(request: web.Request):
+    async def order_delete_handler(request: web.Request) -> web.Response:
         headers = {
             "date": "Wed, 23 Jan 2019 02:26:49 GMT",
             "etag": "W/\"2e3-oHgYMl1OJnGKxsK7hKiHKVed4mM\"",
@@ -181,7 +184,7 @@ async def normal_bitmex_server(aiohttp_server):
         "transactTime": "2019-01-23T02:24:19.745Z","timestamp": "2019-01-23T02:26:49.958Z"}]"""
         return web.Response(body=body, headers=headers)
 
-    async def trade_handler(request: web.Request):
+    async def trade_handler(request: web.Request) -> web.Response:
         body = """[{"timestamp": "2019-01-26T13:38:34.301Z","symbol": "XBTUSD","side": "Buy","size": 50,"price": 3559.5,
         "tickDirection": "ZeroPlusTick","trdMatchID": "105ac363-0abd-48c7-dce7-ce74abd0e838","grossValue": 1404700,
         "homeNotional": 0.014047,"foreignNotional": 50},{"timestamp": "2019-01-26T13:38:33.474Z","symbol": "XBTUSD",
@@ -203,7 +206,7 @@ async def normal_bitmex_server(aiohttp_server):
         }
         return web.Response(body=body, headers=headers)
 
-    async def trade_bucketed_handler(request: web.Request):
+    async def trade_bucketed_handler(request: web.Request) -> web.Response:
         body = """[{"timestamp": "2019-01-26T13:39:00.000Z","symbol": "XBTUSD","open": 3559,"high": 3559.5,
         "low": 3559.5,"close": 3559.5,"trades": 3,"volume": 59,"vwap": 3559.5,"lastSize": 50,"turnover": 1657546,
         "homeNotional": 0.01657546,"foreignNotional": 59},{"timestamp": "2019-01-26T13:38:00.000Z","symbol": "XBTUSD",
@@ -225,7 +228,7 @@ async def normal_bitmex_server(aiohttp_server):
         }
         return web.Response(body=body, headers=headers)
 
-    async def quote_handler(request: web.Response):
+    async def quote_handler(request: web.Response) -> web.Response:
         body = """[{"symbol": "XBTUSD","id": 15599644500,"side": "Sell","size": 2543,"price": 3555},
         {"symbol": "XBTUSD","id": 15599644550,"side": "Buy","size": 3433,"price": 3554.5}]"""
         headers = {
@@ -254,34 +257,35 @@ async def normal_bitmex_server(aiohttp_server):
     yield server
 
 
-@pytest.fixture()
-async def abnormal_bitmex_server(aiohttp_server):
-    async def order_margin_not_enough(request: web.Request):
+@pytest.fixture()  # type:ignore
+async def abnormal_bitmex_server(
+        aiohttp_server: Callable[[web.Application], Coroutine[TestServer, None, None]]) -> None:
+    async def order_margin_not_enough(request: web.Request) -> web.Response:
         ret = {
             "error": {"message": "insufficient available balance",
                       "name": "margin"}
         }
         return web.json_response(ret, status=400)
 
-    async def auth_error(request: web.Request):
+    async def auth_error(request: web.Request) -> web.Response:
         ret = {
             "error": {"message": "auth error", "name": "auth"}
         }
         return web.json_response(ret, status=401)
 
-    async def http_403(request: web.Request):
+    async def http_403(request: web.Request) -> web.Response:
         ret = {
             "error": {"message": "403", "name": "403"}
         }
         return web.json_response(ret, status=403)
 
-    async def http_404(request: web.Request):
+    async def http_404(request: web.Request) -> web.Response:
         ret = {
             "error": {"message": "404", "name": "404"}
         }
         return web.json_response(ret, status=404)
 
-    async def rate_limit(request: web.Request):
+    async def rate_limit(request: web.Request) -> web.Response:
         ret = {
             "error": {"message": "rate limit", "name": "rate"}
         }
@@ -292,13 +296,13 @@ async def abnormal_bitmex_server(aiohttp_server):
         }
         return web.json_response(data=ret, status=429, headers=headers)
 
-    async def http_503(request: web.Request):
+    async def http_503(request: web.Request) -> web.Response:
         return web.Response(status=503)
 
-    async def other_error(request: web.Request):
+    async def other_error(request: web.Request) -> web.Response:
         return web.Response(status=500)
 
-    async def timeout_error(request: web.Request):
+    async def timeout_error(request: web.Request) -> web.Response:
         await asyncio.sleep(TIMEOUT * 2)
         return web.Response(body="[]")
 
@@ -316,12 +320,13 @@ async def abnormal_bitmex_server(aiohttp_server):
     yield server
 
 
-async def test_bitmex_exchange(normal_bitmex_server):
+async def test_bitmex_exchange(normal_bitmex_server: TestServer) -> None:
     with patch("MonkTrader.exchange.bitmex.exchange.BITMEX_TESTNET_API_URL",
                'http://127.0.0.1:{}/'.format(normal_bitmex_server.port)):
         exchange = BitmexExchange(MagicMock(), 'bitmex',
                                   {'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": True})
-
+        instrument = MagicMock()
+        instrument.symbol = "XBTUSD"
         order_id = await exchange.place_limit_order('XBTUSD', 3200, 100)
 
         assert await exchange.amend_order(order_id=order_id, price=3300)
@@ -332,12 +337,12 @@ async def test_bitmex_exchange(normal_bitmex_server):
 
         await exchange.open_orders_http()
 
-        last_price = await exchange.get_last_price("XBTUSD")
+        last_price = await exchange.get_last_price(instrument)
         assert last_price == 3561
 
-        await exchange.get_recent_trades("XBTUSD", 3)
+        await exchange.get_recent_trades(instrument, 3)
 
-        await exchange.get_kline("XBTUSD", "1m", 3)
+        await exchange.get_kline(instrument, "1m", 3)
 
         # await exchange.get_quote("XBTUSD")
 
@@ -346,12 +351,13 @@ async def test_bitmex_exchange(normal_bitmex_server):
         exchange.exchange_info()
 
 
-async def test_bitmex_exchange_error(abnormal_bitmex_server):
+async def test_bitmex_exchange_error(abnormal_bitmex_server: TestServer) -> None:
     with patch("MonkTrader.exchange.bitmex.exchange.BITMEX_API_URL",
                'http://127.0.0.1:{}/'.format(abnormal_bitmex_server.port)):
         exchange = BitmexExchange(MagicMock(), 'bitmex',
                                   {'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": False})
-
+        instrument = MagicMock()
+        instrument.symbol = "XBTUSAD"
         with pytest.raises(MarginNotEnoughError):
             await exchange.place_limit_order("XBTUSD", 10, 100)
 
@@ -365,13 +371,13 @@ async def test_bitmex_exchange_error(abnormal_bitmex_server):
             await exchange.available_instruments(timeout=TIMEOUT)
 
         with pytest.raises(MaxRetryError):
-            await exchange.get_recent_trades("XBTUSD")
+            await exchange.get_recent_trades(instrument)
 
         with pytest.raises(HttpError):
-            await exchange.get_kline("XBTUSD", "1m")
+            await exchange.get_kline(instrument, "1m")
 
         with pytest.raises(RateLimitError):
-            await exchange.get_last_price("XBTUSD")
+            await exchange.get_last_price(instrument)
 
         with pytest.raises(NotFoundError):
             await exchange.cancel_order("random")

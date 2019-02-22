@@ -28,8 +28,7 @@ import inspect
 import os
 import pathlib
 import stat
-from collections import defaultdict
-from typing import IO, Any, List, Optional, Set, Type
+from typing import IO, List, Optional, Set
 
 from dateutil.tz import tzlocal
 
@@ -92,7 +91,7 @@ class CsvZipDefaultDict(dict):
 
         self.file_set = set()  # type: Set[IO]
 
-    def __missing__(self, key:str) -> IO:
+    def __missing__(self, key: str) -> IO:
         f = gzip.open(os.path.join(self.dir, '{}.csv.gz'.format(key)), 'wb')
         self.writerow(f, self.fieldnames)
         self.file_set.add(f)
@@ -110,7 +109,7 @@ class CsvZipDefaultDict(dict):
             f.close()
 
 
-def local_tz_offset()->Optional[datetime.timedelta]:
+def local_tz_offset() -> Optional[datetime.timedelta]:
     now = datetime.datetime.now(tzlocal())
     return now.utcoffset()
 
@@ -122,7 +121,7 @@ else:
     local_offset_seconds = local_offset.total_seconds()
 
 
-def get_resource_path(file: Optional[str] = None, prefix:str='resource') -> str:
+def get_resource_path(file: Optional[str] = None, prefix: str = 'resource') -> str:
     """
     This function would get the file path from the module which use this
     function. Supposed that:
@@ -149,7 +148,7 @@ def get_resource_path(file: Optional[str] = None, prefix:str='resource') -> str:
         return os.path.join(dir_path, prefix, file)
 
 
-def make_writable(filename:str) ->None:
+def make_writable(filename: str) -> None:
     if not os.access(filename, os.W_OK):
         st = os.stat(filename)
         new_permissions = stat.S_IMODE(st.st_mode) | stat.S_IWUSR

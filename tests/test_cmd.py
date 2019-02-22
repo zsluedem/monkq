@@ -28,7 +28,7 @@ from unittest.mock import patch
 from MonkTrader.__main__ import cmd_main
 
 
-def test_download():
+def test_download() -> None:
     with patch("MonkTrader.__main__.BitMexDownloader") as downloader:
         with tempfile.TemporaryDirectory() as tem_dir:
             cmd_main.main(['download', '--kind', 'trade', '--dst_dir', tem_dir], standalone_mode=False)
@@ -38,7 +38,7 @@ def test_download():
             obj.do_all.assert_called()
 
 
-def test_startstrategy():
+def test_startstrategy() -> None:
     with tempfile.TemporaryDirectory() as tem_dir:
         cmd_main.main(['startstrategy', '-n', 'strategy1', '-d', tem_dir], standalone_mode=False)
 
@@ -94,15 +94,15 @@ EXCHANGES = {  # type: ignore
 
 
 class MyStrategy(BaseStrategy):
-    def setup(self):
+    def setup(self):  # type:ignore
         pass
 
-    def on_trade(self, message):
+    def on_trade(self, message):  # type:ignore
         pass
 
-    def tick(self, message):
+    def tick(self, message):  # type:ignore
         pass
 
-    def handle_bar(self):
+    def handle_bar(self):  # type:ignore
         pass
 """

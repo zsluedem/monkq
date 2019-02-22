@@ -21,9 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import json
-
-import requests
 
 
 # def cal_liq_price(open_price: float, current_position: int, leverage: float, buy_amount: int, long: bool):
@@ -46,4 +43,3 @@ import requests
 #     content = resp.content
 #     return json.loads(content)
 #
-

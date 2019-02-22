@@ -27,7 +27,7 @@ import io
 import os
 import shutil
 import zlib
-from typing import Generator, Iterator, Type, List, Set, IO
+from typing import IO, Generator, Iterator, List, Set, Type
 
 import pandas
 import requests
@@ -37,7 +37,9 @@ from logbook import Logger
 from MonkTrader.config.global_settings import (
     HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
 )
-from MonkTrader.data import DataDownloader, Point, ProcessPoints, DownloadProcess
+from MonkTrader.data import (
+    DataDownloader, DownloadProcess, Point, ProcessPoints,
+)
 from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
     INSTRUMENT_FILENAME, QUOTE_FILE_NAME, QUOTE_LINK, START_DATE, SYMBOL_LINK,
@@ -152,7 +154,7 @@ class FileObjRequest():
 
 
 class _HDFStream(FileObjRequest, DownloadProcess):
-    kind:str
+    kind: str
 
     def __init__(self, point: DatePoint):
         super(_HDFStream, self).__init__(point=point)
@@ -166,7 +168,7 @@ class _HDFStream(FileObjRequest, DownloadProcess):
             self.dst_file = os.path.join(self.dst_dir, QUOTE_FILE_NAME)
         self.process_point = point
 
-        self.processed_key:Set = set()
+        self.processed_key: Set = set()
 
     def process(self) -> None:
         try:
@@ -202,7 +204,7 @@ class _HDFStream(FileObjRequest, DownloadProcess):
         try:
             with pandas.HDFStore(os.path.join(dst_dir, filename), 'r') as store:
                 keys = store.keys()
-                max_date= START_DATE
+                max_date = START_DATE
                 for key in keys:
                     index = store.select_column(key, 'index')
                     last = max(index)
@@ -235,9 +237,9 @@ class RawStreamRequest(StreamRequest, DownloadProcess):
     :param dst_dir: the content would save to the dst_dir directory
         with the `FILENAME`.
     """
-    FILENAME:str
+    FILENAME: str
 
-    def __init__(self, point: DatePoint) :
+    def __init__(self, point: DatePoint):
         super(RawStreamRequest, self).__init__(point=point)
         self.url = point.url
         assure_dir(point.dst_dir)
@@ -276,7 +278,7 @@ class TarStreamRequest(RawStreamRequest):
 
 
 class SymbolsStreamRequest(RawStreamRequest):
-    FILENAME:str = INSTRUMENT_FILENAME
+    FILENAME: str = INSTRUMENT_FILENAME
 
     @classmethod
     def get_start(cls, dst_dir: str) -> datetime.datetime:
@@ -304,14 +306,14 @@ class _CsvStreamRequest(StreamRequest, DownloadProcess):
     """
 
     def __init__(self, point: DatePoint, cache_num: int = 100, chunk_process: bool = False,
-                 csv_reader: Type[csv.DictReader]=csv.DictReader):
+                 csv_reader: Type[csv.DictReader] = csv.DictReader):
         super(_CsvStreamRequest, self).__init__(point=point)
         self.date = point.date
         self.url = point.url
         self.cache_num = cache_num
         self.chunk_process = chunk_process
         self.data = bytearray()
-        self.cache:List = list()
+        self.cache: List = list()
         self.csv_reader = csv_reader
         self.dec = zlib.decompressobj(32 + zlib.MAX_WBITS)
 
@@ -359,7 +361,7 @@ class _CsvStreamRequest(StreamRequest, DownloadProcess):
     def process_chunk(self) -> None:
         raise NotImplementedError
 
-    def process_row(self, row:dict) -> dict:
+    def process_row(self, row: dict) -> dict:
         return row
 
 
@@ -389,9 +391,9 @@ class _FileStream(_CsvStreamRequest):
 
 
     """
-    fieldnames:List = list()
+    fieldnames: List = list()
 
-    def __init__(self, point: DatePoint, writer_cls:Type=CsvFileDefaultDict):
+    def __init__(self, point: DatePoint, writer_cls: Type = CsvFileDefaultDict):
         super(_FileStream, self).__init__(point=point, chunk_process=False)
         assert os.path.isdir(point.dst_dir)
         new_dir = os.path.join(point.dst_dir, self.date.strftime("%Y%m%d"))
@@ -432,7 +434,7 @@ class _ZipFileStream(_FileStream):
     """
     DEFAULT = 'DEFAULT'
 
-    def __init__(self, point: DatePoint, writer_cls:Type=CsvZipDefaultDict):
+    def __init__(self, point: DatePoint, writer_cls: Type = CsvZipDefaultDict):
         super(_ZipFileStream, self).__init__(point, writer_cls)
 
     def process_row(self, row: dict) -> dict:

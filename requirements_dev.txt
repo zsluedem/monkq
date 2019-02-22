@@ -6,7 +6,6 @@ matplotlib
 jupyter
 mpl_finance
 pytest
-pytest-mypy
 typeshed
 pytest-aiohttp
 mypy==0.650

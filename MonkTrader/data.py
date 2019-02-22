@@ -23,10 +23,7 @@
 #
 import datetime
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Iterable, Iterator, Union, Protocol, TypeVar, TYPE_CHECKING, Generic
-if TYPE_CHECKING:
-    from MonkTrader.exchange.bitmex.data.download import DatePoint
-    from MonkTrader.exchange.bitmex.data.kline import KlinePoint
+from typing import Any, Iterable, Iterator
 
 from logbook import Logger
 from MonkTrader.exception import DataDownloadError
@@ -41,10 +38,10 @@ class Point(ABC):
         raise NotImplementedError
 
 
-
 class ProcessPoints(Iterable):
     def __iter__(self) -> Iterator[Point]:
         raise NotImplementedError()
+
 
 class DataDownloader(ABC):
     @abstractmethod
@@ -63,7 +60,7 @@ class DataDownloader(ABC):
             logger.info(_('some exception occured when you download data at point {}. Check!!').format(point.value))
 
 
-class DownloadProcess(Protocol):
+class DownloadProcess(ABC):
     """
     Each download process should include two method -- "process" and "rollback".
     The "process" is to do the download main function.If there are any exceptions happened in
@@ -72,7 +69,7 @@ class DownloadProcess(Protocol):
     classmethod "get_start" is used to get the start point from history.
     """
 
-    def __init__(self, point:Point)-> None:
+    def __init__(self, point: Point) -> None:
         ...
 
     def process(self) -> None:
@@ -90,7 +87,7 @@ class DownloadProcess(Protocol):
         ...
 
     @classmethod
-    def get_start(cls, obj:str) -> datetime.datetime:
+    def get_start(cls, obj: str) -> datetime.datetime:
         ...
 
 

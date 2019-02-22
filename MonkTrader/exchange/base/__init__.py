@@ -21,12 +21,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import List, Union, Optional, ValuesView
+from typing import TYPE_CHECKING, List, Optional, Union, ValuesView
 
 from MonkTrader.assets import T_INSTRUMENT, T_ORDER, AbcAccount
-from MonkTrader.assets.instrument import Instrument
 from MonkTrader.context import Context
+
 from .info import ExchangeInfo
+
+if TYPE_CHECKING:
+    from MonkTrader.assets.instrument import Instrument
 
 
 class BaseExchange:
@@ -35,7 +38,7 @@ class BaseExchange:
         self.name = name
         self.exchange_setting = exchange_setting
 
-    async def get_last_price(self, instrument: Instrument) -> float:
+    async def get_last_price(self, instrument: "Instrument") -> float:
         """
         get instrument last trade price
         """
@@ -48,7 +51,7 @@ class BaseExchange:
         raise NotImplementedError()
 
     async def place_limit_order(self, target: Union[str, T_INSTRUMENT],
-                          price: float, quantity: float) -> str:
+                                price: float, quantity: float) -> str:
         """
         create a new limit order in the exchange.
 
@@ -57,7 +60,7 @@ class BaseExchange:
         raise NotImplementedError()
 
     async def place_market_order(self, target: Union[str, T_INSTRUMENT],
-                           quantity: float) -> str:
+                                 quantity: float) -> str:
         """
         create a new market order in the exchange.
 
@@ -65,7 +68,7 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def amend_order(self, order_id: str, quantity:Optional[float], price:Optional[float]) -> bool:
+    async def amend_order(self, order_id: str, quantity: Optional[float], price: Optional[float]) -> bool:
         """
         amend an order price , quantitu or etc.
         """
@@ -94,20 +97,20 @@ class BaseExchange:
     def get_account(self) -> AbcAccount:
         raise NotImplementedError()
 
-    async def available_instruments(self) -> ValuesView[Instrument]:
+    async def available_instruments(self) -> ValuesView["Instrument"]:
         """
         return all the available instruments at the moment
         """
         raise NotImplementedError()
 
-    async def get_kline(self, target: Instrument, freq: str,
-                  count: int = 100, including_now: bool = False) -> List:
+    async def get_kline(self, target: "Instrument", freq: str,
+                        count: int = 100, including_now: bool = False) -> List:
         """
         get an instrument kline
         """
         raise NotImplementedError()
 
-    async def get_recent_trades(self, instrument: Instrument) -> List[dict]:
+    async def get_recent_trades(self, instrument: "Instrument") -> List[dict]:
         """
         get recent trade. Maximum recent 500 trades
         """
@@ -129,6 +132,3 @@ class BaseExchange:
     #
     # def place_stop_market_order(self) -> None:
     #     raise NotImplementedError()
-
-
-

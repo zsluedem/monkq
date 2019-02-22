@@ -32,14 +32,14 @@ secret = "chNOOS4KvNXR_Xq4k4c9qsfoKWvnDecLATCRlcBwyKDYnWgO"
 api_id = "LAqUlngMIQkIUjXMUreyu3qn"
 
 
-def test_generate_expires():
+def test_generate_expires() -> None:
     assert generate_expires(123, 123) == 246
     now = time.time()
     d = generate_expires() - now - expire_ts
     assert d < 2
 
 
-def test_generate_signature():
+def test_generate_signature() -> None:
     assert generate_signature(
         secret,
         'GET',
@@ -59,7 +59,7 @@ def test_generate_signature():
         '1749cd2ccae4aa49048ae09f0b95110cee706e0944e6a14ad0b3a8cb45bd336b'
 
 
-def test_gen_header_dict():
+def test_gen_header_dict() -> None:
     assert gen_header_dict(
         api_id,
         secret,

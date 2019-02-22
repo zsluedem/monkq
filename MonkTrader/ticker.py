@@ -23,6 +23,7 @@
 #
 import datetime
 from typing import Generator
+
 from dateutil.rrule import DAILY, MINUTELY, rrule
 from MonkTrader.exception import SettingError
 from MonkTrader.utils import is_aware_datetime

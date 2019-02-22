@@ -39,7 +39,8 @@ from MonkTrader.utils.i18n import _
 
 USERHOME = os.path.join(os.path.expanduser('~'), '.monk')
 
-T_D = TypeVar("T_D",bound=DataDownloader)
+T_D = TypeVar("T_D", bound=DataDownloader)
+
 
 @click.group()
 @click.option('-c', '--config', type=str)

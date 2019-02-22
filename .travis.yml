@@ -10,6 +10,7 @@ addons:
   apt:
     packages:
     - hdf5-tools
+    - libhdf5-dev
 branches:
   only:
   - master

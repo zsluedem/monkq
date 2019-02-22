@@ -6,7 +6,10 @@ dist: xenial
 python:
   - "3.7"
   - "3.6"
-
+addons:
+  apt:
+    packages:
+    - hdf5-tools
 branches:
   only:
   - master

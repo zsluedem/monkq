@@ -28,7 +28,7 @@ jobs:
 
       - run:
           name: test
-          command: "~/venv/bin/python -m pytest --mypy -m mypy tests"
+          command: "~/venv/bin/python -m mypy MonkTrader tests"
 
       - store_artifacts:
           path: test-reports
@@ -61,7 +61,7 @@ jobs:
 
       - run:
           name: test
-          command: "~/venv/bin/python -m pytest --mypy -m mypy tests"
+          command: "~/venv/bin/python -m mypy MonkTrader tests"
 
       - store_artifacts:
           path: test-reports

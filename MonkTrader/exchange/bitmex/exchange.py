@@ -30,7 +30,7 @@ from typing import (
     Any, Callable, Dict, List, Optional, TypeVar, Union, ValuesView, cast,
 )
 
-import aiohttp
+from aiohttp import TraceConfig, TCPConnector, ClientSession, ClientResponse, ClientTimeout  # type:ignore
 from aiohttp.helpers import sentinel
 from logbook import Logger
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
@@ -135,7 +135,7 @@ class BitmexExchange(BaseExchange):
             ws_url = BITMEX_WEBSOCKET_URL
         self.base_url = base_url
 
-        self._trace_config = aiohttp.TraceConfig()
+        self._trace_config = TraceConfig()
         # self._trace_config.on_request_end.append(self._end_request)
 
         # used only for testing
@@ -148,8 +148,8 @@ class BitmexExchange(BaseExchange):
 
         self._available_instrument_cache: Dict[str, Instrument] = {}
 
-        self._connector = aiohttp.TCPConnector(keepalive_timeout=90)  # type:ignore
-        self.session = aiohttp.ClientSession(trace_configs=[self._trace_config],
+        self._connector = TCPConnector(keepalive_timeout=90)  # type:ignore
+        self.session = ClientSession(trace_configs=[self._trace_config],
                                              loop=self._loop,
                                              connector=self._connector)
         self.ws = BitmexWebsocket(strategy=context.strategy, loop=self._loop,
@@ -451,7 +451,7 @@ class BitmexExchange(BaseExchange):
 
     async def _curl_bitmex(self, path: str, query: Optional[dict] = None, postdict: Optional[dict] = None,
                            timeout: int = sentinel, method: str = None,
-                           max_retry: int = 5) -> aiohttp.ClientResponse:  # type:ignore
+                           max_retry: int = 5) -> ClientResponse:  # type:ignore
         url = self.base_url + path
 
         url_obj = URL(url)
@@ -489,9 +489,9 @@ class BitmexExchange(BaseExchange):
         headers.update(gen_header_dict(self.api_secret, self.api_key, method, str(url_obj), data))
 
         if timeout is not sentinel:
-            timeout = aiohttp.ClientTimeout(total=timeout)  # type:ignore
+            timeout = ClientTimeout(total=timeout)
 
-        async def retry(retry_time: int) -> aiohttp.ClientResponse:  # type:ignore
+        async def retry(retry_time: int) -> ClientResponse:
             logger.info("Retry on remain times {}".format(retry_time))
             retry_time -= 1
             if retry_time < 0:

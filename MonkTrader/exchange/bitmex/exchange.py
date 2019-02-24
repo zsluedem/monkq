@@ -76,11 +76,49 @@ def authentication_required(fn: F) -> F:
 class BitmexSimulateExchange(BaseExchange):
     def __init__(self, context: Context, name: str, exchange_setting: dict) -> None:
         super(BitmexSimulateExchange, self).__init__(context, name, exchange_setting)
-        # self.dataloader = BitmexDataloader(self)
         # self.trade_counter = TradeCounter(self)
 
-    # def setup(self) -> None:
-    #     self.dataloader.load()
+    async def setup(self) -> None:
+        raise NotImplementedError()
+
+    async def get_last_price(self, instrument: "Instrument") -> float:
+        raise NotImplementedError()
+
+    def exchange_info(self) -> ExchangeInfo:
+        raise NotImplementedError()
+
+    async def place_limit_order(self, target: Union[str, T_INSTRUMENT],
+                                price: float, quantity: float) -> str:
+        raise NotImplementedError()
+
+    async def place_market_order(self, target: Union[str, T_INSTRUMENT],
+                                 quantity: float) -> str:
+        raise NotImplementedError()
+
+    async def amend_order(self, order_id: str, quantity: Optional[float], price: Optional[float]) -> bool:
+        raise NotImplementedError()
+
+    async def cancel_order(self, order_id: str) -> bool:
+        raise NotImplementedError()
+
+    async def open_orders(self) -> str:
+        raise NotImplementedError()
+
+    def get_order(self, order_id: str):
+        raise NotImplementedError()
+
+    def get_account(self):
+        raise NotImplementedError()
+
+    async def available_instruments(self) -> ValuesView["Instrument"]:
+        raise NotImplementedError()
+
+    async def get_kline(self, target: "Instrument", freq: str,
+                        count: int = 100, including_now: bool = False) -> List:
+        raise NotImplementedError()
+
+    async def get_recent_trades(self, instrument: "Instrument") -> List[dict]:
+        raise NotImplementedError()
 
 
 class BitmexExchange(BaseExchange):
@@ -150,8 +188,8 @@ class BitmexExchange(BaseExchange):
 
         self._connector = TCPConnector(keepalive_timeout=90)  # type:ignore
         self.session = ClientSession(trace_configs=[self._trace_config],
-                                             loop=self._loop,
-                                             connector=self._connector)
+                                     loop=self._loop,
+                                     connector=self._connector)
         self.ws = BitmexWebsocket(strategy=context.strategy, loop=self._loop,
                                   session=self.session, ws_url=ws_url,
                                   api_key=self.api_key, api_secret=self.api_secret,

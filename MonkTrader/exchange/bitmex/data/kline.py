@@ -159,3 +159,9 @@ class BitMexKlineTransform(DataDownloader):
                 self.cache = point.df
             else:
                 self.cache = pandas.concat([self.cache, point.df], copy=False)
+
+    def last(self):
+        pass
+
+    def fullfill_kline(self):
+        pass

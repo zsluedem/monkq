@@ -48,10 +48,10 @@ def random_trade_frame(length: int, timestamp: pandas.Timestamp = pandas.Timesta
     return df
 
 
-def random_kline_data(length: int, endtime: pandas.Timestamp) -> pandas.DataFrame:
+def random_kline_data(length: int, endtime: pandas.Timestamp, freq:str='min') -> pandas.DataFrame:
     df = pandas.DataFrame(numpy.random.uniform(1, 1000, size=(length, 6)),
                           columns=["high", "low", "open", "close", "volume", "turnover"],
-                          index=pandas.date_range(end=endtime, periods=length, freq='S', tz=utc))
+                          index=pandas.date_range(end=endtime, periods=length, freq=freq, tz=utc))
 
     return df
 

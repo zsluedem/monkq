@@ -58,7 +58,10 @@ class DataDownloader(ABC):
                 self.download_one_point(point)
         except DataDownloadError:
             logger.info(_('some exception occured when you download data at point {}. Check!!').format(point.value))
+        self.last()
 
+    def last(self) -> None:
+        pass
 
 class DownloadProcess(ABC):
     """

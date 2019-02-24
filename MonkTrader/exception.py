@@ -37,6 +37,9 @@ class SettingError(MonkError):
     pass
 
 
+class DataError(MonkError):
+    pass
+
 class AuthError(MonkError):
     pass
 

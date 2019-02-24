@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 import os
-from typing import Iterator, Optional
+from typing import Iterator, Optional, List, Dict
 
 import pandas
 from dateutil.relativedelta import relativedelta
@@ -34,13 +34,13 @@ from MonkTrader.config.global_settings import (
 from MonkTrader.data import DataProcessor, Point, ProcessPoints
 from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
-    KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME,
+    KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME, INSTRUMENT_FILENAME
 )
 from MonkTrader.utils import utc_datetime
 from MonkTrader.utils.i18n import _
-
+import json
 from ..log import logger_group
-from .utils import trades_to_1m_kline
+from .utils import trades_to_1m_kline, check_1m_data_integrity
 
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
@@ -164,5 +164,34 @@ class BitMexKlineTransform(DataProcessor):
         pass
 
 
+class FullFillPoint(Point):
+    def __init__(self):
+        pass
+
+    @property
+    def value(self) -> None:
+        pass
+
+
+class KlineFullFileProcessPoints(ProcessPoints):
+    def __init__(self) -> None:
+        pass
+
+    def __iter__(self) -> Iterator[FullFillPoint]:
+        pass
+
+
 class KlineFullFill(DataProcessor):
-    pass
+    def __init__(self, input_dir) -> None:
+        with open(os.path.join(input_dir, INSTRUMENT_FILENAME)) as f:
+            self.instrument_data: List[dict] = json.load(f)
+        self.output_file = os.path.join(input_dir, KLINE_FILE_NAME)
+
+    def process_points(self) -> KlineFullFileProcessPoints:
+        return KlineFullFileProcessPoints()
+
+    def process_one_point(self, point: FullFillPoint) -> None:
+        pass
+
+    def last(self) -> None:
+        pass

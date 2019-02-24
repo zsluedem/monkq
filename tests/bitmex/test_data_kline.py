@@ -1,4 +1,3 @@
-import datetime
 import os
 import tempfile
 from unittest.mock import patch
@@ -7,19 +6,18 @@ import pandas
 from MonkTrader.exchange.bitmex.const import TRADE_FILE_NAME
 from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform
 from MonkTrader.exchange.bitmex.data.utils import (
-    fullfill_1m_kline_with_start_end, trades_to_1m_kline, check_1m_data_integrity
+    check_1m_data_integrity, fullfill_1m_kline_with_start_end,
+    trades_to_1m_kline,
 )
-from MonkTrader.exchange.bitmex.data.utils import trades_to_1m_kline, fullfill_1m_kline_with_start_end
 from MonkTrader.utils import utc_datetime
-from tests.bitmex.conftest import random_kline_data
 
 from .conftest import random_kline_data, random_trade_frame
 
 
 def test_trade_to_1m_kline() -> None:
-    df1 = random_trade_frame(10, pandas.Timestamp(2018, 1, 1, 12, 0, 1))
-    df2 = random_trade_frame(10, pandas.Timestamp(2018, 1, 2, 12, 0, 1))
-    df3 = random_trade_frame(10, pandas.Timestamp(2018, 1, 4, 12, 0, 1))
+    df1 = random_trade_frame(10, utc_datetime(2018, 1, 1, 12, 0, 1))
+    df2 = random_trade_frame(10, utc_datetime(2018, 1, 2, 12, 0, 1))
+    df3 = random_trade_frame(10, utc_datetime(2018, 1, 4, 12, 0, 1))
 
     frame = df1.append(df2).append(df3)
 
@@ -50,29 +48,29 @@ def test_trade_to_1m_kline() -> None:
 
 
 def test_check_1m_data_integrity() -> None:
-    df1 = random_kline_data(10, datetime.datetime(2018, 1, 1, 12, 10))
+    df1 = random_kline_data(10, utc_datetime(2018, 1, 1, 12, 10))
 
-    assert check_1m_data_integrity(df1, datetime.datetime(2018, 1, 1, 12), datetime.datetime(2018, 1, 1, 12, 10))
-    assert not check_1m_data_integrity(df1, datetime.datetime(2018, 1, 1, 12, 1),
-                                       datetime.datetime(2018, 1, 1, 12, 10))
+    assert check_1m_data_integrity(df1, utc_datetime(2018, 1, 1, 12), utc_datetime(2018, 1, 1, 12, 10))
+    assert not check_1m_data_integrity(df1, utc_datetime(2018, 1, 1, 12, 1),
+                                       utc_datetime(2018, 1, 1, 12, 10))
 
-    assert not check_1m_data_integrity(df1, datetime.datetime(2018, 1, 1, 12), datetime.datetime(2018, 1, 1, 12, 12))
+    assert not check_1m_data_integrity(df1, utc_datetime(2018, 1, 1, 12), utc_datetime(2018, 1, 1, 12, 12))
 
 
 def test_fullfill_kline() -> None:
-    k_df1 = random_kline_data(10, pandas.Timestamp(2018, 1, 2, 12, 30))
-    k_df2 = random_kline_data(10, pandas.Timestamp(2018, 1, 6, 12, 30))
+    k_df1 = random_kline_data(10, utc_datetime(2018, 1, 2, 12, 30))
+    k_df2 = random_kline_data(10, utc_datetime(2018, 1, 6, 12, 30))
 
     kline_df = k_df1.append(k_df2)
 
     full_kline = fullfill_1m_kline_with_start_end(kline_df,
-                                                  datetime.datetime(2018, 1, 1, 12),
-                                                  datetime.datetime(2018, 1, 20, 12))
+                                                  utc_datetime(2018, 1, 1, 12),
+                                                  utc_datetime(2018, 1, 20, 12))
 
     assert len(full_kline) == 27360
 
-    s1 = full_kline.loc[datetime.datetime(2018, 1, 2, 12, 29)]
-    s2 = k_df1.loc[datetime.datetime(2018, 1, 2, 12, 29)]
+    s1 = full_kline.loc[utc_datetime(2018, 1, 2, 12, 29)]
+    s2 = k_df1.loc[utc_datetime(2018, 1, 2, 12, 29)]
     assert s1['close'] == s2['close']
     assert s1['open'] == s2['open']
     assert s1['high'] == s2['high']
@@ -81,8 +79,8 @@ def test_fullfill_kline() -> None:
     assert s1['turnover'] == s2['turnover']
     assert s1.name == s2.name
 
-    s1 = full_kline.loc[datetime.datetime(2018, 1, 2, 12, 35)]
-    s2 = k_df1.loc[datetime.datetime(2018, 1, 2, 12, 30)]
+    s1 = full_kline.loc[utc_datetime(2018, 1, 2, 12, 35)]
+    s2 = k_df1.loc[utc_datetime(2018, 1, 2, 12, 30)]
 
     assert s1['close'] == s2['close']
     assert s1['open'] == s2['open']
@@ -91,8 +89,8 @@ def test_fullfill_kline() -> None:
     assert s1['volume'] == 0
     assert s1['turnover'] == 0
 
-    s1 = full_kline.loc[datetime.datetime(2018, 1, 6, 12, 25)]
-    s2 = k_df2.loc[datetime.datetime(2018, 1, 6, 12, 25)]
+    s1 = full_kline.loc[utc_datetime(2018, 1, 6, 12, 25)]
+    s2 = k_df2.loc[utc_datetime(2018, 1, 6, 12, 25)]
 
     assert s1['close'] == s2['close']
     assert s1['open'] == s2['open']
@@ -102,8 +100,8 @@ def test_fullfill_kline() -> None:
     assert s1['turnover'] == s2['turnover']
     assert s1.name == s2.name
 
-    s1 = full_kline.loc[datetime.datetime(2018, 1, 6, 12, 35)]
-    s2 = k_df2.loc[datetime.datetime(2018, 1, 6, 12, 30)]
+    s1 = full_kline.loc[utc_datetime(2018, 1, 6, 12, 35)]
+    s2 = k_df2.loc[utc_datetime(2018, 1, 6, 12, 30)]
 
     assert s1['close'] == s2['close']
     assert s1['open'] == s2['open']

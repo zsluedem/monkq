@@ -163,5 +163,6 @@ class BitMexKlineTransform(DataProcessor):
     def last(self) -> None:
         pass
 
+
 class KlineFullFill(DataProcessor):
     pass

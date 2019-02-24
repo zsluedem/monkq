@@ -87,5 +87,6 @@ class BitmexDataloader(DataLoader):
             instrument = instrument_cls.create(instrument_map, instrument_raw, self.exchange)
             self.instruments[instrument.symbol] = instrument
 
+
     def get_last_price(self, instrument: Instrument) -> float:
         pass

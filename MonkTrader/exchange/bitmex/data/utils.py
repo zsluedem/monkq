@@ -22,10 +22,10 @@
 # SOFTWARE.
 #
 
+import datetime
 import os
 from typing import IO, Optional, Union
 
-import datetime
 import numpy as np
 import pandas
 from dateutil.relativedelta import relativedelta
@@ -154,7 +154,7 @@ def fullfill_1m_kline_with_start_end(frame: pandas.DataFrame, start: datetime.da
     new = pandas.DataFrame([
         (np.nan, np.nan, np.nan, np.nan, 0., 0.),
         (np.nan, np.nan, np.nan, np.nan, 0., 0.)
-    ], columns=["high", "low", "open", "close", "volume", "turnover"], index=pandas.DatetimeIndex((start,end)))
+    ], columns=["high", "low", "open", "close", "volume", "turnover"], index=pandas.DatetimeIndex((start, end)))
 
     frame = frame.append(new)
 
@@ -183,7 +183,7 @@ def classify_df(df: pandas.DataFrame, column: str, delete_column: bool = True) -
     return out
 
 
-def checkout_1m_data_integrity(df: pandas.DataFrame):
+def checkout_1m_data_integrity(df: pandas.DataFrame) -> None:
     pass
 
 

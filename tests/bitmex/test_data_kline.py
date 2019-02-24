@@ -1,15 +1,20 @@
+import datetime
 import os
 import tempfile
 from unittest.mock import patch
+
 import pandas
-import datetime
 from MonkTrader.exchange.bitmex.const import TRADE_FILE_NAME
 from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform
+from MonkTrader.exchange.bitmex.data.utils import (
+    fullfill_1m_kline_with_start_end, trades_to_1m_kline,
+)
 from MonkTrader.exchange.bitmex.data.utils import trades_to_1m_kline, fullfill_1m_kline_with_start_end
 from MonkTrader.utils import utc_datetime
 from tests.bitmex.conftest import random_kline_data
 
-from .conftest import random_trade_frame, random_kline_data
+from .conftest import random_kline_data, random_trade_frame
+
 
 def test_trade_to_1m_kline() -> None:
     df1 = random_trade_frame(10, pandas.Timestamp(2018, 1, 1, 12, 0, 1))
@@ -44,7 +49,7 @@ def test_trade_to_1m_kline() -> None:
     assert outcome['turnover'][-1] == sum(df3['foreignNotional'])
 
 
-def test_fullfill_kline():
+def test_fullfill_kline() -> None:
     k_df1 = random_kline_data(10, pandas.Timestamp(2018, 1, 2, 12, 30))
     k_df2 = random_kline_data(10, pandas.Timestamp(2018, 1, 6, 12, 30))
 

@@ -22,22 +22,23 @@
 # SOFTWARE.
 #
 
-from typing import List, Dict
-from MonkTrader.exception import  DataError
-from MonkTrader.utils.i18n import _
+from typing import Dict, List
+
 import pandas
+from MonkTrader.exception import DataError
+from MonkTrader.utils.i18n import _
+
 
 class LazyHDFTableStore():
     def __init__(self, hdf_path: str):
         self.hdf_path = hdf_path
-        self._cached:Dict[str, pandas.DataFrame] = dict()
+        self._cached: Dict[str, pandas.DataFrame] = dict()
 
     @property
     def cached_table(self) -> List[str]:
         return [key.strip('/') for key in self._cached.keys()]
 
-
-    def get(self, key:str) -> pandas.DataFrame:
+    def get(self, key: str) -> pandas.DataFrame:
         if key in self._cached:
             return self._cached[key]
         else:
@@ -47,4 +48,3 @@ class LazyHDFTableStore():
                 return df
             except KeyError:
                 raise DataError(_("Not found hdf data {} in {}").format(key, self.hdf_path))
-

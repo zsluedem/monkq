@@ -32,11 +32,7 @@ from MonkTrader.assets.instrument import (
 )
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataError
-from MonkTrader.exchange.bitmex.const import (
-    INSTRUMENT_FILENAME, TRADE_FILE_NAME,
-)
-
-from .utils import read_trade_tar
+from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
 if TYPE_CHECKING:
     from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange
@@ -90,7 +86,6 @@ class BitmexDataloader(DataLoader):
                 raise LoadDataError()
             instrument = instrument_cls.create(instrument_map, instrument_raw, self.exchange)
             self.instruments[instrument.symbol] = instrument
-
 
     def get_last_price(self, instrument: Instrument) -> float:
         pass

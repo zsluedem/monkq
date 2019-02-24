@@ -119,7 +119,6 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-
     # def order_book(self) -> None:
     #     raise NotImplementedError()
     # def withdraw(self) -> None:

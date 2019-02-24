@@ -30,7 +30,9 @@ from typing import (
     Any, Callable, Dict, List, Optional, TypeVar, Union, ValuesView, cast,
 )
 
-from aiohttp import TraceConfig, TCPConnector, ClientSession, ClientResponse, ClientTimeout  # type:ignore
+from aiohttp import (  # type:ignore
+    ClientResponse, ClientSession, ClientTimeout, TCPConnector, TraceConfig,
+)
 from aiohttp.helpers import sentinel
 from logbook import Logger
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
@@ -104,11 +106,11 @@ class BitmexSimulateExchange(BaseExchange):
     async def open_orders(self) -> str:
         raise NotImplementedError()
 
-    def get_order(self, order_id: str):
-        raise NotImplementedError()
-
-    def get_account(self):
-        raise NotImplementedError()
+    # def get_order(self, order_id: str):
+    #     raise NotImplementedError()
+    #
+    # def get_account(self):
+    #     raise NotImplementedError()
 
     async def available_instruments(self) -> ValuesView["Instrument"]:
         raise NotImplementedError()

@@ -22,14 +22,15 @@
 # SOFTWARE.
 #
 
+import datetime
+
+import pytest
+from MonkTrader.exception import DataError
 from MonkTrader.lazyhdf import LazyHDFTableStore
 from MonkTrader.utils import get_resource_path
-from MonkTrader.exception import DataError
-import datetime
-import pytest
 
 
-def test_lazy_hdf_table():
+def test_lazy_hdf_table() -> None:
     store = LazyHDFTableStore(get_resource_path('test_table.hdf'))
 
     assert store.cached_table == []

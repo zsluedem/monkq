@@ -63,6 +63,7 @@ class DataDownloader(ABC):
     def last(self) -> None:
         pass
 
+
 class DownloadProcess(ABC):
     """
     Each download process should include two method -- "process" and "rollback".

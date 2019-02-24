@@ -31,6 +31,7 @@ import stat
 from typing import IO, List, Optional, Set
 
 from dateutil.tz import tzlocal
+from pytz import utc
 
 
 def assure_dir(directory: str) -> bool:
@@ -153,3 +154,8 @@ def make_writable(filename: str) -> None:
         st = os.stat(filename)
         new_permissions = stat.S_IMODE(st.st_mode) | stat.S_IWUSR
         os.chmod(filename, new_permissions)
+
+
+def utc_datetime(year: int, month: int, day: int, hour: int = 0,
+                 minute: int = 0, second: int = 0, microsecond: int = 0) -> datetime.datetime:
+    return datetime.datetime(year, month, day, hour, minute, second, microsecond, tzinfo=utc)

@@ -21,8 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
 from urllib.parse import urljoin
+
+from MonkTrader.utils import utc_datetime
 
 TRADE_LINK = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}.csv.gz"
 QUOTE_LINK = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
@@ -33,7 +34,7 @@ BITMEX_TESTNET_WEBSOCKET_URL = "wss://testnet.bitmex.com/realtime"
 SYMBOL_LINK = urljoin(BITMEX_API_URL, "instrument")
 TARFILETYPE = '.csv.gz'
 INSTRUMENT_FILENAME = 'instruments.json'
-START_DATE = datetime.datetime(2014, 11, 22)  # bitmex open date
+START_DATE = utc_datetime(2014, 11, 22)  # bitmex open date
 
 TRADE_FILE_NAME = 'trade.hdf'
 QUOTE_FILE_NAME = 'quote.hdf'

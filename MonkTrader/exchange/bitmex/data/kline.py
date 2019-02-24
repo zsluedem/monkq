@@ -36,6 +36,7 @@ from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
     KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME,
 )
+from MonkTrader.utils import utc_datetime
 from MonkTrader.utils.i18n import _
 
 from ..log import logger_group
@@ -138,8 +139,8 @@ class BitMexKlineTransform(DataDownloader):
         logger.debug("Process {} data from {} to {}".format(point.key, self.mark_point, last_date))
         if last_date > self.mark_point:
             process_df = point.df.loc[
-                point.df.index < pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
-            cache_df = point.df.loc[point.df.index >= pandas.Timestamp(last_date.year, last_date.month, last_date.day)]
+                point.df.index < utc_datetime(last_date.year, last_date.month, last_date.day)]
+            cache_df = point.df.loc[point.df.index >= utc_datetime(last_date.year, last_date.month, last_date.day)]
 
             if self.cache is not None:
                 process_df = pandas.concat([self.cache, process_df], copy=False)

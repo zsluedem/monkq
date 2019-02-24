@@ -38,7 +38,7 @@ from MonkTrader.config.global_settings import (
     HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
 )
 from MonkTrader.data import (
-    DataDownloader, DownloadProcess, Point, ProcessPoints,
+    DataProcessor, DownloadProcess, Point, ProcessPoints,
 )
 from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
@@ -90,7 +90,7 @@ class BitMexProcessPoints(ProcessPoints):
             yield DatePoint(date, self.link.format(date.strftime("%Y%m%d")), self.dst_dir)
 
 
-class BitMexDownloader(DataDownloader):
+class BitMexDownloader(DataProcessor):
     def __init__(self, kind: str, mode: str, dst_dir: str):
         logger.info(_('Start downloading the data'))
         self.mode = mode
@@ -131,10 +131,10 @@ class BitMexDownloader(DataDownloader):
         self.end = datetime.datetime.now(tz=utc) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
         self.start = self.Streamer.get_start(dst_dir)
 
-    def process_point(self) -> BitMexProcessPoints:
+    def process_points(self) -> BitMexProcessPoints:
         return BitMexProcessPoints(self.start, self.end, self.link, self.dst_dir)
 
-    def download_one_point(self, point: DatePoint) -> None:
+    def process_one_point(self, point: DatePoint) -> None:
         logger.info(_('Downloading {} data on {}').format(self.kind, point.value.isoformat()))
         qstream = self.Streamer(point=point)
         qstream.process()

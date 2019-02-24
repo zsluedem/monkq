@@ -30,7 +30,7 @@ from typing import TypeVar
 import click
 import MonkTrader
 from logbook import StreamHandler
-from MonkTrader.data import DataDownloader
+from MonkTrader.data import DataProcessor
 from MonkTrader.exception import CommandError
 from MonkTrader.exchange.bitmex.data.download import BitMexDownloader
 from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform
@@ -39,7 +39,7 @@ from MonkTrader.utils.i18n import _
 
 USERHOME = os.path.join(os.path.expanduser('~'), '.monk')
 
-T_D = TypeVar("T_D", bound=DataDownloader)
+T_D = TypeVar("T_D", bound=DataProcessor)
 
 
 @click.group()
@@ -56,7 +56,7 @@ def cmd_main(ctx: click.Context, config: str) -> None:
 @click.option('--dst_dir', default=os.path.expanduser('~/.monk/data'), type=str)
 @click.pass_context
 def download(ctx: click.Context, kind: str, mode: str, dst_dir: str) -> None:
-    b: DataDownloader
+    b: DataProcessor
     if kind == 'kline':
         b = BitMexKlineTransform(dst_dir, dst_dir)
     else:

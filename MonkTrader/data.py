@@ -43,19 +43,19 @@ class ProcessPoints(Iterable):
         raise NotImplementedError()
 
 
-class DataDownloader(ABC):
+class DataProcessor(ABC):
     @abstractmethod
-    def process_point(self) -> ProcessPoints:
+    def process_points(self) -> ProcessPoints:
         raise NotImplementedError()
 
     @abstractmethod
-    def download_one_point(self, point: Any) -> None:
+    def process_one_point(self, point: Any) -> None:
         raise NotImplementedError()
 
     def do_all(self) -> None:
         try:
-            for point in iter(self.process_point()):
-                self.download_one_point(point)
+            for point in iter(self.process_points()):
+                self.process_one_point(point)
         except DataDownloadError:
             logger.info(_('some exception occured when you download data at point {}. Check!!').format(point.value))
         self.last()

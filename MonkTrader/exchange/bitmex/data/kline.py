@@ -31,7 +31,7 @@ from MonkTrader.config.global_settings import (
     HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
     HDF_TRADE_TO_KLINE_CHUNK_SIZE,
 )
-from MonkTrader.data import DataDownloader, Point, ProcessPoints
+from MonkTrader.data import DataProcessor, Point, ProcessPoints
 from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
     KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME,
@@ -109,7 +109,7 @@ class BitMexKlineProcessPoints(ProcessPoints):
                                   "{}").format(key))
 
 
-class BitMexKlineTransform(DataDownloader):
+class BitMexKlineTransform(DataProcessor):
     def __init__(self, input_dir: str, output_dir: str) -> None:
         self.input_file = os.path.join(input_dir, TRADE_FILE_NAME)
         self.output_file = os.path.join(output_dir, KLINE_FILE_NAME)
@@ -117,10 +117,10 @@ class BitMexKlineTransform(DataDownloader):
         self.mark_point = START_DATE
         self.cache = None
 
-    def process_point(self) -> BitMexKlineProcessPoints:
+    def process_points(self) -> BitMexKlineProcessPoints:
         return BitMexKlineProcessPoints(self.input_file, self.output_file)
 
-    def download_one_point(self, point: KlinePoint) -> None:
+    def process_one_point(self, point: KlinePoint) -> None:
         # if df is None, it is an end point
         if point.df is None:
             if self.cache is not None:
@@ -163,5 +163,5 @@ class BitMexKlineTransform(DataDownloader):
     def last(self) -> None:
         pass
 
-    # def fullfill_kline(self):
-    #     pass
+class KlineFullFill(DataProcessor):
+    pass

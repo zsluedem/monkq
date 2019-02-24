@@ -54,7 +54,7 @@ dtypes_quote = {
 
 
 def _date_parse(one: str) -> pandas.Timestamp:
-    return pandas.to_datetime(one, format="%Y-%m-%dD%H:%M:%S.%f")
+    return pandas.to_datetime(one, format="%Y-%m-%dD%H:%M:%S.%f", utc=True)
 
 
 def _side_converters(side: str) -> SIDE:

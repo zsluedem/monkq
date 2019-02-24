@@ -45,8 +45,11 @@ from MonkTrader.exchange.bitmex.const import (
     INSTRUMENT_FILENAME, QUOTE_FILE_NAME, QUOTE_LINK, START_DATE, SYMBOL_LINK,
     TARFILETYPE, TRADE_FILE_NAME, TRADE_LINK,
 )
-from MonkTrader.utils import CsvFileDefaultDict, CsvZipDefaultDict, assure_dir
+from MonkTrader.utils import (
+    CsvFileDefaultDict, CsvZipDefaultDict, assure_dir, utc_datetime,
+)
 from MonkTrader.utils.i18n import _
+from pytz import utc
 
 from ..log import logger_group
 from .utils import classify_df, read_quote_tar, read_trade_tar
@@ -125,7 +128,7 @@ class BitMexDownloader(DataDownloader):
             raise ValueError()
 
     def init_mode(self, dst_dir: str) -> None:
-        self.end = datetime.datetime.utcnow() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
+        self.end = datetime.datetime.now(tz=utc) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
         self.start = self.Streamer.get_start(dst_dir)
 
     def process_point(self) -> BitMexProcessPoints:
@@ -209,7 +212,7 @@ class _HDFStream(FileObjRequest, DownloadProcess):
                     index = store.select_column(key, 'index')
                     last = max(index)
                     max_date = max(max_date, last)
-                last_date = datetime.datetime(max_date.year, max_date.month, max_date.day)
+                last_date = utc_datetime(max_date.year, max_date.month, max_date.day)
                 return last_date + relativedelta(days=+1)
 
         except (KeyError, OSError):
@@ -266,7 +269,7 @@ class RawStreamRequest(StreamRequest, DownloadProcess):
         dones = os.listdir(dst_dir)
         if dones:
             current = max(dones)
-            return datetime.datetime.strptime(current, "%Y%m%d" + TARFILETYPE) + relativedelta(days=+1)
+            return utc.localize(datetime.datetime.strptime(current, "%Y%m%d" + TARFILETYPE)) + relativedelta(days=+1)
         else:
             return START_DATE
 
@@ -282,7 +285,7 @@ class SymbolsStreamRequest(RawStreamRequest):
 
     @classmethod
     def get_start(cls, dst_dir: str) -> datetime.datetime:
-        return datetime.datetime.utcnow() + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
+        return datetime.datetime.now(tz=utc) + relativedelta(days=-1, hour=0, minute=0, second=0, microsecond=0)
 
 
 class _CsvStreamRequest(StreamRequest, DownloadProcess):
@@ -422,7 +425,7 @@ class _FileStream(_CsvStreamRequest):
         dones = os.listdir(dst_dir)
         if dones:
             current = max(dones)
-            return datetime.datetime.strptime(current, "%Y%m%d") + relativedelta(days=+1)
+            return utc.localize(datetime.datetime.strptime(current, "%Y%m%d")) + relativedelta(days=+1)
         else:
             return START_DATE
 

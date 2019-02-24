@@ -44,6 +44,8 @@ from MonkTrader.exchange.bitmex.data.download import (
     HDFTradeStream, QuoteZipFileStream, SymbolsStreamRequest, TarStreamRequest,
     TradeZipFileStream,
 )
+from MonkTrader.utils import utc_datetime
+from pytz import utc
 from tests.bitmex.conftest import (
     random_quote_frame, random_quote_hdf, random_trade_frame, random_trade_hdf,
 )
@@ -98,46 +100,46 @@ def _mock_exception_stream(self, url: str):  # type:ignore
 
 
 def test_datepoint() -> None:
-    d = DatePoint(datetime.datetime(2018, 1, 1), 'a', 'b')
-    assert d.value == datetime.datetime(2018, 1, 1)
+    d = DatePoint(utc_datetime(2018, 1, 1), 'a', 'b')
+    assert d.value == utc_datetime(2018, 1, 1)
     assert d.url == 'a'
     assert d.dst_dir == 'b'
 
 
 def test_bitmex_process_points() -> None:
-    p = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 5), 'a', 'b'))
+    p = iter(BitMexProcessPoints(utc_datetime(2018, 1, 1), utc_datetime(2018, 1, 5), 'a', 'b'))
     one = next(p)
-    assert one.value == datetime.datetime(2018, 1, 1)
+    assert one.value == utc_datetime(2018, 1, 1)
     assert one.url == 'a'
     assert one.dst_dir == 'b'
     two = next(p)
-    assert two.value == datetime.datetime(2018, 1, 2)
+    assert two.value == utc_datetime(2018, 1, 2)
     assert two.url == 'a'
     assert two.dst_dir == 'b'
-    assert next(p).value == datetime.datetime(2018, 1, 3)
-    assert next(p).value == datetime.datetime(2018, 1, 4)
-    assert next(p).value == datetime.datetime(2018, 1, 5)
+    assert next(p).value == utc_datetime(2018, 1, 3)
+    assert next(p).value == utc_datetime(2018, 1, 4)
+    assert next(p).value == utc_datetime(2018, 1, 5)
 
     with pytest.raises(StopIteration):
         next(p)
 
-    p2 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 5), 'a', 'b'))
+    p2 = iter(BitMexProcessPoints(utc_datetime(2018, 1, 1), utc_datetime(2018, 1, 5), 'a', 'b'))
     p_list = list(iter(p2))
-    assert p_list[0] == DatePoint(datetime.datetime(2018, 1, 1), 'a', 'b')
-    assert p_list[1] == DatePoint(datetime.datetime(2018, 1, 2), 'a', 'b')
-    assert p_list[2] == DatePoint(datetime.datetime(2018, 1, 3), 'a', 'b')
-    assert p_list[3] == DatePoint(datetime.datetime(2018, 1, 4), 'a', 'b')
-    assert p_list[4] == DatePoint(datetime.datetime(2018, 1, 5), 'a', 'b')
+    assert p_list[0] == DatePoint(utc_datetime(2018, 1, 1), 'a', 'b')
+    assert p_list[1] == DatePoint(utc_datetime(2018, 1, 2), 'a', 'b')
+    assert p_list[2] == DatePoint(utc_datetime(2018, 1, 3), 'a', 'b')
+    assert p_list[3] == DatePoint(utc_datetime(2018, 1, 4), 'a', 'b')
+    assert p_list[4] == DatePoint(utc_datetime(2018, 1, 5), 'a', 'b')
 
-    p3 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1), 'a', 'b'))
-    assert next(p3).value == datetime.datetime(2018, 1, 1)
+    p3 = iter(BitMexProcessPoints(utc_datetime(2018, 1, 1), utc_datetime(2018, 1, 1), 'a', 'b'))
+    assert next(p3).value == utc_datetime(2018, 1, 1)
     with pytest.raises(StopIteration):
         next(p3)
 
-    p4 = iter(BitMexProcessPoints(datetime.datetime(2018, 1, 1), datetime.datetime(2018, 1, 1), 'a', 'b'))
+    p4 = iter(BitMexProcessPoints(utc_datetime(2018, 1, 1), utc_datetime(2018, 1, 1), 'a', 'b'))
 
     p2_list = list(p4)
-    assert p2_list[0] == DatePoint(datetime.datetime(2018, 1, 1), 'a', 'b')
+    assert p2_list[0] == DatePoint(utc_datetime(2018, 1, 1), 'a', 'b')
     with pytest.raises(IndexError):
         p2_list[1]
 
@@ -157,13 +159,13 @@ def test_bitmex_downloader() -> None:
         mkfile(os.path.join(tmp, '20180103'))
         b = BitMexDownloader(kind='quote', mode='csv', dst_dir=tmp)
         assert b.Streamer == QuoteZipFileStream
-        assert b.start == datetime.datetime(2018, 1, 4)
+        assert b.start == utc_datetime(2018, 1, 4)
 
     with tempfile.TemporaryDirectory() as tmp:
         mkfile(os.path.join(tmp, '20180103'))
         b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
         assert b.Streamer == TradeZipFileStream
-        assert b.start == datetime.datetime(2018, 1, 4)
+        assert b.start == utc_datetime(2018, 1, 4)
 
     with tempfile.TemporaryDirectory() as tmp:
         b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
@@ -184,13 +186,13 @@ def test_bitmex_downloader() -> None:
         mkfile(os.path.join(tmp, '20180103.csv.gz'))
         b = BitMexDownloader(kind='trade', mode='tar', dst_dir=tmp)
         assert b.Streamer == TarStreamRequest
-        assert b.start == datetime.datetime(2018, 1, 4)
+        assert b.start == utc_datetime(2018, 1, 4)
 
     with tempfile.TemporaryDirectory() as tmp:
         mkfile(os.path.join(tmp, '20180103.csv.gz'))
         b = BitMexDownloader(kind='quote', mode='tar', dst_dir=tmp)
         assert b.Streamer == TarStreamRequest
-        assert b.start == datetime.datetime(2018, 1, 4)
+        assert b.start == utc_datetime(2018, 1, 4)
 
     with tempfile.TemporaryDirectory() as tmp:
         b = BitMexDownloader(kind='quote', mode='tar', dst_dir=tmp)
@@ -211,18 +213,18 @@ def test_bitmex_downloader() -> None:
         random_quote_hdf(os.path.join(tmp, QUOTE_FILE_NAME))
         b = BitMexDownloader(kind='quote', mode='hdf', dst_dir=tmp)
         assert b.Streamer == HDFQuoteStream
-        assert b.start == datetime.datetime(2018, 1, 4)
+        assert b.start == utc_datetime(2018, 1, 4)
 
     with tempfile.TemporaryDirectory() as tmp:
         random_trade_hdf(os.path.join(tmp, TRADE_FILE_NAME))
         b = BitMexDownloader(kind='trade', mode='hdf', dst_dir=tmp)
         assert b.Streamer == HDFTradeStream
-        assert b.start == datetime.datetime(2018, 1, 4)
+        assert b.start == utc_datetime(2018, 1, 4)
 
 
 def test_bitmexdownloader_do_all() -> None:
     with tempfile.TemporaryDirectory() as tmp:
-        start = datetime.datetime.utcnow() + relativedelta(days=-2, hour=0, minute=0, second=0, microsecond=0)
+        start = datetime.datetime.now(tz=utc) + relativedelta(days=-2, hour=0, minute=0, second=0, microsecond=0)
         mkfile(os.path.join(tmp, start.strftime('%Y%m%d')))
         b = BitMexDownloader(kind='trade', mode='csv', dst_dir=tmp)
         m = MagicMock()
@@ -277,7 +279,7 @@ class MockSymbolsStream(SymbolsStreamRequest):
 
 def test_symbols_stream_request() -> None:
     with tempfile.TemporaryDirectory() as tmp:
-        stream = MockSymbolsStream(point=DatePoint(datetime.datetime(2018, 1, 1), mock_url, tmp),
+        stream = MockSymbolsStream(point=DatePoint(utc_datetime(2018, 1, 1), mock_url, tmp),
                                    stream=stream_symbols)
         stream.process()
 
@@ -289,7 +291,7 @@ def test_symbols_stream_request() -> None:
 
 def test_raw_stream_request() -> None:
     with tempfile.TemporaryDirectory() as tmp:
-        date = datetime.datetime(2018, 1, 1)
+        date = utc_datetime(2018, 1, 1)
         outcome = os.path.join(tmp, date.strftime("%Y%m%d") + '.csv.gz')
         stream = MockRawStreamRequest(point=DatePoint(date, mock_url, tmp), stream=stream_b)
         stream.process()
@@ -302,7 +304,7 @@ def test_raw_stream_request() -> None:
 
 def test_raw_stream_request_exception() -> None:
     with tempfile.TemporaryDirectory() as tmp:
-        date = datetime.datetime(2018, 1, 1)
+        date = utc_datetime(2018, 1, 1)
         outcome = os.path.join(tmp, date.strftime("%Y%m%d") + '.csv.gz')
         stream = MockRawStreamRequest(point=DatePoint(date, mock_url, tmp), stream=stream_b)
         stream._stream_requests = _mock_exception_stream  # type:ignore
@@ -313,7 +315,7 @@ def test_raw_stream_request_exception() -> None:
 
 
 def test_trade_zip_file_stream() -> None:
-    d = datetime.datetime(2018, 1, 1)
+    d = utc_datetime(2018, 1, 1)
 
     with tempfile.TemporaryDirectory() as tmp:
         tar_dir = os.path.join(tmp, d.strftime("%Y%m%d"))
@@ -341,7 +343,7 @@ def test_trade_zip_file_stream() -> None:
 
 
 def test_trade_zip_file_stream_exception() -> None:
-    d = datetime.datetime(2018, 1, 1)
+    d = utc_datetime(2018, 1, 1)
 
     with tempfile.TemporaryDirectory() as tmp:
         tar_dir = os.path.join(tmp, d.strftime("%Y%m%d"))
@@ -356,7 +358,7 @@ def test_trade_zip_file_stream_exception() -> None:
 
 
 def test_quote_zip_file_stream() -> None:
-    d = datetime.datetime(2018, 1, 1)
+    d = utc_datetime(2018, 1, 1)
 
     with tempfile.TemporaryDirectory() as tmp:
         tar_dir = os.path.join(tmp, d.strftime("%Y%m%d"))
@@ -384,7 +386,7 @@ def test_quote_zip_file_stream() -> None:
 
 
 def test_quote_zip_file_stream_exception() -> None:
-    d = datetime.datetime(2018, 1, 1)
+    d = utc_datetime(2018, 1, 1)
 
     with tempfile.TemporaryDirectory() as tmp:
         tar_dir = os.path.join(tmp, d.strftime("%Y%m%d"))
@@ -403,7 +405,7 @@ def test_quote_hdf_stream() -> None:
         resp = m.get()
         resp.raw = io.BytesIO(stream_quote_gzip)
         with tempfile.TemporaryDirectory() as tmp:
-            point = DatePoint(datetime.datetime(2018, 1, 3), 'test_url', tmp)
+            point = DatePoint(utc_datetime(2018, 1, 3), 'test_url', tmp)
             stream = HDFQuoteStream(point=point)
             stream.process()
 
@@ -431,7 +433,7 @@ def test_quote_hdf_stream() -> None:
 
 
 def test_quote_hdf_stream_exception() -> None:
-    d = datetime.datetime(2018, 1, 5)
+    d = utc_datetime(2018, 1, 5)
 
     with tempfile.TemporaryDirectory() as tmp:
         point = DatePoint(d, 'test_url', tmp)
@@ -453,7 +455,7 @@ def test_quote_hdf_stream_exception() -> None:
 
 
 def test_trade_hdf_stream_exception() -> None:
-    d = datetime.datetime(2018, 1, 5)
+    d = utc_datetime(2018, 1, 5)
     with tempfile.TemporaryDirectory() as tmp:
         point = DatePoint(d, 'test_url', tmp)
         random_trade_hdf(os.path.join(tmp, TRADE_FILE_NAME), 4)
@@ -479,7 +481,7 @@ def test_trade_hdf_stream() -> None:
         resp = m.get()
         resp.raw = io.BytesIO(stream_trade_gzip)
         with tempfile.TemporaryDirectory() as tmp:
-            point = DatePoint(datetime.datetime(2018, 1, 3), 'test_url', tmp, )
+            point = DatePoint(utc_datetime(2018, 1, 3), 'test_url', tmp, )
             stream = HDFTradeStream(point=point)
             stream.process()
 

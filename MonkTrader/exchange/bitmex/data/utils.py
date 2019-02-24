@@ -183,8 +183,14 @@ def classify_df(df: pandas.DataFrame, column: str, delete_column: bool = True) -
     return out
 
 
-def checkout_1m_data_integrity(df: pandas.DataFrame) -> None:
-    pass
+def check_1m_data_integrity(df: pandas.DataFrame, start: datetime.datetime, end: datetime.datetime) -> bool:
+    assert start.second == 0
+    assert start.microsecond == 0
+    assert end.second == 0
+    assert end.microsecond == 0
+    start = start + relativedelta(minutes=1)
+    total_date = pandas.date_range(start, end, freq='min')
+    return len(df) == len(total_date) and df.index[0] == start and df.index[-1] == end
 
 
 def tarcsv2hdf(csv_file: str, key: str, output: str = '') -> None:

@@ -7,7 +7,7 @@ import pandas
 from MonkTrader.exchange.bitmex.const import TRADE_FILE_NAME
 from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform
 from MonkTrader.exchange.bitmex.data.utils import (
-    fullfill_1m_kline_with_start_end, trades_to_1m_kline,
+    fullfill_1m_kline_with_start_end, trades_to_1m_kline, check_1m_data_integrity
 )
 from MonkTrader.exchange.bitmex.data.utils import trades_to_1m_kline, fullfill_1m_kline_with_start_end
 from MonkTrader.utils import utc_datetime
@@ -47,6 +47,16 @@ def test_trade_to_1m_kline() -> None:
     assert outcome['close'][-1] == df3['price'][-1]
     assert outcome['volume'][-1] == sum(df3['homeNotional'])
     assert outcome['turnover'][-1] == sum(df3['foreignNotional'])
+
+
+def test_check_1m_data_integrity() -> None:
+    df1 = random_kline_data(10, datetime.datetime(2018, 1, 1, 12, 10))
+
+    assert check_1m_data_integrity(df1, datetime.datetime(2018, 1, 1, 12), datetime.datetime(2018, 1, 1, 12, 10))
+    assert not check_1m_data_integrity(df1, datetime.datetime(2018, 1, 1, 12, 1),
+                                       datetime.datetime(2018, 1, 1, 12, 10))
+
+    assert not check_1m_data_integrity(df1, datetime.datetime(2018, 1, 1, 12), datetime.datetime(2018, 1, 1, 12, 12))
 
 
 def test_fullfill_kline() -> None:

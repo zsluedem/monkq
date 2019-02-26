@@ -30,10 +30,9 @@ import tempfile
 
 import pytest
 import pytz
-from MonkTrader.utils import (
-    CsvFileDefaultDict, CsvZipDefaultDict, assure_dir, get_resource_path,
-    is_aware_datetime,
-)
+from MonkTrader.utils.filefunc import assure_dir, get_resource_path
+from MonkTrader.utils.csv import CsvFileDefaultDict, CsvZipDefaultDict
+from MonkTrader.utils.timefunc import is_aware_datetime
 
 
 def test_assure_home() -> None:

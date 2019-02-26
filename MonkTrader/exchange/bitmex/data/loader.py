@@ -32,7 +32,9 @@ from MonkTrader.assets.instrument import (
 )
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataError
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
+from MonkTrader.lazyhdf import LazyHDFTableStore
+from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME, KLINE_FILE_NAME
+from MonkTrader.context import Context
 
 if TYPE_CHECKING:
     from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange
@@ -70,11 +72,13 @@ class BitmexDataloader(DataLoader):
         'FFWCSX': PerpetualInstrument,  # perpetual  futures contracts
     }
 
-    def __init__(self, exchange: 'BitmexSimulateExchange', data_dir: str) -> None:
+    def __init__(self, exchange: 'BitmexSimulateExchange', context: Context, data_dir: str) -> None:
         self.data_dir = data_dir
         self.instruments: Dict[str, Instrument] = dict()
         self.exchange = exchange
+        self.context = context
         self.trade_data: Dict = dict()
+        self._kline_store = LazyHDFTableStore(os.path.join(data_dir, KLINE_FILE_NAME))
 
     def load_instruments(self) -> None:
         instruments_file = os.path.join(self.data_dir, INSTRUMENT_FILENAME)
@@ -88,4 +92,10 @@ class BitmexDataloader(DataLoader):
             self.instruments[instrument.symbol] = instrument
 
     def get_last_price(self, instrument: Instrument) -> float:
+        kline = self._kline_store.get(instrument.symbol)
+        bar = kline.loc[self.context.now]
+        return bar['close']
+
+    def get_kline(self, instrument: "Instrument", freq: str,
+                  count: int, including_now: bool = False)-> list:
         pass

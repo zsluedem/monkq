@@ -44,7 +44,7 @@ from MonkTrader.exchange.bitmex.data.download import (
     HDFTradeStream, QuoteZipFileStream, SymbolsStreamRequest, TarStreamRequest,
     TradeZipFileStream,
 )
-from MonkTrader.utils import utc_datetime
+from MonkTrader.utils.timefunc import utc_datetime
 from pytz import utc
 from tests.bitmex.conftest import (
     random_quote_frame, random_quote_hdf, random_trade_frame, random_trade_hdf,

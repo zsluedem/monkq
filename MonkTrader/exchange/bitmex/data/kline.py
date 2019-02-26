@@ -37,7 +37,7 @@ from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
     KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME, INSTRUMENT_FILENAME
 )
-from MonkTrader.utils import utc_datetime, parse_datetime_str
+from MonkTrader.utils.timefunc import utc_datetime, parse_datetime_str
 from MonkTrader.utils.i18n import _
 import json
 from ..log import logger_group

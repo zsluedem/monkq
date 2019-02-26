@@ -31,11 +31,12 @@ from MonkTrader.assets.instrument import (
     UpsideInstrument,
 )
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
-from MonkTrader.utils import get_resource_path
+from MonkTrader.utils.filefunc import get_resource_path
 
 
 def test_bitmex_dataloader(exchange: MagicMock) -> None:
-    dataloader = BitmexDataloader(exchange, get_resource_path())
+    context = MagicMock()
+    dataloader = BitmexDataloader(exchange, context, get_resource_path())
     dataloader.load_instruments()
 
     XBT7D_D95 = dataloader.instruments.get('XBT7D_D95')

@@ -35,7 +35,7 @@ from MonkTrader.exception import (
     NotFoundError, RateLimitError,
 )
 from MonkTrader.exchange.bitmex.exchange import BitmexExchange
-from MonkTrader.utils import get_resource_path
+from MonkTrader.utils.filefunc import get_resource_path
 
 TEST_API_KEY = "ae86vJ85yU8Mh5r6iSv68asb"
 TEST_API_SECRET = "Yl39dzyn5YzuswQ_7qGtEx1LxxnwV5dM2Ex1ihr_EK-4Rs8b"

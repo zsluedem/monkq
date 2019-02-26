@@ -26,7 +26,7 @@ import hmac
 import time
 from urllib.parse import urlparse
 
-from MonkTrader.utils import local_offset_seconds
+from MonkTrader.utils.timefunc import local_offset_seconds
 
 _safe_nonce = 300
 

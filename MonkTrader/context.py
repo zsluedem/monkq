@@ -22,6 +22,7 @@
 # SOFTWARE.
 #
 from importlib import import_module
+import datetime
 from typing import TYPE_CHECKING, Dict, Type, TypeVar
 
 from MonkTrader.base_strategy import BaseStrategy
@@ -39,6 +40,7 @@ class Context:
     def __init__(self, settings: Setting) -> None:
         self._settings = settings
         self._exchanges: Dict = {}
+        self.now: datetime.datetime
 
     def _import_cls_from_str(self, entry: str) -> Type[BaseStrategy]:
         mod_path, _, cls_name = entry.rpartition('.')

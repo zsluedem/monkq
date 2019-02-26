@@ -13,7 +13,7 @@ from MonkTrader.exchange.bitmex.data.utils import (
     check_1m_data_integrity, fullfill_1m_kline_with_start_end,
     trades_to_1m_kline,
 )
-from MonkTrader.utils import utc_datetime
+from MonkTrader.utils.timefunc import utc_datetime
 
 from .conftest import random_kline_data, random_trade_frame, random_kline_data_with_start_end
 

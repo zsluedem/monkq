@@ -62,6 +62,10 @@ T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 FuncType = Callable[..., Any]
 F = TypeVar('F', bound=FuncType)
 
+bitmex_info = ExchangeInfo(name="bitmex",
+                           location="unknown",
+                           info="famous exchange")
+
 
 def authentication_required(fn: F) -> F:
     """Annotation for methods that require auth."""
@@ -87,7 +91,7 @@ class BitmexSimulateExchange(BaseExchange):
         raise NotImplementedError()
 
     def exchange_info(self) -> ExchangeInfo:
-        raise NotImplementedError()
+        return bitmex_info
 
     async def place_limit_order(self, target: Union[str, T_INSTRUMENT],
                                 price: float, quantity: float) -> str:
@@ -225,9 +229,7 @@ class BitmexExchange(BaseExchange):
             return 0
 
     def exchange_info(self) -> ExchangeInfo:
-        return ExchangeInfo(name="bitmex",
-                            location="unknown",
-                            info="famous exchange")
+        return bitmex_info
 
     async def place_limit_order(self, target: Union[str, Instrument],
                                 price: float, quantity: float, timeout: int = sentinel,

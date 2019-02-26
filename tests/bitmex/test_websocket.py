@@ -34,7 +34,7 @@ from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.exchange.bitmex.websocket import (
     INTERVAL_FACTOR, BitmexWebsocket,
 )
-from MonkTrader.utils import get_resource_path
+from MonkTrader.utils.filefunc import get_resource_path
 
 pytestmark = pytest.mark.asyncio
 API_KEY = "jeg9lHHlfNPu3UbCyLDCYm32"

@@ -15,7 +15,7 @@ from MonkTrader.exchange.bitmex.data.utils import (
 )
 from MonkTrader.utils.timefunc import utc_datetime
 
-from .conftest import random_kline_data, random_trade_frame, random_kline_data_with_start_end
+from tests.tools import random_trade_frame, random_kline_data, random_kline_data_with_start_end
 
 
 def compare_dataframe_time(df1: pandas.DataFrame, df2: pandas.DataFrame, time: datetime.datetime) -> None:

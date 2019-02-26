@@ -106,11 +106,11 @@ class BitmexSimulateExchange(BaseExchange):
     async def open_orders(self) -> str:
         raise NotImplementedError()
 
-    def get_order(self, order_id: str):
-        raise NotImplementedError()
-
-    def get_account(self):
-        raise NotImplementedError()
+    # def get_order(self, order_id: str):
+    #     raise NotImplementedError()
+    #
+    # def get_account(self):
+    #     raise NotImplementedError()
 
     async def available_instruments(self) -> ValuesView["Instrument"]:
         raise NotImplementedError()

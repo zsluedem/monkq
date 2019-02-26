@@ -28,6 +28,7 @@ import inspect
 import os
 import pathlib
 import stat
+from dateutil.parser import parse
 from typing import IO, List, Optional, Set
 
 from dateutil.tz import tzlocal
@@ -159,3 +160,9 @@ def make_writable(filename: str) -> None:
 def utc_datetime(year: int, month: int, day: int, hour: int = 0,
                  minute: int = 0, second: int = 0, microsecond: int = 0) -> datetime.datetime:
     return datetime.datetime(year, month, day, hour, minute, second, microsecond, tzinfo=utc)
+
+
+def parse_datetime_str(datetime_str: str) -> datetime.datetime:
+    naive = parse(datetime_str, ignoretz=True)
+    aware = naive.replace(tzinfo=utc)
+    return aware

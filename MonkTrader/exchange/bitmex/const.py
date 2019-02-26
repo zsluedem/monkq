@@ -31,7 +31,7 @@ BITMEX_API_URL = "https://www.bitmex.com/api/v1/"
 BITMEX_WEBSOCKET_URL = "wss://www.bitmex.com/realtime"
 BITMEX_TESTNET_API_URL = "https://testnet.bitmex.com/api/v1/"
 BITMEX_TESTNET_WEBSOCKET_URL = "wss://testnet.bitmex.com/realtime"
-SYMBOL_LINK = urljoin(BITMEX_API_URL, "instrument")
+SYMBOL_LINK = urljoin(BITMEX_API_URL, "instrument?count=500")
 TARFILETYPE = '.csv.gz'
 INSTRUMENT_FILENAME = 'instruments.json'
 START_DATE = utc_datetime(2014, 11, 22)  # bitmex open date

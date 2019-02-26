@@ -150,15 +150,13 @@ def fullfill_1m_kline_with_start_end(frame: pandas.DataFrame, start: datetime.da
     assert start.microsecond == 0
     assert end.second == 0
     assert end.microsecond == 0
-    start = start + relativedelta(minutes=1)
     new = pandas.DataFrame([
         (np.nan, np.nan, np.nan, np.nan, 0., 0.),
         (np.nan, np.nan, np.nan, np.nan, 0., 0.)
     ], columns=["high", "low", "open", "close", "volume", "turnover"], index=pandas.DatetimeIndex((start, end)))
 
-    frame = frame.append(new)
-
-    resample = frame.resample('1Min', label='right', closed='right', convention="end")
+    new_df = frame.append(new, sort=False)
+    resample = new_df.resample('1Min', label='right', closed='right', convention="end")
 
     outcome = resample['close'].last()
     outcome = pandas.DataFrame(index=outcome.index)

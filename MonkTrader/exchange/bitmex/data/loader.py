@@ -32,11 +32,7 @@ from MonkTrader.assets.instrument import (
 )
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataError
-from MonkTrader.exchange.bitmex.const import (
-    INSTRUMENT_FILENAME, TRADE_FILE_NAME,
-)
-
-from .utils import read_trade_tar
+from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 
 if TYPE_CHECKING:
     from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange
@@ -91,20 +87,5 @@ class BitmexDataloader(DataLoader):
             instrument = instrument_cls.create(instrument_map, instrument_raw, self.exchange)
             self.instruments[instrument.symbol] = instrument
 
-    def load_trades(self) -> None:
-        base = os.path.join(self.data_dir, TRADE_FILE_NAME)
-        directories = os.listdir(base)
-        directories.sort()
-        for directory in directories:
-            date_file = os.path.join(base, directory)
-            symbols_files = os.listdir(date_file)
-            for path in symbols_files:
-                symbol = path.split('.')[0]
-                data = read_trade_tar(os.path.join(date_file, path), False, False)
-                if self.trade_data.get(symbol) is None:
-                    self.trade_data[symbol] = data
-                else:
-                    self.trade_data[symbol] = self.trade_data[symbol].append(data, ignore_index=True)
-
-    def resample_trades(self, freq: str) -> None:
+    def get_last_price(self, instrument: Instrument) -> float:
         pass

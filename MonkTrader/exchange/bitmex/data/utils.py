@@ -22,11 +22,13 @@
 # SOFTWARE.
 #
 
+import datetime
 import os
 from typing import IO, Optional, Union
 
 import numpy as np
 import pandas
+from dateutil.relativedelta import relativedelta
 from MonkTrader.assets.const import SIDE
 from MonkTrader.const import TICK_DIRECTION
 
@@ -142,6 +144,32 @@ def trades_to_1m_kline(frame: pandas.DataFrame) -> pandas.DataFrame:
     return kline
 
 
+def fullfill_1m_kline_with_start_end(frame: pandas.DataFrame, start: datetime.datetime,
+                                     end: datetime.datetime) -> pandas.DataFrame:
+    assert start.second == 0
+    assert start.microsecond == 0
+    assert end.second == 0
+    assert end.microsecond == 0
+    new = pandas.DataFrame([
+        (np.nan, np.nan, np.nan, np.nan, 0., 0.),
+        (np.nan, np.nan, np.nan, np.nan, 0., 0.)
+    ], columns=["high", "low", "open", "close", "volume", "turnover"], index=pandas.DatetimeIndex((start, end)))
+
+    new_df = frame.append(new, sort=False)
+    resample = new_df.resample('1Min', label='right', closed='right', convention="end")
+
+    outcome = resample['close'].last()
+    outcome = pandas.DataFrame(index=outcome.index)
+    outcome['close'] = resample['close'].last()
+    outcome['open'] = resample['open'].last()
+    outcome['high'] = resample['high'].last()
+    outcome['low'] = resample['low'].last()
+    outcome['volume'] = resample['volume'].sum()
+    outcome['turnover'] = resample['turnover'].sum()
+    outcome.fillna(method='ffill', inplace=True)
+    return outcome
+
+
 def classify_df(df: pandas.DataFrame, column: str, delete_column: bool = True) -> pandas.DataFrame:
     out = {}
     uniques = df[column].unique()
@@ -151,6 +179,16 @@ def classify_df(df: pandas.DataFrame, column: str, delete_column: bool = True) -
             del new[column]
         out[one] = new
     return out
+
+
+def check_1m_data_integrity(df: pandas.DataFrame, start: datetime.datetime, end: datetime.datetime) -> bool:
+    assert start.second == 0
+    assert start.microsecond == 0
+    assert end.second == 0
+    assert end.microsecond == 0
+    start = start + relativedelta(minutes=1)
+    total_date = pandas.date_range(start, end, freq='min')
+    return len(df) == len(total_date) and df.index[0] == start and df.index[-1] == end
 
 
 def tarcsv2hdf(csv_file: str, key: str, output: str = '') -> None:

@@ -21,21 +21,39 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from urllib.parse import urljoin
 
-from MonkTrader.utils import utc_datetime
+import datetime
 
-TRADE_LINK = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}.csv.gz"
-QUOTE_LINK = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
-BITMEX_API_URL = "https://www.bitmex.com/api/v1/"
-BITMEX_WEBSOCKET_URL = "wss://www.bitmex.com/realtime"
-BITMEX_TESTNET_API_URL = "https://testnet.bitmex.com/api/v1/"
-BITMEX_TESTNET_WEBSOCKET_URL = "wss://testnet.bitmex.com/realtime"
-SYMBOL_LINK = urljoin(BITMEX_API_URL, "instrument?count=500")
-TARFILETYPE = '.csv.gz'
-INSTRUMENT_FILENAME = 'instruments.json'
-START_DATE = utc_datetime(2014, 11, 22)  # bitmex open date
+import pytest
+from MonkTrader.exception import DataError
+from MonkTrader.lazyhdf import LazyHDFTableStore
+from MonkTrader.utils import get_resource_path
 
-TRADE_FILE_NAME = 'trade.hdf'
-QUOTE_FILE_NAME = 'quote.hdf'
-KLINE_FILE_NAME = 'kline.hdf'
+
+def test_lazy_hdf_table() -> None:
+    store = LazyHDFTableStore(get_resource_path('test_table.hdf'))
+
+    assert store.cached_table == []
+
+    df1 = store.get('XBTZ15')
+
+    assert df1.index[-1] == datetime.datetime(2015, 12, 25, 12)
+    assert df1.iloc[-1]['open'] == 453.11
+    assert df1.iloc[-1]['close'] == 453.11
+    assert df1.iloc[-1]['high'] == 453.11
+    assert df1.iloc[-1]['low'] == 453.11
+    assert df1.iloc[-1]['volume'] == 650.4802
+    assert df1.iloc[-1]['turnover'] == 294739.1000
+
+    assert df1.index[10] == datetime.datetime(2015, 5, 29, 12, 41)
+    assert df1.iloc[10]['open'] == 280.0
+    assert df1.iloc[10]['close'] == 280.0
+    assert df1.iloc[10]['high'] == 280.0
+    assert df1.iloc[10]['low'] == 280.0
+    assert df1.iloc[10]['volume'] == 0.0
+    assert df1.iloc[10]['turnover'] == 0.0
+
+    assert store.cached_table == ['XBTZ15']
+
+    with pytest.raises(DataError):
+        store.get("XBTUSD")

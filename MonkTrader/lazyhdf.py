@@ -21,21 +21,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from urllib.parse import urljoin
 
-from MonkTrader.utils import utc_datetime
+from typing import Dict, List
 
-TRADE_LINK = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}.csv.gz"
-QUOTE_LINK = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"
-BITMEX_API_URL = "https://www.bitmex.com/api/v1/"
-BITMEX_WEBSOCKET_URL = "wss://www.bitmex.com/realtime"
-BITMEX_TESTNET_API_URL = "https://testnet.bitmex.com/api/v1/"
-BITMEX_TESTNET_WEBSOCKET_URL = "wss://testnet.bitmex.com/realtime"
-SYMBOL_LINK = urljoin(BITMEX_API_URL, "instrument?count=500")
-TARFILETYPE = '.csv.gz'
-INSTRUMENT_FILENAME = 'instruments.json'
-START_DATE = utc_datetime(2014, 11, 22)  # bitmex open date
+import pandas
+from MonkTrader.exception import DataError
+from MonkTrader.utils.i18n import _
 
-TRADE_FILE_NAME = 'trade.hdf'
-QUOTE_FILE_NAME = 'quote.hdf'
-KLINE_FILE_NAME = 'kline.hdf'
+
+class LazyHDFTableStore():
+    def __init__(self, hdf_path: str):
+        self.hdf_path = hdf_path
+        self._cached: Dict[str, pandas.DataFrame] = dict()
+
+    @property
+    def cached_table(self) -> List[str]:
+        return [key.strip('/') for key in self._cached.keys()]
+
+    def get(self, key: str) -> pandas.DataFrame:
+        if key in self._cached:
+            return self._cached[key]
+        else:
+            try:
+                df = pandas.read_hdf(self.hdf_path, key)
+                self._cached[key] = df
+                return df
+            except KeyError:
+                raise DataError(_("Not found hdf data {} in {}").format(key, self.hdf_path))

@@ -38,6 +38,9 @@ class BaseExchange:
         self.name = name
         self.exchange_setting = exchange_setting
 
+    async def setup(self) -> None:
+        raise NotImplementedError()
+
     async def get_last_price(self, instrument: "Instrument") -> float:
         """
         get instrument last trade price
@@ -114,9 +117,6 @@ class BaseExchange:
         """
         get recent trade. Maximum recent 500 trades
         """
-        raise NotImplementedError()
-
-    async def setup(self) -> None:
         raise NotImplementedError()
 
     # def order_book(self) -> None:

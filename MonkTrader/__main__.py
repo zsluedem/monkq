@@ -30,16 +30,16 @@ from typing import TypeVar
 import click
 import MonkTrader
 from logbook import StreamHandler
-from MonkTrader.data import DataDownloader
+from MonkTrader.data import DataProcessor
 from MonkTrader.exception import CommandError
 from MonkTrader.exchange.bitmex.data.download import BitMexDownloader
-from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform
+from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform, KlineFullFill
 from MonkTrader.utils import assure_dir, make_writable
 from MonkTrader.utils.i18n import _
 
 USERHOME = os.path.join(os.path.expanduser('~'), '.monk')
 
-T_D = TypeVar("T_D", bound=DataDownloader)
+T_D = TypeVar("T_D", bound=DataProcessor)
 
 
 @click.group()
@@ -56,13 +56,15 @@ def cmd_main(ctx: click.Context, config: str) -> None:
 @click.option('--dst_dir', default=os.path.expanduser('~/.monk/data'), type=str)
 @click.pass_context
 def download(ctx: click.Context, kind: str, mode: str, dst_dir: str) -> None:
-    b: DataDownloader
     if kind == 'kline':
-        b = BitMexKlineTransform(dst_dir, dst_dir)
+        kline_transform = BitMexKlineTransform(dst_dir, dst_dir)
+        kline_transform.do_all()
+        kline_fullfill = KlineFullFill(dst_dir)
+        kline_fullfill.do_all()
     else:
         assure_dir(dst_dir)
         b = BitMexDownloader(kind, mode, dst_dir)
-    b.do_all()
+        b.do_all()
 
 
 @cmd_main.command()

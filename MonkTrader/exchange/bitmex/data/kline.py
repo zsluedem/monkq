@@ -22,25 +22,26 @@
 # SOFTWARE.
 #
 import os
-from typing import Iterator, Optional
+from typing import Iterator, Optional, List, Dict, Tuple
 
 import pandas
+import datetime
 from dateutil.relativedelta import relativedelta
 from logbook import Logger
 from MonkTrader.config.global_settings import (
     HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
     HDF_TRADE_TO_KLINE_CHUNK_SIZE,
 )
-from MonkTrader.data import DataDownloader, Point, ProcessPoints
+from MonkTrader.data import DataProcessor, Point, ProcessPoints
 from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
-    KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME,
+    KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME, INSTRUMENT_FILENAME
 )
-from MonkTrader.utils import utc_datetime
+from MonkTrader.utils import utc_datetime, parse_datetime_str
 from MonkTrader.utils.i18n import _
-
+import json
 from ..log import logger_group
-from .utils import trades_to_1m_kline
+from .utils import trades_to_1m_kline, check_1m_data_integrity, fullfill_1m_kline_with_start_end
 
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
@@ -109,7 +110,7 @@ class BitMexKlineProcessPoints(ProcessPoints):
                                   "{}").format(key))
 
 
-class BitMexKlineTransform(DataDownloader):
+class BitMexKlineTransform(DataProcessor):
     def __init__(self, input_dir: str, output_dir: str) -> None:
         self.input_file = os.path.join(input_dir, TRADE_FILE_NAME)
         self.output_file = os.path.join(output_dir, KLINE_FILE_NAME)
@@ -117,10 +118,10 @@ class BitMexKlineTransform(DataDownloader):
         self.mark_point = START_DATE
         self.cache = None
 
-    def process_point(self) -> BitMexKlineProcessPoints:
+    def process_points(self) -> BitMexKlineProcessPoints:
         return BitMexKlineProcessPoints(self.input_file, self.output_file)
 
-    def download_one_point(self, point: KlinePoint) -> None:
+    def process_one_point(self, point: KlinePoint) -> None:
         # if df is None, it is an end point
         if point.df is None:
             if self.cache is not None:
@@ -147,7 +148,8 @@ class BitMexKlineTransform(DataDownloader):
 
             if len(process_df) != 0:
                 kline = trades_to_1m_kline(process_df)
-                logger.debug("Write {} data from {} to {} into hdf file".format(point.key, self.mark_point, last_date))
+                logger.debug("Write {} data from {} to {} into hdf file"
+                             .format(point.key, self.mark_point, last_date))
                 kline.to_hdf(self.output_file, point.key, mode='a',
                              format='table', data_columns=True, index=False,
                              complib=HDF_FILE_COMPRESS_LIB, complevel=HDF_FILE_COMPRESS_LEVEL, append=True)
@@ -159,3 +161,99 @@ class BitMexKlineTransform(DataDownloader):
                 self.cache = point.df
             else:
                 self.cache = pandas.concat([self.cache, point.df], copy=False)
+
+    def last(self) -> None:
+        pass
+
+
+class FullFillPoint(Point):
+    def __init__(self, df: pandas.DataFrame, instruemt_data: dict, key: str):
+        self.df = df
+        self.instrument_data = instruemt_data
+        self.key = key
+
+    @property
+    def value(self) -> pandas.DataFrame:
+        return self.df
+
+
+class KlineFullFileProcessPoints(ProcessPoints):
+    def __init__(self, instrument_data: Dict[str, dict], kline_hdf_path: str) -> None:
+        self.kline_hdf_path = kline_hdf_path
+        self.instrument_data = instrument_data
+
+        self.keys = self.get_keys()
+
+    def __iter__(self) -> Iterator[FullFillPoint]:
+        for key in self.keys:
+            df = pandas.read_hdf(self.kline_hdf_path, key)
+            yield FullFillPoint(df, self.instrument_data[key], key)
+
+    def get_keys(self) -> List[str]:
+        kline = pandas.HDFStore(self.kline_hdf_path)
+        kline_keys = kline.keys()
+        kline.close()
+        kline_keys = [key.strip('/') for key in kline_keys]
+        return kline_keys
+
+
+class KlineFullFill(DataProcessor):
+    def __init__(self, input_dir: str) -> None:
+        with open(os.path.join(input_dir, INSTRUMENT_FILENAME)) as f:
+            instrument_data: List[dict] = json.load(f)
+        self.instrument_data = self.reformat_instrument_data(instrument_data)
+        self.output_file = os.path.join(input_dir, KLINE_FILE_NAME)
+
+    def reformat_instrument_data(self, data: List[dict]) -> Dict[str, dict]:
+        outcome = {}
+        for instrument in data:
+            outcome[instrument['symbol']] = instrument
+        return outcome
+
+    def process_points(self) -> KlineFullFileProcessPoints:
+        return KlineFullFileProcessPoints(self.instrument_data, self.output_file)
+
+    def process_one_point(self, point: FullFillPoint) -> None:
+        logger.debug("Full fill kline data {}.".format(point.key))
+        df = point.value
+        list_datetime, last_datetime = self.get_start_end(point.key, df)
+
+        logger.debug("Kline data start point is: {}, end point is: {}.".format(list_datetime, last_datetime))
+
+        if check_1m_data_integrity(df, list_datetime, last_datetime):
+            logger.debug("Check kline is complete, doesn't have to full fill.")
+        else:
+            logger.debug("Kline data is not full fill, try to full fill.")
+            fullfill_df = fullfill_1m_kline_with_start_end(df, list_datetime, last_datetime)
+
+            fullfill_df.to_hdf(self.output_file, key=point.key, mode='a',
+                               format='fixed', data_columns=True,
+                               index=False, complib=HDF_FILE_COMPRESS_LIB,
+                               complevel=HDF_FILE_COMPRESS_LEVEL)
+
+    def get_start_end(self, key: str, df: pandas.DataFrame) -> Tuple[datetime.datetime, datetime.datetime]:
+        instrument = self.instrument_data[key]
+        list_datetime = parse_datetime_str(instrument['listing'])
+        start = list_datetime + relativedelta(minutes=1)
+
+        last_pd_datetime = df.index[-1]
+        last_pd_datetime = last_pd_datetime.to_pydatetime()
+        if instrument.get('expiry'):
+            expiry_datetime = parse_datetime_str(instrument['expiry'])
+            if expiry_datetime > last_pd_datetime:
+                logger.debug("Instrument {} haven't expired yet. "
+                             "Expiry date: {}, last_kline_date: {}.".format(key, expiry_datetime, last_pd_datetime))
+                last_datetime = last_pd_datetime + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
+            else:
+                logger.debug("Instrument {} has expired. Use expiry date {}".format(key, expiry_datetime))
+                last_datetime = expiry_datetime
+        else:
+            logger.debug("Instrument {} doesn't have expiry date."
+                         "Use the df last datetime as the last date."
+                         "Original kline last datetime is {}".format(key, last_pd_datetime))
+
+            last_datetime = last_pd_datetime + relativedelta(days=+1, hour=0, minute=0, second=0, microsecond=0)
+        return (start, last_datetime)
+
+    def last(self) -> None:
+        pass

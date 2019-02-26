@@ -448,3 +448,4 @@ def test_fullfill_kline() -> None:
         compare_datafrome_index(xmrj17, XMRJ17, random.randint(1, len(XMRJ17)))
         compare_datafrome_index(xmrj17, XMRJ17, random.randint(1, len(XMRJ17)))
         compare_datafrome_index(xmrj17, XMRJ17, random.randint(1, len(XMRJ17)))
+        store.close()

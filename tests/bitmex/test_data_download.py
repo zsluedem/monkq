@@ -412,20 +412,21 @@ def test_quote_hdf_stream() -> None:
             with pandas.HDFStore(os.path.join(tmp, QUOTE_FILE_NAME), 'r') as store:
                 XBTz18 = store['XBTZ18']
 
+                assert XBTz18.index[0] == utc_datetime(2018, 12, 5, 0, 0, 7, 302458)
                 assert XBTz18['bidSize'][0] == 256083
                 assert XBTz18['bidPrice'][0] == 9.54e-06
                 assert XBTz18['askPrice'][0] == 9.55e-06
                 assert XBTz18['askSize'][0] == 574060
 
                 XBTUSD = store['XBTUSD']
-
+                assert XBTUSD.index[0] == utc_datetime(2018, 12, 5, 0, 0, 5, 45590)
                 assert XBTUSD['bidSize'][0] == 256081
                 assert XBTUSD['bidPrice'][0] == 9.54e-06
                 assert XBTUSD['askPrice'][0] == 9.55e-06
                 assert XBTUSD['askSize'][0] == 544060
 
                 ADAZ18 = store['ADAZ18']
-
+                assert ADAZ18.index[0] == utc_datetime(2018, 12, 5, 0, 0, 4, 778522)
                 assert ADAZ18['bidSize'][0] == 256089
                 assert ADAZ18['bidPrice'][0] == 9.54e-06
                 assert ADAZ18['askPrice'][0] == 9.55e-06
@@ -488,6 +489,7 @@ def test_trade_hdf_stream() -> None:
             with pandas.HDFStore(os.path.join(tmp, TRADE_FILE_NAME), 'r') as store:
                 XBTz18 = store['XBTZ18']
 
+                assert XBTz18.index[0] == utc_datetime(2018, 12, 5, 0, 0, 25, 948313)
                 assert XBTz18['side'][0] == SIDE.SELL.value
                 assert XBTz18['size'][0] == 10000
                 assert XBTz18['price'][0] == 9.54e-06
@@ -498,6 +500,7 @@ def test_trade_hdf_stream() -> None:
 
                 ADAZ18 = store['ADAZ18']
 
+                assert ADAZ18.index[0] == utc_datetime(2018, 12, 5, 0, 0, 25, 948313)
                 assert ADAZ18['side'][0] == SIDE.SELL.value
                 assert ADAZ18['size'][0] == 166774
                 assert ADAZ18['price'][0] == 9.54e-06
@@ -508,6 +511,7 @@ def test_trade_hdf_stream() -> None:
 
                 XBTUSD = store['XBTUSD']
 
+                assert XBTUSD.index[0] == utc_datetime(2018, 12, 5, 0, 0, 25, 948313)
                 assert XBTUSD['side'][0] == SIDE.SELL.value
                 assert XBTUSD['size'][0] == 11
                 assert XBTUSD['price'][0] == 9.54e-06

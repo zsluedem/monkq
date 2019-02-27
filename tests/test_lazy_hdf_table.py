@@ -26,8 +26,8 @@ import numpy as np
 import pytest
 from MonkTrader.exception import DataError
 from MonkTrader.lazyhdf import LazyHDFTableStore
-from MonkTrader.utils.filefunc import get_resource_path
 from MonkTrader.utils.timefunc import utc_datetime
+from tests.tools import get_resource_path
 
 
 def test_lazy_hdf_table() -> None:

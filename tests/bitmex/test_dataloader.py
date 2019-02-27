@@ -24,7 +24,7 @@
 
 import datetime
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from dateutil.tz import tzutc
 from MonkTrader.assets.instrument import (
@@ -32,13 +32,13 @@ from MonkTrader.assets.instrument import (
     UpsideInstrument,
 )
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
-from MonkTrader.utils.filefunc import get_resource_path
 from MonkTrader.utils.timefunc import utc_datetime
+from tests.tools import get_resource_path
 
 
 def test_bitmex_dataloader_instruments(exchange: MagicMock) -> None:
     context = MagicMock()
-    dataloader = BitmexDataloader(exchange, context, get_resource_path())
+    dataloader = BitmexDataloader(exchange, context, get_resource_path('bitmex'))
     dataloader.load_instruments()
 
     XBT7D_D95 = dataloader.instruments.get('XBT7D_D95')
@@ -137,7 +137,7 @@ def test_bitmex_dataloader_instruments(exchange: MagicMock) -> None:
 @pytest.mark.xfail
 def test_bitmex_dataloader_kline_data(exchange: MagicMock) -> None:
     context = MagicMock()
-    dataloader = BitmexDataloader(exchange, context, "")
+    dataloader = BitmexDataloader(exchange, context, get_resource_path())
 
     instrument = MagicMock()
     instrument.symbol = "XBTZ15"

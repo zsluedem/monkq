@@ -48,33 +48,6 @@ def assure_dir(directory: str) -> bool:
         return False
 
 
-def get_resource_path(file: Optional[str] = None, prefix: str = 'resource') -> str:
-    """
-    This function would get the file path from the module which use this
-    function. Supposed that:
-    We have a dir like below:
-
-    a_directory
-        |
-        |
-        +-- __init__.py
-        +-- a.py
-
-    If we use this function in `a.py`, then this function would return
-    `/path/to/a_directory/resource/{file}`
-
-    :param file:
-    :return:
-    """
-    outer_frame = inspect.getouterframes(inspect.currentframe())[1]
-    file_path = outer_frame.filename
-    dir_path = os.path.dirname(file_path)
-    if file is None:
-        return os.path.join(dir_path, prefix)
-    else:
-        return os.path.join(dir_path, prefix, file)
-
-
 def make_writable(filename: str) -> None:
     if not os.access(filename, os.W_OK):
         st = os.stat(filename)

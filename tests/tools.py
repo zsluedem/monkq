@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 import datetime
-
+import os
 import numpy
 import pandas
 from pytz import utc
@@ -90,3 +90,14 @@ def random_trade_hdf(path: str, length: int = 3) -> None:
     tmp_df2.to_hdf(path, '/ETHUSD',
                    data_columns=True, index=False, complib='blosc:blosclz',
                    complevel=9, append=True, format='table')
+
+
+def get_resource_path(filename: str = "") -> str:
+    """
+    get the resource path in the resource in the test dir.
+    /path/to/resource/filename
+    """
+    current = os.path.abspath(__file__)
+    current_path = os.path.dirname(current)
+    resource_dir = os.path.join(current_path, 'resource')
+    return os.path.join(resource_dir, filename)

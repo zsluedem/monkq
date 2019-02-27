@@ -34,13 +34,13 @@ from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.exchange.bitmex.websocket import (
     INTERVAL_FACTOR, BitmexWebsocket,
 )
-from MonkTrader.utils.filefunc import get_resource_path
+from tests.tools import get_resource_path
 
 pytestmark = pytest.mark.asyncio
 API_KEY = "jeg9lHHlfNPu3UbCyLDCYm32"
 API_SECRET = "9d9Sjm_vMhWC9BcMOsf9y2hcM37d4sAbUJTyfEumdD3t92qE"
 
-ws_data_path = get_resource_path("mock_bitmex_ws_data.txt")
+ws_data_path = get_resource_path("bitmex/mock_bitmex_ws_data.txt")
 
 
 def ret_data() -> Generator[str, None, None]:

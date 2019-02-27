@@ -35,7 +35,7 @@ from MonkTrader.exception import (
     NotFoundError, RateLimitError,
 )
 from MonkTrader.exchange.bitmex.exchange import BitmexExchange
-from MonkTrader.utils.filefunc import get_resource_path
+from tests.tools import get_resource_path
 
 TEST_API_KEY = "ae86vJ85yU8Mh5r6iSv68asb"
 TEST_API_SECRET = "Yl39dzyn5YzuswQ_7qGtEx1LxxnwV5dM2Ex1ihr_EK-4Rs8b"
@@ -77,7 +77,7 @@ async def normal_bitmex_server(
             "indicativeSettlePrice": 3584.47,
             "optionUnderlyingPrice": null,"settledPrice": null,"timestamp": "2019-01-26T13:28:00.000Z"}]"""
         else:
-            with open(get_resource_path('active_instrument.json')) as f:
+            with open(get_resource_path('bitmex/active_instrument.json')) as f:
                 active_contents = f.read()
             body = active_contents
         headers = {

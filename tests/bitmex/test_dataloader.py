@@ -23,6 +23,7 @@
 #
 
 import datetime
+import pytest
 from unittest.mock import MagicMock
 
 from dateutil.tz import tzutc
@@ -32,9 +33,10 @@ from MonkTrader.assets.instrument import (
 )
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.utils.filefunc import get_resource_path
+from MonkTrader.utils.timefunc import utc_datetime
 
 
-def test_bitmex_dataloader(exchange: MagicMock) -> None:
+def test_bitmex_dataloader_instruments(exchange: MagicMock) -> None:
     context = MagicMock()
     dataloader = BitmexDataloader(exchange, context, get_resource_path())
     dataloader.load_instruments()
@@ -130,3 +132,22 @@ def test_bitmex_dataloader(exchange: MagicMock) -> None:
     assert TRXH19.front_date == datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc())
     assert TRXH19.reference_symbol == ".TRXXBT30M"
     assert TRXH19.deleverage
+
+
+@pytest.mark.xfail
+def test_bitmex_dataloader_kline_data(exchange: MagicMock) -> None:
+    context = MagicMock()
+    dataloader = BitmexDataloader(exchange, context, "")
+
+    instrument = MagicMock()
+    instrument.symbol = "XBTZ15"
+    context.now = utc_datetime(2015, 12, 25, 11, 40)
+
+    assert dataloader.get_last_price(instrument) == 454.00
+    kline_df = dataloader.get_kline(instrument, 50)
+    assert len(kline_df) == 50
+    assert kline_df.index[-1] == utc_datetime(2015, 12, 25, 11, 39)
+
+    context.now = utc_datetime(2016, 1, 1, 11, 12)
+
+    assert dataloader.get_last_price(instrument) == 0

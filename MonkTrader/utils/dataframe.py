@@ -53,11 +53,12 @@ def is_datetime_not_remain(obj: datetime.datetime, freq: str) -> bool:
 
 
 def _get_relativedelta(period: int, minutes: int, forward: bool) -> relativedelta:
-        remain = minutes % period
-        if forward:
-            return relativedelta(second=0, microsecond=0, minutes=period - remain)
-        else:
-            return relativedelta(second=0, microsecond=0, minutes=-remain)
+    remain = minutes % period
+    if forward:
+        return relativedelta(second=0, microsecond=0, minutes=period - remain)
+    else:
+        return relativedelta(second=0, microsecond=0, minutes=-remain)
+
 
 def make_datetime_exactly(obj: datetime.datetime, freq: str, forward: bool) -> datetime.datetime:
     if is_datetime_not_remain(obj, freq):

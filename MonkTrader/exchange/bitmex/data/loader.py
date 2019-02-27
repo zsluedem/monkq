@@ -24,7 +24,9 @@
 
 import json
 import os
+import pandas
 from typing import TYPE_CHECKING, Dict, Type
+from logbook import Logger
 
 from MonkTrader.assets.instrument import (
     DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
@@ -35,9 +37,15 @@ from MonkTrader.exception import LoadDataError
 from MonkTrader.lazyhdf import LazyHDFTableStore
 from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME, KLINE_FILE_NAME
 from MonkTrader.context import Context
+from MonkTrader.utils.dataframe import kline_dataframe_window, make_datetime_exactly
+from MonkTrader.utils.i18n import _
+from ..log import logger_group
 
 if TYPE_CHECKING:
     from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange
+
+logger = Logger('exchange.bitmex.dataloader')
+logger_group.add_logger(logger)
 
 instrument_map = {
     'symbol': 'symbol',
@@ -81,21 +89,31 @@ class BitmexDataloader(DataLoader):
         self._kline_store = LazyHDFTableStore(os.path.join(data_dir, KLINE_FILE_NAME))
 
     def load_instruments(self) -> None:
+        logger.debug("Now loading the instruments data.")
         instruments_file = os.path.join(self.data_dir, INSTRUMENT_FILENAME)
         with open(instruments_file) as f:
             instruments_raw = json.load(f)
         for instrument_raw in instruments_raw:
             instrument_cls = self.instrument_cls.get(instrument_raw['typ'])
             if instrument_cls is None:
-                raise LoadDataError()
+                raise LoadDataError(_("Unsurpport instrument type {}").format(instrument_raw['typ']))
             instrument = instrument_cls.create(instrument_map, instrument_raw, self.exchange)
             self.instruments[instrument.symbol] = instrument
+        logger.debug("Now loading the instruments data.")
 
     def get_last_price(self, instrument: Instrument) -> float:
         kline = self._kline_store.get(instrument.symbol)
-        bar = kline.loc[self.context.now]
-        return bar['close']
+        time_target = make_datetime_exactly(self.context.now, "T", forward=False)
+        try:
+            bar = kline.loc[time_target - kline.index.freq.delta]
+            return bar['close']
+        except KeyError:
+            logger.warning(_("Instrument {} on {} has no bar data., Use 0 as last price"
+                             .format(instrument.symbol, self.context.now)))
+            return 0.0
 
-    def get_kline(self, instrument: "Instrument", freq: str,
-                  count: int, including_now: bool = False)-> list:
-        pass
+    def get_kline(self, instrument: "Instrument",
+                  count: int) -> pandas.DataFrame:
+        kline_frame = self._kline_store.get(instrument.symbol)
+        target_klines = kline_dataframe_window(kline_frame, self.context.now, count)
+        return target_klines

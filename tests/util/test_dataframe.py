@@ -23,8 +23,42 @@
 #
 
 from MonkTrader.utils.timefunc import utc_datetime
-from MonkTrader.utils.dataframe import kline_dataframe_window
+from MonkTrader.utils.dataframe import kline_dataframe_window, is_datetime_not_remain, make_datetime_exactly
 from tests.tools import random_kline_data_with_start_end
+
+
+def test_is_datetime_not_remain() -> None:
+    assert is_datetime_not_remain(utc_datetime(2018, 1, 1, 12, 32), "T")
+    assert not is_datetime_not_remain(utc_datetime(2018, 1, 1, 1, 1, 1), "T")
+
+    assert is_datetime_not_remain(utc_datetime(2018, 1, 1, 1, 25), "5T")
+    assert not is_datetime_not_remain(utc_datetime(2018, 1, 1, 1, 1, 1), "5T")
+
+    assert is_datetime_not_remain(utc_datetime(2018, 1, 1, 1, 15), "15T")
+    assert not is_datetime_not_remain(utc_datetime(2018, 1, 1, 1, 25), "15T")
+
+    assert is_datetime_not_remain(utc_datetime(2018, 1, 1, 1, 30), "30T")
+    assert not is_datetime_not_remain(utc_datetime(2018, 1, 1, 1, 25), "30T")
+
+    assert is_datetime_not_remain(utc_datetime(2018, 1, 1, 1), "60T")
+    assert not is_datetime_not_remain(utc_datetime(2018, 1, 1, 1, 25), "60T")
+
+
+def test_make_datetime_exactly() -> None:
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "T", True) == utc_datetime(2018, 1, 1, 12, 12)
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "T", False) == utc_datetime(2018, 1, 1, 12, 11)
+
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "5T", True) == utc_datetime(2018, 1, 1, 12, 15)
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "5T", False) == utc_datetime(2018, 1, 1, 12, 10)
+
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "15T", True) == utc_datetime(2018, 1, 1, 12, 15)
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "15T", False) == utc_datetime(2018, 1, 1, 12, 0)
+
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "30T", True) == utc_datetime(2018, 1, 1, 12, 30)
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "30T", False) == utc_datetime(2018, 1, 1, 12)
+
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "60T", True) == utc_datetime(2018, 1, 1, 13)
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "60T", False) == utc_datetime(2018, 1, 1, 12)
 
 
 def test_1m_dataframe_window() -> None:

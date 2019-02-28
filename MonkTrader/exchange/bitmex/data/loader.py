@@ -24,21 +24,26 @@
 
 import json
 import os
-import pandas
 from typing import TYPE_CHECKING, Dict, Type
-from logbook import Logger
 
+import pandas
+from logbook import Logger
 from MonkTrader.assets.instrument import (
     DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
     UpsideInstrument,
 )
+from MonkTrader.context import Context
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataError
+from MonkTrader.exchange.bitmex.const import (
+    INSTRUMENT_FILENAME, KLINE_FILE_NAME,
+)
 from MonkTrader.lazyhdf import LazyHDFTableStore
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME, KLINE_FILE_NAME
-from MonkTrader.context import Context
-from MonkTrader.utils.dataframe import kline_dataframe_window, make_datetime_exactly
+from MonkTrader.utils.dataframe import (
+    kline_dataframe_window, make_datetime_exactly,
+)
 from MonkTrader.utils.i18n import _
+
 from ..log import logger_group
 
 if TYPE_CHECKING:

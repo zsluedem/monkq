@@ -46,7 +46,9 @@ from MonkTrader.exchange.bitmex.data.download import (
 )
 from MonkTrader.utils.timefunc import utc_datetime
 from pytz import utc
-from tests.tools import random_quote_frame, random_trade_frame, random_quote_hdf, random_trade_hdf
+from tests.tools import (
+    random_quote_frame, random_quote_hdf, random_trade_frame, random_trade_hdf,
+)
 
 stream_b = b"""c1,c2,c3,c4
 1,2,3,4

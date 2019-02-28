@@ -21,10 +21,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import pandas
 import datetime
-from dateutil.relativedelta import relativedelta
 from functools import partial
+
+import pandas
+from dateutil.relativedelta import relativedelta
 
 
 def _is_min_not_remain(obj: datetime.datetime) -> bool:

@@ -23,7 +23,6 @@
 #
 
 import datetime
-import pytest
 from unittest.mock import MagicMock, patch
 
 from dateutil.tz import tzutc

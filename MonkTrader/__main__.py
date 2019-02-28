@@ -33,7 +33,9 @@ from logbook import StreamHandler
 from MonkTrader.data import DataProcessor
 from MonkTrader.exception import CommandError
 from MonkTrader.exchange.bitmex.data.download import BitMexDownloader
-from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform, KlineFullFill
+from MonkTrader.exchange.bitmex.data.kline import (
+    BitMexKlineTransform, KlineFullFill,
+)
 from MonkTrader.utils.filefunc import assure_dir, make_writable
 from MonkTrader.utils.i18n import _
 

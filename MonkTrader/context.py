@@ -21,8 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from importlib import import_module
 import datetime
+from importlib import import_module
 from typing import TYPE_CHECKING, Dict, Type, TypeVar
 
 from MonkTrader.base_strategy import BaseStrategy

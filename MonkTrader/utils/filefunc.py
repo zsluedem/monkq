@@ -21,11 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import inspect
 import os
 import pathlib
 import stat
-from typing import Optional
 
 
 def assure_dir(directory: str) -> bool:

@@ -22,8 +22,10 @@
 # SOFTWARE.
 #
 
+from MonkTrader.utils.dataframe import (
+    is_datetime_not_remain, kline_dataframe_window, make_datetime_exactly,
+)
 from MonkTrader.utils.timefunc import utc_datetime
-from MonkTrader.utils.dataframe import kline_dataframe_window, is_datetime_not_remain, make_datetime_exactly
 from tests.tools import random_kline_data_with_start_end
 
 

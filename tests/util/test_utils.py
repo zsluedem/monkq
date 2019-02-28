@@ -30,8 +30,8 @@ import tempfile
 
 import pytest
 import pytz
-from MonkTrader.utils.filefunc import assure_dir
 from MonkTrader.utils.csv import CsvFileDefaultDict, CsvZipDefaultDict
+from MonkTrader.utils.filefunc import assure_dir
 from MonkTrader.utils.timefunc import is_aware_datetime
 
 
@@ -94,4 +94,3 @@ def test_aware_datetime() -> None:
 
     d2 = datetime.datetime(2018, 1, 1, 12, tzinfo=pytz.utc)
     assert is_aware_datetime(d2)
-

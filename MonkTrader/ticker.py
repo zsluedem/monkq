@@ -26,8 +26,8 @@ from typing import Generator
 
 from dateutil.rrule import DAILY, MINUTELY, rrule
 from MonkTrader.exception import SettingError
-from MonkTrader.utils.timefunc import is_aware_datetime
 from MonkTrader.utils.i18n import _
+from MonkTrader.utils.timefunc import is_aware_datetime
 
 FREQ_DICT = {'1m': MINUTELY, '1d': DAILY}
 

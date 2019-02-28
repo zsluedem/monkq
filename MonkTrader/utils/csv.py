@@ -24,7 +24,7 @@
 import csv
 import gzip
 import os
-from typing import List, Set, IO
+from typing import IO, List, Set
 
 
 class CsvFileDefaultDict(dict):

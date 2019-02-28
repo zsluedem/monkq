@@ -237,7 +237,8 @@ class BitmexExchange(BaseExchange):
         pass
 
     async def available_instruments(self, timeout: int = sentinel) -> ValuesView[Instrument]:
-        contents = await self.http_interface.active_instruments(timeout)
+        resp = await self.http_interface.active_instruments(timeout)
+        contents = await resp.json()
         for one in contents:
             instrument = FutureInstrument.create(self.INSTRUMENT_KEY_MAP, one, self)
             self._available_instrument_cache[instrument.symbol] = instrument

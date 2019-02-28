@@ -23,19 +23,20 @@
 #
 import asyncio
 import json
+import ssl
 import time
 from typing import Callable, Coroutine
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from aiohttp import web
+from aiohttp import ClientSession, TCPConnector, web  # type:ignore
 from aiohttp.test_utils import TestServer
 from MonkTrader.exception import (
     HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
     NotFoundError, RateLimitError,
 )
-from MonkTrader.exchange.bitmex.exchange import BitmexExchange
-from MonkTrader.utils import get_resource_path
+from MonkTrader.exchange.bitmex.http import BitMexHTTPInterface
+from tests.tools import get_resource_path
 
 TEST_API_KEY = "ae86vJ85yU8Mh5r6iSv68asb"
 TEST_API_SECRET = "Yl39dzyn5YzuswQ_7qGtEx1LxxnwV5dM2Ex1ihr_EK-4Rs8b"
@@ -77,7 +78,7 @@ async def normal_bitmex_server(
             "indicativeSettlePrice": 3584.47,
             "optionUnderlyingPrice": null,"settledPrice": null,"timestamp": "2019-01-26T13:28:00.000Z"}]"""
         else:
-            with open(get_resource_path('active_instrument.json')) as f:
+            with open(get_resource_path('bitmex/active_instrument.json')) as f:
                 active_contents = f.read()
             body = active_contents
         headers = {
@@ -246,6 +247,7 @@ async def normal_bitmex_server(
 
     app = web.Application()
     app.router.add_get('/instrument', instrument_handler)
+    app.router.add_get('/instrument/active', instrument_handler)
     app.router.add_get('/order', order_get_handler)
     app.router.add_post('/order', order_post_handler)
     app.router.add_put('/order', order_put_handler)
@@ -320,46 +322,52 @@ async def abnormal_bitmex_server(
     yield server
 
 
-async def test_bitmex_exchange(normal_bitmex_server: TestServer) -> None:
-    with patch("MonkTrader.exchange.bitmex.exchange.BITMEX_TESTNET_API_URL",
+async def test_bitmex_http_interface(normal_bitmex_server: TestServer, loop: asyncio.AbstractEventLoop) -> None:
+    with patch("MonkTrader.exchange.bitmex.http.BITMEX_TESTNET_API_URL",
                'http://127.0.0.1:{}/'.format(normal_bitmex_server.port)):
-        exchange = BitmexExchange(MagicMock(), 'bitmex',
-                                  {'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": True})
-        instrument = MagicMock()
-        instrument.symbol = "XBTUSD"
+        ssl_context = ssl.create_default_context()
+        connector = TCPConnector(keepalive_timeout=90)  # type:ignore
+        session = ClientSession(loop=loop, connector=connector)
+
+        exchange = BitMexHTTPInterface({'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": True},
+                                       connector, session, ssl_context, loop)
+        symbol = "XBTUSD"
+
+        await exchange.get_instrument_info(symbol)
+
         order_id = await exchange.place_limit_order('XBTUSD', 3200, 100)
 
         assert await exchange.amend_order(order_id=order_id, price=3300)
 
         assert await exchange.cancel_order(order_id=order_id)
 
-        await exchange.place_market_order("XBTUSD", 100)
+        await exchange.place_market_order(symbol, 100)
 
         await exchange.open_orders_http()
 
-        last_price = await exchange.get_last_price(instrument)
-        assert last_price == 3561
+        await exchange.active_instruments()
 
-        await exchange.get_recent_trades(instrument, 3)
+        await exchange.get_recent_trades(symbol, 3)
 
-        await exchange.get_kline(instrument, "1m", 3)
-
-        # await exchange.get_quote("XBTUSD")
+        await exchange.get_kline(symbol, "1m", 3)
 
         await exchange.session.close()
 
-        exchange.exchange_info()
 
-
-async def test_bitmex_exchange_error(abnormal_bitmex_server: TestServer) -> None:
-    with patch("MonkTrader.exchange.bitmex.exchange.BITMEX_API_URL",
+async def test_bitmex_http_interface_error(abnormal_bitmex_server: TestServer,
+                                           loop: asyncio.AbstractEventLoop) -> None:
+    with patch("MonkTrader.exchange.bitmex.http.BITMEX_API_URL",
                'http://127.0.0.1:{}/'.format(abnormal_bitmex_server.port)):
-        exchange = BitmexExchange(MagicMock(), 'bitmex',
-                                  {'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": False})
-        instrument = MagicMock()
-        instrument.symbol = "XBTUSAD"
+        ssl_context = ssl.create_default_context()
+        connector = TCPConnector(keepalive_timeout=90)  # type:ignore
+        session = ClientSession(loop=loop, connector=connector)
+
+        exchange = BitMexHTTPInterface({'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": False},
+                                       connector, session, ssl_context, loop)
+
+        symbol = "XBTUSD"
         with pytest.raises(MarginNotEnoughError):
-            await exchange.place_limit_order("XBTUSD", 10, 100)
+            await exchange.place_limit_order(symbol, 10, 100)
 
         with pytest.raises(HttpAuthError):
             await exchange.amend_order("random", 10, 100)
@@ -368,16 +376,16 @@ async def test_bitmex_exchange_error(abnormal_bitmex_server: TestServer) -> None
             await exchange.open_orders_http()
 
         with pytest.raises(MaxRetryError):
-            await exchange.available_instruments(timeout=TIMEOUT)
+            await exchange.active_instruments(timeout=TIMEOUT)
 
         with pytest.raises(MaxRetryError):
-            await exchange.get_recent_trades(instrument)
+            await exchange.get_recent_trades(symbol)
 
         with pytest.raises(HttpError):
-            await exchange.get_kline(instrument, "1m")
+            await exchange.get_kline(symbol, "1m")
 
         with pytest.raises(RateLimitError):
-            await exchange.get_last_price(instrument)
+            await exchange.get_instrument_info(symbol)
 
         with pytest.raises(NotFoundError):
             await exchange.cancel_order("random")

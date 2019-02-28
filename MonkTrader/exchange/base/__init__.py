@@ -30,6 +30,7 @@ from .info import ExchangeInfo
 
 if TYPE_CHECKING:
     from MonkTrader.assets.instrument import Instrument
+    from MonkTrader.assets.order import BaseOrder  # noqa
 
 
 class BaseExchange:
@@ -85,7 +86,7 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def open_orders(self) -> str:
+    async def open_orders(self) -> List["BaseOrder"]:
         """
         get all the open orders
         """

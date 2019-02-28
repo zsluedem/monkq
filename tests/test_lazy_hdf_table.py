@@ -22,12 +22,12 @@
 # SOFTWARE.
 #
 
-import datetime
-
+import numpy as np
 import pytest
 from MonkTrader.exception import DataError
 from MonkTrader.lazyhdf import LazyHDFTableStore
-from MonkTrader.utils import get_resource_path
+from MonkTrader.utils.timefunc import utc_datetime
+from tests.tools import get_resource_path
 
 
 def test_lazy_hdf_table() -> None:
@@ -37,7 +37,7 @@ def test_lazy_hdf_table() -> None:
 
     df1 = store.get('XBTZ15')
 
-    assert df1.index[-1] == datetime.datetime(2015, 12, 25, 12)
+    assert df1.index[-1] == utc_datetime(2015, 12, 25, 12)
     assert df1.iloc[-1]['open'] == 453.11
     assert df1.iloc[-1]['close'] == 453.11
     assert df1.iloc[-1]['high'] == 453.11
@@ -45,11 +45,11 @@ def test_lazy_hdf_table() -> None:
     assert df1.iloc[-1]['volume'] == 650.4802
     assert df1.iloc[-1]['turnover'] == 294739.1000
 
-    assert df1.index[10] == datetime.datetime(2015, 5, 29, 12, 41)
-    assert df1.iloc[10]['open'] == 280.0
-    assert df1.iloc[10]['close'] == 280.0
-    assert df1.iloc[10]['high'] == 280.0
-    assert df1.iloc[10]['low'] == 280.0
+    assert df1.index[10] == utc_datetime(2015, 5, 29, 12, 11)
+    assert np.isnan(df1.iloc[10]['open'])
+    assert np.isnan(df1.iloc[10]['high'])
+    assert np.isnan(df1.iloc[10]['close'])
+    assert np.isnan(df1.iloc[10]['low'])
     assert df1.iloc[10]['volume'] == 0.0
     assert df1.iloc[10]['turnover'] == 0.0
 

@@ -1,21 +1,26 @@
-import os
-import tempfile
-import json
-import random
 import datetime
-import numpy as np
+import json
+import os
+import random
+import tempfile
 from unittest.mock import patch
 
+import numpy as np
 import pandas
-from MonkTrader.exchange.bitmex.const import TRADE_FILE_NAME, INSTRUMENT_FILENAME, KLINE_FILE_NAME
-from MonkTrader.exchange.bitmex.data.kline import BitMexKlineTransform, KlineFullFill
+from MonkTrader.exchange.bitmex.const import (
+    INSTRUMENT_FILENAME, KLINE_FILE_NAME, TRADE_FILE_NAME,
+)
+from MonkTrader.exchange.bitmex.data.kline import (
+    BitMexKlineTransform, KlineFullFill,
+)
 from MonkTrader.exchange.bitmex.data.utils import (
     check_1m_data_integrity, fullfill_1m_kline_with_start_end,
     trades_to_1m_kline,
 )
-from MonkTrader.utils import utc_datetime
-
-from .conftest import random_kline_data, random_trade_frame, random_kline_data_with_start_end
+from MonkTrader.utils.timefunc import utc_datetime
+from tests.tools import (
+    random_kline_data, random_kline_data_with_start_end, random_trade_frame,
+)
 
 
 def compare_dataframe_time(df1: pandas.DataFrame, df2: pandas.DataFrame, time: datetime.datetime) -> None:

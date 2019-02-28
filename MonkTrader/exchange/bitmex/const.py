@@ -23,7 +23,7 @@
 #
 from urllib.parse import urljoin
 
-from MonkTrader.utils import utc_datetime
+from MonkTrader.utils.timefunc import utc_datetime
 
 TRADE_LINK = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/trade/{}.csv.gz"
 QUOTE_LINK = "https://s3-eu-west-1.amazonaws.com/public.bitmex.com/data/quote/{}.csv.gz"

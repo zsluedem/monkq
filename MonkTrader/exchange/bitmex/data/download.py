@@ -45,10 +45,10 @@ from MonkTrader.exchange.bitmex.const import (
     INSTRUMENT_FILENAME, QUOTE_FILE_NAME, QUOTE_LINK, START_DATE, SYMBOL_LINK,
     TARFILETYPE, TRADE_FILE_NAME, TRADE_LINK,
 )
-from MonkTrader.utils import (
-    CsvFileDefaultDict, CsvZipDefaultDict, assure_dir, utc_datetime,
-)
+from MonkTrader.utils.csv import CsvFileDefaultDict, CsvZipDefaultDict
+from MonkTrader.utils.filefunc import assure_dir
 from MonkTrader.utils.i18n import _
+from MonkTrader.utils.timefunc import utc_datetime
 from pytz import utc
 
 from ..log import logger_group

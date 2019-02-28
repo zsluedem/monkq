@@ -21,11 +21,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import datetime
+import json
 import os
-from typing import Iterator, Optional, List, Dict, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 
 import pandas
-import datetime
 from dateutil.relativedelta import relativedelta
 from logbook import Logger
 from MonkTrader.config.global_settings import (
@@ -35,13 +36,16 @@ from MonkTrader.config.global_settings import (
 from MonkTrader.data import DataProcessor, Point, ProcessPoints
 from MonkTrader.exception import DataDownloadError
 from MonkTrader.exchange.bitmex.const import (
-    KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME, INSTRUMENT_FILENAME
+    INSTRUMENT_FILENAME, KLINE_FILE_NAME, START_DATE, TRADE_FILE_NAME,
 )
-from MonkTrader.utils import utc_datetime, parse_datetime_str
 from MonkTrader.utils.i18n import _
-import json
+from MonkTrader.utils.timefunc import parse_datetime_str, utc_datetime
+
 from ..log import logger_group
-from .utils import trades_to_1m_kline, check_1m_data_integrity, fullfill_1m_kline_with_start_end
+from .utils import (
+    check_1m_data_integrity, fullfill_1m_kline_with_start_end,
+    trades_to_1m_kline,
+)
 
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)

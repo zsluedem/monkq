@@ -21,3 +21,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import os
+import pathlib
+import stat
+
+
+def assure_dir(directory: str) -> bool:
+    """
+    Assure dir is a directory.
+    :param directory:
+    :return: If dir is a directory , return True, else create the directory
+        and return False
+    :raise NotADirectoryError: if param dir is a file ,
+        raise NotADirectoryError
+    """
+    path = pathlib.Path(directory)
+    if path.is_dir():
+        return True
+    else:
+        try:
+            path.mkdir(parents=True)
+        except FileExistsError:
+            raise NotADirectoryError()
+        return False
+
+
+def make_writable(filename: str) -> None:
+    if not os.access(filename, os.W_OK):
+        st = os.stat(filename)
+        new_permissions = stat.S_IMODE(st.st_mode) | stat.S_IWUSR
+        os.chmod(filename, new_permissions)

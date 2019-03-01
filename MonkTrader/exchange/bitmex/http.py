@@ -26,9 +26,7 @@ import datetime
 import json
 import ssl
 import time
-from typing import (
-    Any, Callable, Dict, List, Optional, TypeVar, Union, cast,
-)
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 
 from aiohttp import (  # type:ignore
     ClientResponse, ClientSession, ClientTimeout, TCPConnector,

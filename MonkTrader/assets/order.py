@@ -62,6 +62,7 @@ class BaseOrder():
     def deal(self, trade: "Trade") -> None:
         assert trade not in self.trades
         assert abs(self.quantity) >= abs(self.traded_quantity + trade.exec_quantity)
+        self.account.deal(trade)
         self.traded_quantity += trade.exec_quantity
         self.trades.append(trade)
 

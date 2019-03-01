@@ -256,7 +256,6 @@ def test_future_account_order_margin_long_position(exchange: MagicMock, future_i
 
     trade2 = Trade(untraded_order2, exec_price=11, exec_quantity=-30, trade_id=random_string(6))
     untraded_order2.deal(trade2)
-    account.deal(trade2)
     assert account.order_margin == 111.65
 
     untraded_order6 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -302,7 +301,6 @@ def test_future_account_order_margin_short_position(exchange: MagicMock, future_
 
     trade2 = Trade(untraded_order2, exec_price=11, exec_quantity=-30, trade_id=random_string(6))
     untraded_order2.deal(trade2)
-    account.deal(trade2)
     assert account.order_margin == 98.45
 
     untraded_order6 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,

@@ -33,13 +33,12 @@ from logbook import Logger
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.order import BaseOrder
 from MonkTrader.config import settings
+from MonkTrader.context import Context
 from MonkTrader.exchange.base import BaseExchange
 from MonkTrader.exchange.base.info import ExchangeInfo
 from MonkTrader.exchange.bitmex.const import (
-    BITMEX_API_URL, BITMEX_TESTNET_API_URL, BITMEX_TESTNET_WEBSOCKET_URL,
-    BITMEX_WEBSOCKET_URL,
+    BITMEX_TESTNET_WEBSOCKET_URL, BITMEX_WEBSOCKET_URL,
 )
-from MonkTrader.context import Context
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.exchange.bitmex.http import BitMexHTTPInterface
 from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
@@ -151,17 +150,11 @@ class BitmexExchange(BaseExchange):
         else:
             self._loop = asyncio.get_event_loop()
         if self.exchange_setting['IS_TEST']:
-            base_url = BITMEX_TESTNET_API_URL
             ws_url = BITMEX_TESTNET_WEBSOCKET_URL
         else:
-            base_url = BITMEX_API_URL
             ws_url = BITMEX_WEBSOCKET_URL
-        self.base_url = base_url
 
         self._trace_config = TraceConfig()
-        # self._trace_config.on_request_end.append(self._end_request)
-
-        # used only for testing
         self._ssl = ssl.create_default_context()
         if settings.SSL_PATH:
             self._ssl.load_verify_locations(settings.SSL_PATH)

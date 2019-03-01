@@ -23,7 +23,8 @@
 #
 
 import pytest
-from MonkTrader.assets.account import BaseAccount, FutureAccount
+from unittest.mock import MagicMock
+from MonkTrader.assets.account import FutureAccount
 from MonkTrader.assets.const import ORDER_STATUS, SIDE
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.order import BaseOrder, FutureLimitOrder
@@ -32,9 +33,9 @@ from MonkTrader.assets.trade import Trade
 from ..utils import random_string
 
 
-def test_buy_order_trade(base_account: BaseAccount, instrument: Instrument) -> None:
+def test_buy_order_trade(instrument: Instrument) -> None:
     order_id = random_string(6)
-    order = BaseOrder(account=base_account, order_id=order_id, instrument=instrument, quantity=100)
+    order = BaseOrder(account=MagicMock(), order_id=order_id, instrument=instrument, quantity=100)
 
     assert order.order_id == order_id
     assert order.side == SIDE.BUY
@@ -72,9 +73,9 @@ def test_buy_order_trade(base_account: BaseAccount, instrument: Instrument) -> N
     assert trade2.commission == 1.375
 
 
-def test_sell_order_trade(base_account: BaseAccount, instrument: Instrument) -> None:
+def test_sell_order_trade(instrument: Instrument) -> None:
     order_id = random_string(6)
-    order = BaseOrder(account=base_account, order_id=order_id, instrument=instrument, quantity=-100)
+    order = BaseOrder(account=MagicMock(), order_id=order_id, instrument=instrument, quantity=-100)
 
     assert order.order_id == order_id
     assert order.side == SIDE.SELL

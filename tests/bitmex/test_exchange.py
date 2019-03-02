@@ -22,14 +22,16 @@
 # SOFTWARE.
 #
 
-from typing import List, Any, Generator, Type
-from MonkTrader.exchange.bitmex.exchange import BitmexExchange, bitmex_info
-from unittest.mock import MagicMock, patch
-from asyncio import AbstractEventLoop
-import pytest
-from uuid import uuid4
 import json
+from asyncio import AbstractEventLoop
+from typing import Any, Generator, List, Type
+from unittest.mock import MagicMock, patch
+from uuid import uuid4
+
 import pandas
+import pytest
+from MonkTrader.exchange.bitmex.exchange import BitmexExchange, bitmex_info
+
 from ..tools import get_resource_path
 
 kline_data = """[

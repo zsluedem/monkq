@@ -24,12 +24,13 @@
 
 import datetime
 import os
-from typing import IO, Optional, Union, List
+from typing import IO, List, Optional, Union
 
 import numpy as np
 import pandas
 from dateutil.relativedelta import relativedelta
 from MonkTrader.assets.const import SIDE
+from MonkTrader.config.global_settings import KLINE_SIDE
 from MonkTrader.const import TICK_DIRECTION
 
 dtypes_trades = {
@@ -136,7 +137,7 @@ def _trade_to_kline(frame: pandas.DataFrame, frequency: str) -> pandas.DataFrame
 
 
 def trades_to_1m_kline(frame: pandas.DataFrame) -> pandas.DataFrame:
-    re_df = frame.resample('1Min', label='right', closed='right')
+    re_df = frame.resample('1Min', label=KLINE_SIDE, closed=KLINE_SIDE)
     kline = re_df['price'].ohlc()
     kline['volume'] = re_df['homeNotional'].sum()
     kline['turnover'] = re_df['foreignNotional'].sum()
@@ -178,7 +179,7 @@ def fullfill_1m_kline_with_start_end(frame: pandas.DataFrame, start: datetime.da
     ], columns=["high", "low", "open", "close", "volume", "turnover"], index=pandas.DatetimeIndex((start, end)))
 
     new_df = frame.append(new, sort=False)
-    resample = new_df.resample('1Min', label='right', closed='right', convention="end")
+    resample = new_df.resample('1Min', label=KLINE_SIDE, closed=KLINE_SIDE, convention="end")
 
     outcome = resample['close'].last()
     outcome = pandas.DataFrame(index=outcome.index)

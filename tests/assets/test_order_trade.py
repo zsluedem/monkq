@@ -22,8 +22,9 @@
 # SOFTWARE.
 #
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from MonkTrader.assets.account import FutureAccount
 from MonkTrader.assets.const import ORDER_STATUS, SIDE
 from MonkTrader.assets.instrument import FutureInstrument, Instrument

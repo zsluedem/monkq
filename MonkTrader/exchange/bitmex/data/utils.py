@@ -24,7 +24,7 @@
 
 import datetime
 import os
-from typing import IO, Optional, Union
+from typing import IO, Optional, Union, List
 
 import numpy as np
 import pandas
@@ -142,6 +142,28 @@ def trades_to_1m_kline(frame: pandas.DataFrame) -> pandas.DataFrame:
     kline['turnover'] = re_df['foreignNotional'].sum()
     kline.fillna(method='ffill', inplace=True)
     return kline
+
+
+def kline_from_list_of_dict(obj: List[dict]) -> pandas.DataFrame:
+    """dict format
+    {'timestamp': '2019-03-02T02:05:00.000Z',
+    'symbol': 'XBTUSD',
+    'open': 3822,
+    'high': 3822,
+    'low': 3822,
+    'close': 3822,
+    'trades': 0,
+    'volume': 0,
+    'vwap': None,
+    'lastSize': None,
+    'turnover': 0,
+    'homeNotional': 0,
+    'foreignNotional': 0}"""
+
+    df = pandas.DataFrame(obj, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'turnover'])
+    df['timestamp'] = pandas.to_datetime(df['timestamp'])
+    df.set_index('timestamp', inplace=True)
+    return df
 
 
 def fullfill_1m_kline_with_start_end(frame: pandas.DataFrame, start: datetime.datetime,

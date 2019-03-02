@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, List, Optional, Union, ValuesView
 
 from MonkTrader.assets import T_INSTRUMENT, T_ORDER, AbcAccount
 from MonkTrader.context import Context
-
+import pandas
 from .info import ExchangeInfo
 
 if TYPE_CHECKING:
@@ -108,7 +108,7 @@ class BaseExchange:
         raise NotImplementedError()
 
     async def get_kline(self, target: "Instrument", freq: str,
-                        count: int = 100, including_now: bool = False) -> List:
+                        count: int = 100, including_now: bool = False) -> pandas.DataFrame:
         """
         get an instrument kline
         """

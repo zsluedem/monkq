@@ -107,3 +107,12 @@ class FutureLimitOrder(LimitOrder):
     @property
     def direction(self) -> DIRECTION:
         return DIRECTION.LONG if self.quantity > 0 else DIRECTION.SHORT
+
+
+@dataclass()
+class FutureMarketOrder(MarketOrder):
+    account: "FutureAccount"
+    instrument: FutureInstrument
+    @property
+    def direction(self) -> DIRECTION:
+        return DIRECTION.LONG if self.quantity > 0 else DIRECTION.SHORT

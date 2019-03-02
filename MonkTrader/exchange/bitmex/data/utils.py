@@ -24,13 +24,13 @@
 
 import datetime
 import os
-from typing import IO, Optional, Union, List
+from typing import IO, List, Optional, Union
 
 import numpy as np
 import pandas
-from MonkTrader.config.global_settings import KLINE_SIDE
 from dateutil.relativedelta import relativedelta
 from MonkTrader.assets.const import SIDE
+from MonkTrader.config.global_settings import KLINE_SIDE
 from MonkTrader.const import TICK_DIRECTION
 
 dtypes_trades = {

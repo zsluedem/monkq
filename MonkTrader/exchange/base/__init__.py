@@ -23,9 +23,10 @@
 #
 from typing import TYPE_CHECKING, List, Optional, Union, ValuesView
 
+import pandas
 from MonkTrader.assets import T_INSTRUMENT, T_ORDER, AbcAccount
 from MonkTrader.context import Context
-import pandas
+
 from .info import ExchangeInfo
 
 if TYPE_CHECKING:

@@ -22,12 +22,12 @@
 # SOFTWARE.
 #
 import asyncio
-import pandas
 import ssl
 from typing import (
     Any, Callable, Dict, List, Optional, TypeVar, Union, ValuesView,
 )
 
+import pandas
 from aiohttp import ClientSession, TCPConnector, TraceConfig  # type:ignore
 from aiohttp.helpers import sentinel
 from logbook import Logger
@@ -41,9 +41,9 @@ from MonkTrader.exchange.bitmex.const import (
     BITMEX_TESTNET_WEBSOCKET_URL, BITMEX_WEBSOCKET_URL,
 )
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
+from MonkTrader.exchange.bitmex.data.utils import kline_from_list_of_dict
 from MonkTrader.exchange.bitmex.http import BitMexHTTPInterface
 from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
-from MonkTrader.exchange.bitmex.data.utils import kline_from_list_of_dict
 
 from .log import logger_group
 

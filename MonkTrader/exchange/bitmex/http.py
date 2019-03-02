@@ -163,20 +163,21 @@ class BitMexHTTPInterface():
                                        max_retry=max_retry)
 
     @authentication_required
-    async def open_orders_http(self, timeout: int = sentinel, max_retry: int = 0) -> str:
+    async def open_orders_http(self, timeout: int = sentinel, max_retry: int = 0) -> List[dict]:
         query = {"filter": '{"open": true}', "count": 500}
         resp = await self._curl_bitmex(path='order', query=query,
                                        method="GET", timeout=timeout,
                                        max_retry=max_retry)
         return await resp.json()
 
-    async def active_instruments(self, timeout: int = sentinel) -> ClientResponse:
-        return await self._curl_bitmex(path='instrument/active', method='GET',
+    async def active_instruments(self, timeout: int = sentinel) -> List[dict]:
+        resp = await self._curl_bitmex(path='instrument/active', method='GET',
                                        max_retry=0, timeout=timeout)
+        return await resp.json()
 
     async def get_kline(self, symbol: str, freq: str,
                         count: int = 100, including_now: bool = False,
-                        timeout: int = sentinel, max_retry: int = 5) -> ClientResponse:
+                        timeout: int = sentinel, max_retry: int = 5) -> List[dict]:
         query = {
             "symbol": symbol,
             "partial": "true" if including_now else "false",
@@ -184,20 +185,23 @@ class BitMexHTTPInterface():
             "reverse": "true",
             "count": count
         }
-        return await self._curl_bitmex(path='trade/bucketed', query=query,
+        resp = await self._curl_bitmex(path='trade/bucketed', query=query,
                                        timeout=timeout, max_retry=max_retry)
+
+        return await resp.json()
 
     async def get_recent_trades(self, symbol: str,
                                 count: int = 100, timeout: int = sentinel,
-                                max_retry: int = 5) -> ClientResponse:
+                                max_retry: int = 5) -> List[dict]:
         query = {
             "symbol": symbol,
             "count": count,
             "reverse": "true"
         }
-        return await self._curl_bitmex(path="trade", query=query,
+        resp = await self._curl_bitmex(path="trade", query=query,
                                        method="GET", timeout=timeout,
                                        max_retry=max_retry)
+        return await resp.json()
 
     async def _curl_bitmex(self, path: str, query: Optional[dict] = None, postdict: Optional[dict] = None,
                            timeout: int = sentinel, method: str = None,

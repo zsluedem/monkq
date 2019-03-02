@@ -22,6 +22,7 @@
 # SOFTWARE.
 #
 import asyncio
+import pandas
 import ssl
 from typing import (
     Any, Callable, Dict, List, Optional, TypeVar, Union, ValuesView,
@@ -42,6 +43,7 @@ from MonkTrader.exchange.bitmex.const import (
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.exchange.bitmex.http import BitMexHTTPInterface
 from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
+from MonkTrader.exchange.bitmex.data.utils import kline_from_list_of_dict
 
 from .log import logger_group
 
@@ -87,7 +89,7 @@ class BitmexSimulateExchange(BaseExchange):
 
     # async def open_orders(self) -> str:
     #     raise NotImplementedError()
-
+    #
     # def get_order(self, order_id: str):
     #     raise NotImplementedError()
     #
@@ -179,6 +181,9 @@ class BitmexExchange(BaseExchange):
     async def setup(self) -> None:
         await self.ws.setup()
 
+    async def close(self) -> None:
+        await self.session.close()
+
     async def get_last_price(self, instrument: Instrument,
                              timeout: int = sentinel, max_retry: int = 0) -> float:
         content = await self.http_interface.get_instrument_info(instrument.symbol, timeout, max_retry)
@@ -205,7 +210,7 @@ class BitmexExchange(BaseExchange):
         if isinstance(target, Instrument):
             target = Instrument.symbol
 
-        return await self.place_market_order(target, quantity, timeout, max_retry)
+        return await self.http_interface.place_market_order(target, quantity, timeout, max_retry)
 
     async def amend_order(self, order_id: str, quantity: Optional[float] = None,
                           price: Optional[float] = None, timeout: int = sentinel,
@@ -227,11 +232,13 @@ class BitmexExchange(BaseExchange):
             return False
 
     async def open_orders(self) -> List[BaseOrder]:
+        # TODO
         pass
 
     async def available_instruments(self, timeout: int = sentinel) -> ValuesView[Instrument]:
-        resp = await self.http_interface.active_instruments(timeout)
-        contents = await resp.json()
+        if self._available_instrument_cache:
+            return self._available_instrument_cache.values()
+        contents = await self.http_interface.active_instruments(timeout)
         for one in contents:
             instrument = FutureInstrument.create(self.INSTRUMENT_KEY_MAP, one, self)
             self._available_instrument_cache[instrument.symbol] = instrument
@@ -239,13 +246,13 @@ class BitmexExchange(BaseExchange):
 
     async def get_kline(self, instrument: Instrument, freq: str,
                         count: int = 100, including_now: bool = False,
-                        timeout: int = sentinel, max_retry: int = 5) -> List:
+                        timeout: int = sentinel, max_retry: int = 5) -> pandas.DataFrame:
 
-        resp = await self.http_interface.get_kline(instrument.symbol, freq, count, including_now, timeout, max_retry)
-        return await resp.json()
+        klines_list = await self.http_interface.get_kline(instrument.symbol, freq, count, including_now, timeout,
+                                                          max_retry)
+        return kline_from_list_of_dict(klines_list)
 
     async def get_recent_trades(self, instrument: Instrument,
                                 count: int = 100, timeout: int = sentinel,
                                 max_retry: int = 5) -> List[dict]:
-        resp = await self.http_interface.get_recent_trades(instrument.symbol, count, timeout, max_retry)
-        return await resp.json()
+        return await self.http_interface.get_recent_trades(instrument.symbol, count, timeout, max_retry)

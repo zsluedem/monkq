@@ -31,8 +31,8 @@ from MonkTrader.exception import MarginError, MarginNotEnoughError
 from MonkTrader.utils.i18n import _
 
 if TYPE_CHECKING:
-    from MonkTrader.assets.trade import Trade
-    from MonkTrader.assets.account import BaseAccount, FutureAccount
+    from MonkTrader.assets.trade import Trade  # pragma: no cover
+    from MonkTrader.assets.account import BaseAccount, FutureAccount  # pragma: no cover
 
 T_ACCOUNT = TypeVar("T_ACCOUNT", bound="BaseAccount")
 T_POSITION = TypeVar("T_POSITION", bound="BasePosition")

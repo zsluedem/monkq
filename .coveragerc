@@ -11,5 +11,6 @@ exclude_lines =
     if self.debug:
     pragma: no cover
     raise NotImplementedError
+    raise ImpossibleError
     if __name__ == .__main__.:
     pass

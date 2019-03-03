@@ -24,7 +24,7 @@
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from MonkTrader.context import Context
+    from MonkTrader.context import Context  # pragma: no cover
 
 
 class BaseStrategy():

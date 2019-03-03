@@ -31,7 +31,7 @@ from MonkTrader.const import RUN_TYPE
 from MonkTrader.exception import SettingError
 
 if TYPE_CHECKING:
-    from MonkTrader.exchange.base import BaseExchange  # noqa: F401
+    from MonkTrader.exchange.base import BaseExchange  # noqa: F401 pragma: no cover
 
 T_EXCHANGE = TypeVar("T_EXCHANGE", bound="BaseExchange")
 

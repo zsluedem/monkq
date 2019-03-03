@@ -47,7 +47,7 @@ from MonkTrader.utils.i18n import _
 from ..log import logger_group
 
 if TYPE_CHECKING:
-    from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange
+    from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange  # pragma: no cover
 
 logger = Logger('exchange.bitmex.dataloader')
 logger_group.add_logger(logger)

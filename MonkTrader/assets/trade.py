@@ -28,7 +28,7 @@ from MonkTrader.assets.const import SIDE
 from MonkTrader.assets.order import BaseOrder
 
 if TYPE_CHECKING:
-    from MonkTrader.assets.instrument import Instrument
+    from MonkTrader.assets.instrument import Instrument  # pragma: no cover
 
 
 @dataclasses.dataclass()

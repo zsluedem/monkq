@@ -30,8 +30,8 @@ from MonkTrader.context import Context
 from .info import ExchangeInfo
 
 if TYPE_CHECKING:
-    from MonkTrader.assets.instrument import Instrument
-    from MonkTrader.assets.order import BaseOrder  # noqa
+    from MonkTrader.assets.instrument import Instrument  # pragma: no cover
+    from MonkTrader.assets.order import BaseOrder  # noqa   pragma: no cover
 
 
 class BaseExchange:

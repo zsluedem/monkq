@@ -21,3 +21,55 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import datetime
+import os
+import shutil
+import tempfile
+from typing import Generator, TypeVar
+
+import pytest
+from dateutil.tz import tzutc
+from MonkTrader.assets.instrument import FutureInstrument, Instrument  # noqa
+from MonkTrader.exchange.base import BaseExchange  # noqa
+from MonkTrader.exchange.bitmex.const import (
+    INSTRUMENT_FILENAME, KLINE_FILE_NAME,
+)
+from tests.tools import get_resource_path
+
+T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseExchange")
+
+
+@pytest.fixture()
+def tem_data_dir() -> Generator[str, None, None]:
+    with tempfile.TemporaryDirectory() as tmp:
+        shutil.copy(get_resource_path('bitmex/instruments.json'), os.path.join(tmp, INSTRUMENT_FILENAME))
+        shutil.copy(get_resource_path('test_table.hdf'), os.path.join(tmp, KLINE_FILE_NAME))
+        yield tmp
+
+
+@pytest.fixture()
+def instrument(exchange: T_EXCHANGE) -> Generator[FutureInstrument, None, None]:
+    yield FutureInstrument(
+        symbol="XBJZ16",
+        root_symbol="XBJ",
+
+        listing_date=datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc()),
+        expiry_date=datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc()),
+        underlying="XBT",
+        quote_currency="XBJ",
+        lot_size=1,
+        tick_size=1e-8,
+        maker_fee=-0.0005,
+        taker_fee=0.0025,
+        exchange=exchange,
+
+        init_margin_rate=0.05,
+        maint_margin_rate=0.025,
+        settlement_fee=0,
+        settle_currency="XBt",
+        front_date=datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc()),
+        settle_date=datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc()),
+        reference_symbol=".XBJZ16",
+        deleverage=True,
+    )

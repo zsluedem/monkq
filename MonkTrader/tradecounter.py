@@ -61,6 +61,7 @@ class TradeCounter():
     def cancel_order(self, order_id: str) -> None:
         self._open_orders.pop(order_id)
 
+    # TODO
     def amend_order(self, order_id: str, quantity: Optional[float], price: Optional[float]) -> None:
         raise NotImplementedError()
 

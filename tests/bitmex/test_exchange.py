@@ -24,206 +24,40 @@
 
 import json
 from asyncio import AbstractEventLoop
-from typing import Any, Generator, List, Type
-from unittest.mock import MagicMock, patch
-from uuid import uuid4
+from typing import Generator
+from unittest.mock import MagicMock
 
 import pandas
 import pytest
-from MonkTrader.exchange.bitmex.exchange import BitmexExchange, bitmex_info
+from asynctest import CoroutineMock
+from MonkTrader.assets.instrument import FutureInstrument
+from MonkTrader.exchange.bitmex.exchange import (
+    BitmexExchange, BitmexSimulateExchange, bitmex_info,
+)
+from MonkTrader.utils.id import gen_unique_id
+from MonkTrader.utils.timefunc import utc_datetime
 
 from ..tools import get_resource_path
 
-kline_data = """[
-  {
-    "timestamp": "2019-03-02T02:14:00.000Z",
-    "symbol": "XBTUSD",
-    "open": 3822,
-    "high": 3822.5,
-    "low": 3821.5,
-    "close": 3822.5,
-    "trades": 19,
-    "volume": 10702,
-    "vwap": 3821.8995,
-    "lastSize": 2,
-    "turnover": 280019022,
-    "homeNotional": 2.8001902199999993,
-    "foreignNotional": 10702
-  },
-  {
-    "timestamp": "2019-03-02T02:13:00.000Z",
-    "symbol": "XBTUSD",
-    "open": 3822,
-    "high": 3822.5,
-    "low": 3822,
-    "close": 3822,
-    "trades": 11,
-    "volume": 764,
-    "vwap": 3822.1916,
-    "lastSize": 100,
-    "turnover": 19988954,
-    "homeNotional": 0.19988953999999998,
-    "foreignNotional": 764
-  },
-  {
-    "timestamp": "2019-03-02T02:12:00.000Z",
-    "symbol": "XBTUSD",
-    "open": 3822,
-    "high": 3822.5,
-    "low": 3822,
-    "close": 3822,
-    "trades": 3,
-    "volume": 113,
-    "vwap": 3822.4839,
-    "lastSize": 10,
-    "turnover": 2956232,
-    "homeNotional": 0.029562320000000003,
-    "foreignNotional": 113
-  },
-  {
-    "timestamp": "2019-03-02T02:11:00.000Z",
-    "symbol": "XBTUSD",
-    "open": 3822,
-    "high": 3822,
-    "low": 3822,
-    "close": 3822,
-    "trades": 1,
-    "volume": 7,
-    "vwap": 3822,
-    "lastSize": 7,
-    "turnover": 183148,
-    "homeNotional": 0.00183148,
-    "foreignNotional": 7
-  },
-  {
-    "timestamp": "2019-03-02T02:10:00.000Z",
-    "symbol": "XBTUSD",
-    "open": 3822,
-    "high": 3822,
-    "low": 3822,
-    "close": 3822,
-    "trades": 0,
-    "volume": 0,
-    "vwap": null,
-    "lastSize": null,
-    "turnover": 0,
-    "homeNotional": 0,
-    "foreignNotional": 0
-  },
-  {
-    "timestamp": "2019-03-02T02:09:00.000Z",
-    "symbol": "XBTUSD",
-    "open": 3822,
-    "high": 3822,
-    "low": 3822,
-    "close": 3822,
-    "trades": 0,
-    "volume": 0,
-    "vwap": null,
-    "lastSize": null,
-    "turnover": 0,
-    "homeNotional": 0,
-    "foreignNotional": 0
-  },
-  {
-    "timestamp": "2019-03-02T02:08:00.000Z",
-    "symbol": "XBTUSD",
-    "open": 3822,
-    "high": 3822.5,
-    "low": 3822,
-    "close": 3822,
-    "trades": 15,
-    "volume": 1827,
-    "vwap": 3822.3377,
-    "lastSize": 100,
-    "turnover": 47798889,
-    "homeNotional": 0.4779888900000001,
-    "foreignNotional": 1827
-  },
-  {
-    "timestamp": "2019-03-02T02:07:00.000Z",
-    "symbol": "XBTUSD",
-    "open": 3822,
-    "high": 3822,
-    "low": 3822,
-    "close": 3822,
-    "trades": 0,
-    "volume": 0,
-    "vwap": null,
-    "lastSize": null,
-    "turnover": 0,
-    "homeNotional": 0,
-    "foreignNotional": 0
-  },
-  {
-    "timestamp": "2019-03-02T02:06:00.000Z",
-    "symbol": "XBTUSD",
-    "open": 3822,
-    "high": 3822,
-    "low": 3822,
-    "close": 3822,
-    "trades": 0,
-    "volume": 0,
-    "vwap": null,
-    "lastSize": null,
-    "turnover": 0,
-    "homeNotional": 0,
-    "foreignNotional": 0
-  },
-  {
-    "timestamp": "2019-03-02T02:05:00.000Z",
-    "symbol": "XBTUSD",
-    "open": 3822,
-    "high": 3822,
-    "low": 3822,
-    "close": 3822,
-    "trades": 0,
-    "volume": 0,
-    "vwap": null,
-    "lastSize": null,
-    "turnover": 0,
-    "homeNotional": 0,
-    "foreignNotional": 0
-  }
-]"""
 
-
-class MockInterface():
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        pass
-
-    async def get_instrument_info(self, *args: Any, **kwargs: Any) -> List[dict]:
-        return [{'lastPrice': 100}]
-
-    async def place_limit_order(self, *args: Any, **kwargs: Any) -> str:
-        return str(uuid4())
-
-    async def place_market_order(self, *args: Any, **kwargs: Any) -> str:
-        return str(uuid4())
-
-    async def amend_order(self, *args: Any, **kwargs: Any) -> MagicMock:
-        resp = MagicMock()
-        resp.status = 200
-        return resp
-
-    async def cancel_order(self, *args: Any, **kwargs: Any) -> MagicMock:
-        resp = MagicMock()
-        resp.status = 200
-        return resp
-
-    async def open_orders(self, *args: Any, **kwargs: Any) -> None:
-        pass
-
-    async def active_instruments(self, *args: Any, **kwargs: Any) -> List[dict]:
-        with open(get_resource_path('bitmex/active_instrument.json')) as f:
-            return json.load(f)
-
-    async def get_kline(self, *args: Any, **kwargs: Any) -> List[dict]:
-        with open(get_resource_path('bitmex/kline_data.json')) as f:
-            return json.load(f)
-
-    async def get_recent_trades(self, *args: Any, **kwargs: Any) -> List[dict]:
-        return json.loads("""[
+@pytest.fixture()
+def mock_httpinterface() -> Generator[MagicMock, None, None]:
+    m = MagicMock()
+    m.get_instrument_info = CoroutineMock(return_value=[{'lastPrice': 100}])
+    m.place_limit_order = CoroutineMock(return_value=gen_unique_id())
+    m.place_market_order = CoroutineMock(return_value=gen_unique_id())
+    resp = MagicMock()
+    resp.status = 200
+    m.amend_order = CoroutineMock(return_value=resp)
+    m.cancel_order = CoroutineMock(return_value=resp)
+    m.open_orders_http = CoroutineMock(return_value=[])
+    with open(get_resource_path('bitmex/active_instrument.json')) as f:
+        instruments = json.load(f)
+    m.active_instruments = CoroutineMock(return_value=instruments)
+    with open(get_resource_path('bitmex/kline_data.json')) as f:
+        klines = json.load(f)
+    m.get_kline = CoroutineMock(return_value=klines)
+    trades = json.loads("""[
 {
   "timestamp": "2019-03-02T02:38:58.304Z",
   "symbol": "XBTUSD",
@@ -236,42 +70,76 @@ class MockInterface():
   "homeNotional": 0.3387764,
   "foreignNotional": 1297
 }]""")
-
-
-@pytest.fixture()
-def mock_httpinterface() -> Generator[Type[MockInterface], None, None]:
-    yield MockInterface
+    m.get_recent_trades = CoroutineMock(return_value=trades)
+    yield m
 
 
 async def test_exchange(mock_httpinterface: MagicMock, loop: AbstractEventLoop) -> None:
-    with patch("MonkTrader.exchange.bitmex.exchange.BitMexHTTPInterface", mock_httpinterface):
-        exchange = BitmexExchange(MagicMock(), 'bitmex', {"IS_TEST": True}, loop)
-        exchange.http_interface = mock_httpinterface
-        # await exchange.setup()
+    WS = MagicMock()
+    ws = WS()
+    ws.setup = CoroutineMock(return_value=None)
+    exchange = BitmexExchange(MagicMock(), 'bitmex', {"IS_TEST": True}, loop)
+    exchange.http_interface = mock_httpinterface
+    exchange.ws = ws
+    await exchange.setup()
 
-        instrument = MagicMock()
-        instrument.symbol = "XBTUSD"
-        assert await exchange.get_last_price(instrument) == 100
+    instrument = MagicMock()
+    instrument.symbol = "XBTUSD"
+    assert await exchange.get_last_price(instrument) == 100
 
-        assert exchange.exchange_info() == bitmex_info
+    #
+    assert exchange.exchange_info() == bitmex_info
 
-        order = await exchange.place_limit_order(instrument, 10, 100)
+    order = await exchange.place_limit_order(instrument, 10, 100)
 
-        await exchange.place_market_order(instrument, 100)
+    await exchange.place_market_order(instrument, 100)
 
-        await exchange.amend_order(order, 200, 10)
+    await exchange.amend_order(order, 200, 10)
 
-        await exchange.cancel_order(order)
-        # TODO
-        await exchange.open_orders()
+    await exchange.cancel_order(order)
+    # TODO
+    await exchange.open_orders()
 
-        await exchange.available_instruments()
-        # use cache below
-        await exchange.available_instruments()
+    await exchange.available_instruments()
+    # use cache below
+    await exchange.available_instruments()
 
-        df = await exchange.get_kline(instrument, '1m')
-        assert isinstance(df, pandas.DataFrame)
+    df = await exchange.get_kline(instrument)
+    assert isinstance(df, pandas.DataFrame)
 
-        await exchange.get_recent_trades(instrument)
+    await exchange.get_recent_trades(instrument)
 
-        await exchange.close()
+    await exchange.close()
+
+
+async def test_bitmex_exchange_simulate(tem_data_dir: str, instrument: FutureInstrument) -> None:
+    context = MagicMock()
+
+    context.settings.DATA_DIR = tem_data_dir
+    sim_exchange = BitmexSimulateExchange(context, 'bitmex', {})
+
+    await sim_exchange.setup()
+    instrument = instrument
+    context.now = utc_datetime(2016, 10, 3, 12, 30)
+    assert await sim_exchange.get_last_price(instrument) == 63744.0
+
+    assert sim_exchange.exchange_info() == bitmex_info
+
+    order_id = await sim_exchange.place_limit_order(instrument, 10, 100)
+
+    market_order_id = await sim_exchange.place_market_order(instrument, 100)
+
+    await sim_exchange.cancel_order(order_id)
+
+    open_orders = await sim_exchange.open_orders()
+
+    assert len(open_orders) == 1
+
+    order = open_orders[0]
+    assert order['order_id'] == market_order_id
+
+    assert await sim_exchange.available_instruments()
+
+    kline = await sim_exchange.get_kline(instrument)
+
+    assert kline.index[-1] == utc_datetime(2016, 10, 3, 12, 29)

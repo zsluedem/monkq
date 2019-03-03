@@ -28,7 +28,9 @@ import pytest
 from MonkTrader.assets.account import FutureAccount
 from MonkTrader.assets.const import ORDER_STATUS, SIDE
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
-from MonkTrader.assets.order import BaseOrder, FutureLimitOrder, FutureMarketOrder
+from MonkTrader.assets.order import (
+    BaseOrder, FutureLimitOrder, FutureMarketOrder,
+)
 from MonkTrader.assets.trade import Trade
 
 from ..utils import random_string
@@ -181,7 +183,7 @@ def test_future_limit_order(future_instrument: FutureInstrument, future_account:
 
 def test_future_market_order(future_instrument: FutureInstrument, future_account: FutureAccount) -> None:
     order1 = FutureMarketOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=100)
+                               quantity=100)
     assert order1.quantity == 100
     assert order1.traded_quantity == 0
     assert order1.side == SIDE.BUY
@@ -207,7 +209,7 @@ def test_future_market_order(future_instrument: FutureInstrument, future_account
     assert trade2 in order1.trades
 
     order2 = FutureMarketOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=-100)
+                               quantity=-100)
 
     assert order2.quantity == -100
     assert order2.traded_quantity == 0

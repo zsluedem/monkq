@@ -113,6 +113,7 @@ class FutureLimitOrder(LimitOrder):
 class FutureMarketOrder(MarketOrder):
     account: "FutureAccount"
     instrument: FutureInstrument
+
     @property
     def direction(self) -> DIRECTION:
         return DIRECTION.LONG if self.quantity > 0 else DIRECTION.SHORT

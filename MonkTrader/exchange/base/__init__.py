@@ -21,7 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import TYPE_CHECKING, List, Optional, Union, ValuesView
+from typing import TYPE_CHECKING, List, Optional, ValuesView
 
 import pandas
 from MonkTrader.assets import T_INSTRUMENT, T_ORDER, AbcAccount
@@ -55,7 +55,7 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def place_limit_order(self, target: Union[str, T_INSTRUMENT],
+    async def place_limit_order(self, target: T_INSTRUMENT,
                                 price: float, quantity: float) -> str:
         """
         create a new limit order in the exchange.
@@ -64,7 +64,7 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def place_market_order(self, target: Union[str, T_INSTRUMENT],
+    async def place_market_order(self, target: T_INSTRUMENT,
                                  quantity: float) -> str:
         """
         create a new market order in the exchange.
@@ -87,7 +87,7 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def open_orders(self) -> List["BaseOrder"]:
+    async def open_orders(self) -> List[dict]:
         """
         get all the open orders
         """
@@ -108,8 +108,7 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def get_kline(self, target: "Instrument", freq: str,
-                        count: int = 100, including_now: bool = False) -> pandas.DataFrame:
+    async def get_kline(self, target: "Instrument", count: int = 100, including_now: bool = False) -> pandas.DataFrame:
         """
         get an instrument kline
         """

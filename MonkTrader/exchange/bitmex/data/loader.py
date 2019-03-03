@@ -93,6 +93,8 @@ class BitmexDataloader(DataLoader):
         self.trade_data: Dict = dict()
         self._kline_store = LazyHDFTableStore(os.path.join(data_dir, KLINE_FILE_NAME))
 
+        self.load_instruments()
+
     def load_instruments(self) -> None:
         logger.debug("Now loading the instruments data.")
         instruments_file = os.path.join(self.data_dir, INSTRUMENT_FILENAME)
@@ -101,10 +103,22 @@ class BitmexDataloader(DataLoader):
         for instrument_raw in instruments_raw:
             instrument_cls = self.instrument_cls.get(instrument_raw['typ'])
             if instrument_cls is None:
-                raise LoadDataError(_("Unsurpport instrument type {}").format(instrument_raw['typ']))
+                raise LoadDataError(_("Unsupport instrument type {}").format(instrument_raw['typ']))
             instrument = instrument_cls.create(instrument_map, instrument_raw, self.exchange)
             self.instruments[instrument.symbol] = instrument
         logger.debug("Now loading the instruments data.")
+
+    def active_instruments(self) -> Dict[str, Instrument]:
+        active = {}
+        for instrument in self.instruments.values():
+            if instrument.expiry_date is None:
+                active[instrument.symbol] = instrument
+                continue
+            if instrument.listing_date is None:
+                continue
+            if instrument.listing_date < self.context.now and instrument.expiry_date > self.context.now:
+                active[instrument.symbol] = instrument
+        return active
 
     def get_last_price(self, instrument: Instrument) -> float:
         kline = self._kline_store.get(instrument.symbol)

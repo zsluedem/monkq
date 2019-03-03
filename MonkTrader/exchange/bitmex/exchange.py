@@ -23,16 +23,16 @@
 #
 import asyncio
 import ssl
-from typing import (
-    Any, Callable, Dict, List, Optional, TypeVar, Union, ValuesView,
-)
+from typing import Any, Callable, Dict, List, Optional, TypeVar, ValuesView
 
 import pandas
 from aiohttp import ClientSession, TCPConnector, TraceConfig  # type:ignore
 from aiohttp.helpers import sentinel
 from logbook import Logger
+from MonkTrader.assets.account import FutureAccount
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
-from MonkTrader.assets.order import BaseOrder
+from MonkTrader.assets.order import FutureLimitOrder, FutureMarketOrder
+from MonkTrader.assets.positions import FuturePosition
 from MonkTrader.config import settings
 from MonkTrader.context import Context
 from MonkTrader.exchange.base import BaseExchange
@@ -44,6 +44,9 @@ from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.exchange.bitmex.data.utils import kline_from_list_of_dict
 from MonkTrader.exchange.bitmex.http import BitMexHTTPInterface
 from MonkTrader.exchange.bitmex.websocket import BitmexWebsocket
+from MonkTrader.tradecounter import TradeCounter
+from MonkTrader.utils.as_dict import base_order_to_dict
+from MonkTrader.utils.id import gen_unique_id
 
 from .log import logger_group
 
@@ -62,10 +65,15 @@ bitmex_info = ExchangeInfo(name="bitmex",
 class BitmexSimulateExchange(BaseExchange):
     def __init__(self, context: Context, name: str, exchange_setting: dict) -> None:
         super(BitmexSimulateExchange, self).__init__(context, name, exchange_setting)
-        self._data = BitmexDataloader(self, context, "")
+        data_dir = context.settings.DATA_DIR  # type:ignore
+        self._data = BitmexDataloader(self, context, data_dir)
+        self._trade_counter = TradeCounter(self)
+        wallet_balance = context.settings.START_WALLET_BALANCE  # type:ignore
+        self._account = FutureAccount(exchange=self, position_cls=FuturePosition,
+                                      wallet_balance=wallet_balance)
 
     async def setup(self) -> None:
-        raise NotImplementedError()
+        return
 
     async def get_last_price(self, instrument: "Instrument") -> float:
         return self._data.get_last_price(instrument)
@@ -73,38 +81,48 @@ class BitmexSimulateExchange(BaseExchange):
     def exchange_info(self) -> ExchangeInfo:
         return bitmex_info
 
-    async def place_limit_order(self, target: Union[str, T_INSTRUMENT],
+    async def place_limit_order(self, target: T_INSTRUMENT,
                                 price: float, quantity: float) -> str:
-        raise NotImplementedError()
+        if isinstance(target, FutureInstrument):
+            order = FutureLimitOrder(account=self._account, instrument=target, price=price, quantity=quantity,
+                                     order_id=gen_unique_id())
+        else:
+            raise NotImplementedError()
+        self._trade_counter.submit_order(order)
+        return order.order_id
 
-    async def place_market_order(self, target: Union[str, T_INSTRUMENT],
+    async def place_market_order(self, target: T_INSTRUMENT,
                                  quantity: float) -> str:
-        raise NotImplementedError()
+        if isinstance(target, FutureInstrument):
+            order = FutureMarketOrder(account=self._account, instrument=target, quantity=quantity,
+                                      order_id=gen_unique_id())
+        else:
+            raise NotImplementedError()
+        self._trade_counter.submit_order(order)
+        return order.order_id
 
+    # TODO
     async def amend_order(self, order_id: str, quantity: Optional[float], price: Optional[float]) -> bool:
         raise NotImplementedError()
 
     async def cancel_order(self, order_id: str) -> bool:
-        raise NotImplementedError()
+        self._trade_counter.cancel_order(order_id)
+        return True
 
-    # async def open_orders(self) -> str:
-    #     raise NotImplementedError()
-    #
-    # def get_order(self, order_id: str):
-    #     raise NotImplementedError()
-    #
-    # def get_account(self):
-    #     raise NotImplementedError()
+    async def open_orders(self) -> List[dict]:
+        outcome = []
+        open_orders = self._trade_counter.open_orders()
+        for order in open_orders:
+            outcome.append(base_order_to_dict(order))
+        return outcome
 
     async def available_instruments(self) -> ValuesView["Instrument"]:
-        raise NotImplementedError()
+        active_instruments = self._data.active_instruments()
+        return active_instruments.values()
 
-    async def get_kline(self, target: "Instrument", freq: str,
-                        count: int = 100, including_now: bool = False) -> List:
-        raise NotImplementedError()
-
-    async def get_recent_trades(self, instrument: "Instrument") -> List[dict]:
-        raise NotImplementedError()
+    async def get_kline(self, target: "Instrument",
+                        count: int = 100, including_now: bool = False) -> pandas.DataFrame:
+        return self._data.get_kline(target, count)
 
 
 class BitmexExchange(BaseExchange):
@@ -197,18 +215,16 @@ class BitmexExchange(BaseExchange):
     def exchange_info(self) -> ExchangeInfo:
         return bitmex_info
 
-    async def place_limit_order(self, target: Union[str, Instrument],
+    async def place_limit_order(self, instrument: Instrument,
                                 price: float, quantity: float, timeout: int = sentinel,
                                 max_retry: int = 0) -> str:
-        if isinstance(target, Instrument):
-            target = Instrument.symbol
+        target = instrument.symbol
         return await self.http_interface.place_limit_order(target, price, quantity, timeout, max_retry)
 
-    async def place_market_order(self, target: Union[str, Instrument],
+    async def place_market_order(self, instrument: Instrument,
                                  quantity: float, timeout: int = sentinel,
                                  max_retry: int = 0) -> str:
-        if isinstance(target, Instrument):
-            target = Instrument.symbol
+        target = instrument.symbol
 
         return await self.http_interface.place_market_order(target, quantity, timeout, max_retry)
 
@@ -231,9 +247,8 @@ class BitmexExchange(BaseExchange):
         else:
             return False
 
-    async def open_orders(self) -> List[BaseOrder]:
-        # TODO
-        pass
+    async def open_orders(self) -> List[dict]:
+        return await self.http_interface.open_orders_http()
 
     async def available_instruments(self, timeout: int = sentinel) -> ValuesView[Instrument]:
         if self._available_instrument_cache:
@@ -244,11 +259,10 @@ class BitmexExchange(BaseExchange):
             self._available_instrument_cache[instrument.symbol] = instrument
         return self._available_instrument_cache.values()
 
-    async def get_kline(self, instrument: Instrument, freq: str,
-                        count: int = 100, including_now: bool = False,
+    async def get_kline(self, instrument: Instrument, count: int = 100, including_now: bool = False,
                         timeout: int = sentinel, max_retry: int = 5) -> pandas.DataFrame:
 
-        klines_list = await self.http_interface.get_kline(instrument.symbol, freq, count, including_now, timeout,
+        klines_list = await self.http_interface.get_kline(instrument.symbol, "1m", count, including_now, timeout,
                                                           max_retry)
         return kline_from_list_of_dict(klines_list)
 

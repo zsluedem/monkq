@@ -30,8 +30,8 @@ from MonkTrader.exception import ImpossibleError
 from MonkTrader.utils.i18n import _
 
 if TYPE_CHECKING:
-    from MonkTrader.assets.account import BaseAccount, FutureAccount
-    from MonkTrader.assets.trade import Trade
+    from MonkTrader.assets.account import BaseAccount, FutureAccount  # pragma: no cover
+    from MonkTrader.assets.trade import Trade  # pragma: no cover
 
 
 @dataclass()

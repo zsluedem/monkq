@@ -23,12 +23,15 @@
 #
 from MonkTrader.context import Context
 from MonkTrader.assets.account import BaseAccount
+from typing import List, Tuple
+import datetime
+
 
 class Statistic():
-    def __init__(self, account: BaseAccount, context:Context):
+    def __init__(self, account: BaseAccount, context: Context):
         self.account = account
         self.context = context
-        self.collected_data = []
+        self.collected_data: List[Tuple[datetime.datetime, float]] = []
 
-    def collect_daily(self):
+    def collect_daily(self) -> None:
         self.collected_data.append((self.context.now, self.account.wallet_balance))

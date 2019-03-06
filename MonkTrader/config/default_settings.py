@@ -23,8 +23,6 @@ RUN_TYPE = RUN_TYPE.BACKTEST  # type: ignore
 
 STRATEGY = "strategy.MyStrategy"
 
-START_WALLET_BALANCE = 1000000
-
 DATA_DIR = os.path.expanduser("~/.monk/data")
 
 EXCHANGES = {  # type: ignore
@@ -32,6 +30,7 @@ EXCHANGES = {  # type: ignore
         'engine': 'MonkTrader.exchange.bitmex',
         "IS_TEST": True,
         "API_KEY": '',
-        "API_SECRET": ''
+        "API_SECRET": '',
+        "START_WALLET_BALANCE": 100000
     }
 }

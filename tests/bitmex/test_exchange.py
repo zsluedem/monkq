@@ -116,7 +116,7 @@ async def test_bitmex_exchange_simulate(tem_data_dir: str, instrument: FutureIns
     context = MagicMock()
 
     context.settings.DATA_DIR = tem_data_dir
-    sim_exchange = BitmexSimulateExchange(context, 'bitmex', {})
+    sim_exchange = BitmexSimulateExchange(context, 'bitmex', {"START_WALLET_BALANCE":1000000})
 
     await sim_exchange.setup()
     instrument = instrument

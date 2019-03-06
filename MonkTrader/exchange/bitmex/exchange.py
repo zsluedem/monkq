@@ -68,7 +68,7 @@ class BitmexSimulateExchange(BaseExchange):
         data_dir = context.settings.DATA_DIR  # type:ignore
         self._data = BitmexDataloader(self, context, data_dir)
         self._trade_counter = TradeCounter(self)
-        wallet_balance = context.settings.START_WALLET_BALANCE  # type:ignore
+        wallet_balance = exchange_setting['START_WALLET_BALANCE']
         self._account = FutureAccount(exchange=self, position_cls=FuturePosition,
                                       wallet_balance=wallet_balance)
 

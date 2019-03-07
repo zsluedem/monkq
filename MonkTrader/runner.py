@@ -21,34 +21,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import os
-import shutil
-import tempfile
-from typing import Generator
-from unittest.mock import MagicMock
 
-import pytest
 from MonkTrader.config import Setting
-from MonkTrader.exchange.base import BaseExchange  # noqa
-from MonkTrader.exchange.bitmex.const import (
-    INSTRUMENT_FILENAME, KLINE_FILE_NAME,
-)
-from tests.tools import get_resource_path
+from MonkTrader.context import Context
+from MonkTrader.stat import Statistic
+from MonkTrader.ticker import FrequencyTicker
 
 
-@pytest.fixture()
-def settings() -> Generator[Setting, None, None]:
-    yield Setting()
+class Runner():
+    def __init__(self, settings: Setting) -> None:
+        self.setting = settings
 
+        self.context = Context(settings)
+        self.context.load_strategy()
+        self.context.load_exchanges()
 
-@pytest.fixture()
-def exchange() -> Generator[MagicMock, None, None]:
-    yield MagicMock(BaseExchange)
+        self.start_datetime = settings.START_TIME  # type: ignore
+        self.end_datetime = settings.END_TIME  # type: ignore
 
+        self.ticker = FrequencyTicker(self.start_datetime, self.end_datetime, '1m')
 
-@pytest.fixture()
-def tem_data_dir() -> Generator[str, None, None]:
-    with tempfile.TemporaryDirectory() as tmp:
-        shutil.copy(get_resource_path('bitmex/instruments.json'), os.path.join(tmp, INSTRUMENT_FILENAME))
-        shutil.copy(get_resource_path('test_table.hdf'), os.path.join(tmp, KLINE_FILE_NAME))
-        yield tmp
+        # TODO no bitmex hard code
+        self.stat = Statistic(self.context.exchanges['bitmex'].get_account(), self.context)
+
+    async def run(self) -> None:
+        for time in self.ticker.timer():
+            self.context.now = time
+
+            await self.context.strategy.handle_bar()
+
+            for key, exchange in self.context.exchanges.items():
+                await exchange.apply_trade()
+
+            if time.minute == 0 and time.second == 0 and time.microsecond == 0:
+                self.stat.collect_daily()

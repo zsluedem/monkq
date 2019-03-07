@@ -3,9 +3,6 @@ import os
 from MonkTrader.const import RUN_TYPE
 from MonkTrader.utils.timefunc import utc_datetime
 
-# Mongodb uri which is used to load data or download data in.
-DATABASE_URI = "mongodb://127.0.0.1:27017"
-
 # HTTP Proxy
 HTTP_PROXY = ""
 

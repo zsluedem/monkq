@@ -21,16 +21,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import TYPE_CHECKING, List, Optional, ValuesView
+from typing import TYPE_CHECKING, Any, List, Optional, ValuesView
 
 import pandas
-from MonkTrader.assets import T_INSTRUMENT, T_ORDER, AbcAccount
 from MonkTrader.context import Context
 
 from .info import ExchangeInfo
 
 if TYPE_CHECKING:
-    from MonkTrader.assets.instrument import Instrument  # pragma: no cover
+    from MonkTrader.assets.account import BaseAccount  # pragma: no cover
+    from MonkTrader.assets.instrument import Instrument  # noqa  pragma: no cover
     from MonkTrader.assets.order import BaseOrder  # noqa   pragma: no cover
 
 
@@ -43,7 +43,7 @@ class BaseExchange:
     async def setup(self) -> None:
         raise NotImplementedError()
 
-    async def get_last_price(self, instrument: "Instrument") -> float:
+    async def get_last_price(self, instrument: Any) -> float:
         """
         get instrument last trade price
         """
@@ -55,7 +55,7 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def place_limit_order(self, target: T_INSTRUMENT,
+    async def place_limit_order(self, instrument: Any,
                                 price: float, quantity: float) -> str:
         """
         create a new limit order in the exchange.
@@ -64,7 +64,7 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def place_market_order(self, target: T_INSTRUMENT,
+    async def place_market_order(self, instrument: Any,
                                  quantity: float) -> str:
         """
         create a new market order in the exchange.
@@ -93,13 +93,13 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    def get_order(self, order_id: str) -> T_ORDER:
+    def get_order(self, order_id: str) -> "BaseOrder":
         """
         get the order obj by th order_id returned when the order was created.
         """
         raise NotImplementedError()
 
-    def get_account(self) -> AbcAccount:
+    def get_account(self) -> "BaseAccount":
         raise NotImplementedError()
 
     async def available_instruments(self) -> ValuesView["Instrument"]:
@@ -108,13 +108,13 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def get_kline(self, target: "Instrument", count: int = 100, including_now: bool = False) -> pandas.DataFrame:
+    async def get_kline(self, instrument: Any, count: int = 100, including_now: bool = False) -> pandas.DataFrame:
         """
         get an instrument kline
         """
         raise NotImplementedError()
 
-    async def get_recent_trades(self, instrument: "Instrument") -> List[dict]:
+    async def get_recent_trades(self, instrument: Any) -> List[dict]:
         """
         get recent trade. Maximum recent 500 trades
         """

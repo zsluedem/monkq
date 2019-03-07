@@ -21,3 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from .exchange import BitmexExchange, BitmexSimulateExchange
+
+default_exchange = BitmexExchange
+default_sim_exchange = BitmexSimulateExchange

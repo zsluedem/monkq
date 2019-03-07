@@ -21,34 +21,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import os
-import shutil
-import tempfile
-from typing import Generator
-from unittest.mock import MagicMock
-
-import pytest
+from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.config import Setting
-from MonkTrader.exchange.base import BaseExchange  # noqa
-from MonkTrader.exchange.bitmex.const import (
-    INSTRUMENT_FILENAME, KLINE_FILE_NAME,
-)
-from tests.tools import get_resource_path
+from MonkTrader.const import RUN_TYPE
+from MonkTrader.runner import Runner
+from MonkTrader.utils.timefunc import utc_datetime
+
+from .utils import over_written_settings
 
 
-@pytest.fixture()
-def settings() -> Generator[Setting, None, None]:
-    yield Setting()
+class TestStrategy(BaseStrategy):
+    async def handle_bar(self) -> None:
+        pass
 
 
-@pytest.fixture()
-def exchange() -> Generator[MagicMock, None, None]:
-    yield MagicMock(BaseExchange)
+async def test_runner(settings: Setting, tem_data_dir: str) -> None:
+    custom_settings = {
+        "STRATEGY": TestStrategy,
+        "START_TIME": utc_datetime(2018, 1, 1),
+        "END_TIME": utc_datetime(2018, 2, 1),
+        "RUN_TYPE": RUN_TYPE.BACKTEST,
+        "FREQUENCY": "1m",
+        "DATA_DIR": tem_data_dir,
+        "EXCHANGE": {
+            "bitmex": {
+                'engine': 'MonkTrader.exchange.bitmex',
+                "IS_TEST": True,
+                "API_KEY": '',
+                "API_SECRET": '',
+                "START_WALLET_BALANCE": 100000
+            }
+        }
 
+    }
+    with over_written_settings(settings, **custom_settings):
+        runner = Runner(settings)
 
-@pytest.fixture()
-def tem_data_dir() -> Generator[str, None, None]:
-    with tempfile.TemporaryDirectory() as tmp:
-        shutil.copy(get_resource_path('bitmex/instruments.json'), os.path.join(tmp, INSTRUMENT_FILENAME))
-        shutil.copy(get_resource_path('test_table.hdf'), os.path.join(tmp, KLINE_FILE_NAME))
-        yield tmp
+        await runner.run()

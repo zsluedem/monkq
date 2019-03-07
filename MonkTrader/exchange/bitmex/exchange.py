@@ -75,26 +75,26 @@ class BitmexSimulateExchange(BaseExchange):
     async def setup(self) -> None:
         return
 
-    async def get_last_price(self, instrument: "Instrument") -> float:
+    async def get_last_price(self, instrument: FutureInstrument) -> float:
         return self._data.get_last_price(instrument)
 
     def exchange_info(self) -> ExchangeInfo:
         return bitmex_info
 
-    async def place_limit_order(self, target: T_INSTRUMENT,
+    async def place_limit_order(self, instrument: FutureInstrument,
                                 price: float, quantity: float) -> str:
-        if isinstance(target, FutureInstrument):
-            order = FutureLimitOrder(account=self._account, instrument=target, price=price, quantity=quantity,
+        if isinstance(instrument, FutureInstrument):
+            order = FutureLimitOrder(account=self._account, instrument=instrument, price=price, quantity=quantity,
                                      order_id=gen_unique_id())
         else:
             raise NotImplementedError()
         self._trade_counter.submit_order(order)
         return order.order_id
 
-    async def place_market_order(self, target: T_INSTRUMENT,
+    async def place_market_order(self, instrument: FutureInstrument,
                                  quantity: float) -> str:
-        if isinstance(target, FutureInstrument):
-            order = FutureMarketOrder(account=self._account, instrument=target, quantity=quantity,
+        if isinstance(instrument, FutureInstrument):
+            order = FutureMarketOrder(account=self._account, instrument=instrument, quantity=quantity,
                                       order_id=gen_unique_id())
         else:
             raise NotImplementedError()
@@ -120,9 +120,15 @@ class BitmexSimulateExchange(BaseExchange):
         active_instruments = self._data.active_instruments()
         return active_instruments.values()
 
-    async def get_kline(self, target: "Instrument",
+    async def get_kline(self, instrument: FutureInstrument,
                         count: int = 100, including_now: bool = False) -> pandas.DataFrame:
-        return self._data.get_kline(target, count)
+        return self._data.get_kline(instrument, count)
+
+    def get_account(self) -> FutureAccount:
+        return self._account
+
+    async def apply_trade(self) -> None:
+        await self._trade_counter.match()
 
 
 class BitmexExchange(BaseExchange):
@@ -202,7 +208,7 @@ class BitmexExchange(BaseExchange):
     async def close(self) -> None:
         await self.session.close()
 
-    async def get_last_price(self, instrument: Instrument,
+    async def get_last_price(self, instrument: FutureInstrument,
                              timeout: int = sentinel, max_retry: int = 0) -> float:
         content = await self.http_interface.get_instrument_info(instrument.symbol, timeout, max_retry)
         try:
@@ -215,13 +221,13 @@ class BitmexExchange(BaseExchange):
     def exchange_info(self) -> ExchangeInfo:
         return bitmex_info
 
-    async def place_limit_order(self, instrument: Instrument,
+    async def place_limit_order(self, instrument: FutureInstrument,
                                 price: float, quantity: float, timeout: int = sentinel,
                                 max_retry: int = 0) -> str:
         target = instrument.symbol
         return await self.http_interface.place_limit_order(target, price, quantity, timeout, max_retry)
 
-    async def place_market_order(self, instrument: Instrument,
+    async def place_market_order(self, instrument: FutureInstrument,
                                  quantity: float, timeout: int = sentinel,
                                  max_retry: int = 0) -> str:
         target = instrument.symbol
@@ -259,14 +265,14 @@ class BitmexExchange(BaseExchange):
             self._available_instrument_cache[instrument.symbol] = instrument
         return self._available_instrument_cache.values()
 
-    async def get_kline(self, instrument: Instrument, count: int = 100, including_now: bool = False,
+    async def get_kline(self, instrument: FutureInstrument, count: int = 100, including_now: bool = False,
                         timeout: int = sentinel, max_retry: int = 5) -> pandas.DataFrame:
 
         klines_list = await self.http_interface.get_kline(instrument.symbol, "1m", count, including_now, timeout,
                                                           max_retry)
         return kline_from_list_of_dict(klines_list)
 
-    async def get_recent_trades(self, instrument: Instrument,
+    async def get_recent_trades(self, instrument: FutureInstrument,
                                 count: int = 100, timeout: int = sentinel,
                                 max_retry: int = 5) -> List[dict]:
         return await self.http_interface.get_recent_trades(instrument.symbol, count, timeout, max_retry)

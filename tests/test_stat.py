@@ -1,5 +1,6 @@
-from MonkTrader.stat import Statistic
 from unittest.mock import MagicMock
+
+from MonkTrader.stat import Statistic
 from MonkTrader.utils.timefunc import utc_datetime
 
 

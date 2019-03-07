@@ -39,7 +39,7 @@ T_EXCHANGE = TypeVar("T_EXCHANGE", bound="BaseExchange")
 class Context:
     def __init__(self, settings: Setting) -> None:
         self.settings = settings
-        self._exchanges: Dict = {}
+        self.exchanges: Dict = {}
         self.now: datetime.datetime = settings.START_TIME  # type:ignore
 
     def _import_cls_from_str(self, entry: str) -> Type[BaseStrategy]:
@@ -52,7 +52,7 @@ class Context:
 
     def load_exchanges(self) -> None:
         for name, exchange_setting in self.settings.EXCHANGES.items():  # type:ignore
-            self._exchanges[name] = self._load_exchange(name, exchange_setting)
+            self.exchanges[name] = self._load_exchange(name, exchange_setting)
 
     def _load_exchange(self, name: str, exchange_setting: Dict) -> T_EXCHANGE:
         mod = import_module(exchange_setting.get('engine'))  # type: ignore
@@ -68,9 +68,11 @@ class Context:
         return exchange_cls(self, name, exchange_setting)
 
     def load_strategy(self) -> None:
-        if isinstance(self.settings.STRATEGY, BaseStrategy):  # type: ignore
+        if issubclass(self.settings.STRATEGY, BaseStrategy):  # type: ignore
             strategy_cls = getattr(self.settings, "STRATEGY")
             self.strategy = strategy_cls(self)  # type: ignore
         elif isinstance(self.settings.STRATEGY, str):  # type: ignore
             strategy_cls = self._import_cls_from_str(self.settings.STRATEGY)  # type: ignore
             self.strategy = strategy_cls(self)  # type: ignore
+        else:
+            raise NotImplementedError()

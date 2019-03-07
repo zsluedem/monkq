@@ -22,30 +22,15 @@
 # SOFTWARE.
 #
 import datetime
-import os
-import shutil
-import tempfile
+
 from typing import Generator, TypeVar
 
 import pytest
 from dateutil.tz import tzutc
 from MonkTrader.assets.instrument import FutureInstrument, Instrument  # noqa
-from MonkTrader.exchange.base import BaseExchange  # noqa
-from MonkTrader.exchange.bitmex.const import (
-    INSTRUMENT_FILENAME, KLINE_FILE_NAME,
-)
-from tests.tools import get_resource_path
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseExchange")
-
-
-@pytest.fixture()
-def tem_data_dir() -> Generator[str, None, None]:
-    with tempfile.TemporaryDirectory() as tmp:
-        shutil.copy(get_resource_path('bitmex/instruments.json'), os.path.join(tmp, INSTRUMENT_FILENAME))
-        shutil.copy(get_resource_path('test_table.hdf'), os.path.join(tmp, KLINE_FILE_NAME))
-        yield tmp
 
 
 @pytest.fixture()

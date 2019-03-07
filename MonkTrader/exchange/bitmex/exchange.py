@@ -124,6 +124,11 @@ class BitmexSimulateExchange(BaseExchange):
                         count: int = 100, including_now: bool = False) -> pandas.DataFrame:
         return self._data.get_kline(target, count)
 
+    def get_account(self) -> FutureAccount:
+        return self._account
+
+    async def apply_trade(self) -> None:
+        await self._trade_counter.match()
 
 class BitmexExchange(BaseExchange):
     INSTRUMENT_KEY_MAP = {

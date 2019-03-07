@@ -21,7 +21,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .exchange import BitmexExchange, BitmexSimulateExchange
 
-default_exchange = BitmexExchange
-default_sim_exchange = BitmexSimulateExchange
+from MonkTrader.context import Context
+from MonkTrader.ticker import FrequencyTicker
+from MonkTrader.stat import Statistic
+
+class Runner():
+    def __init__(self, settings):
+        self.setting = settings
+
+        self.context = Context(settings)
+        self.context.load_strategy()
+        self.context.load_exchanges()
+
+        self.start_datetime = settings.START_TIME
+        self.end_datetime = settings.END_TIME
+
+        self.ticker = FrequencyTicker(self.start_datetime, self.end_datetime, '1m')
+
+        # TODO no bitmex hard code
+        self.stat = Statistic(self.context.exchanges['bitmex'].get_account(), self.context)
+
+    async def run(self):
+        for time in self.ticker.timer():
+            self.context.now = time
+
+            await self.context.strategy.handle_bar()
+
+            for key,exchange in self.context.exchanges.items():
+                await exchange.apply_trade()
+
+
+            if time.minute == 0 and time.second == 0 and time.microsecond == 0:
+                self.stat.collect_daily()
+

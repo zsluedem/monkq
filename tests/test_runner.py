@@ -21,7 +21,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .exchange import BitmexExchange, BitmexSimulateExchange
+from MonkTrader.runner import Runner
+from MonkTrader.base_strategy import BaseStrategy
+from MonkTrader.config import Setting
+from MonkTrader.const import RUN_TYPE
+from MonkTrader.utils.timefunc import utc_datetime
+from .utils import over_written_settings
+import tempfile
 
-default_exchange = BitmexExchange
-default_sim_exchange = BitmexSimulateExchange
+
+class TestStrategy(BaseStrategy):
+    async def handle_bar(self) -> None:
+        pass
+
+
+async def test_runner(settings: Setting, tem_data_dir: str):
+    custom_settings = {
+        "STRATEGY": TestStrategy,
+        "START_TIME": utc_datetime(2018, 1, 1),
+        "END_TIME": utc_datetime(2018, 2, 1),
+        "RUN_TYPE": RUN_TYPE.BACKTEST,
+        "FREQUENCY": "1m",
+        "DATA_DIR": tem_data_dir,
+        "EXCHANGE": {
+            "bitmex": {
+                'engine': 'MonkTrader.exchange.bitmex',
+                "IS_TEST": True,
+                "API_KEY": '',
+                "API_SECRET": '',
+                "START_WALLET_BALANCE": 100000
+            }
+        }
+
+    }
+    with over_written_settings(settings, **custom_settings):
+        runner = Runner(settings)
+
+        await runner.run()

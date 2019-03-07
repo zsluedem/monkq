@@ -143,3 +143,8 @@ async def test_bitmex_exchange_simulate(tem_data_dir: str, instrument: FutureIns
     kline = await sim_exchange.get_kline(instrument)
 
     assert kline.index[-1] == utc_datetime(2016, 10, 3, 12, 29)
+
+    account = sim_exchange.get_account()
+    assert account.wallet_balance == 1000000
+
+    await sim_exchange.apply_trade()

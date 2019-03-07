@@ -68,11 +68,12 @@ class Context:
         return exchange_cls(self, name, exchange_setting)
 
     def load_strategy(self) -> None:
-        if issubclass(self.settings.STRATEGY, BaseStrategy):  # type: ignore
-            strategy_cls = getattr(self.settings, "STRATEGY")
-            self.strategy = strategy_cls(self)  # type: ignore
-        elif isinstance(self.settings.STRATEGY, str):  # type: ignore
+        if isinstance(self.settings.STRATEGY, str):  # type: ignore
             strategy_cls = self._import_cls_from_str(self.settings.STRATEGY)  # type: ignore
+            assert issubclass(strategy_cls, BaseStrategy)
+            self.strategy = strategy_cls(self)  # type: ignore
+        elif issubclass(self.settings.STRATEGY, BaseStrategy):  # type: ignore
+            strategy_cls = getattr(self.settings, "STRATEGY")
             self.strategy = strategy_cls(self)  # type: ignore
         else:
             raise NotImplementedError()

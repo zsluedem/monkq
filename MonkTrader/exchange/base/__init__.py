@@ -93,13 +93,13 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    def get_order(self, order_id: str) -> BaseOrder:
+    def get_order(self, order_id: str) -> "BaseOrder":
         """
         get the order obj by th order_id returned when the order was created.
         """
         raise NotImplementedError()
 
-    def get_account(self) -> BaseAccount:
+    def get_account(self) -> "BaseAccount":
         raise NotImplementedError()
 
     async def available_instruments(self) -> ValuesView["Instrument"]:

@@ -21,10 +21,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.context import Context
-from MonkTrader.assets.account import BaseAccount
-from typing import List, Tuple
 import datetime
+from typing import List, Tuple
+
+from MonkTrader.assets.account import BaseAccount
+from MonkTrader.context import Context
 
 
 class Statistic():

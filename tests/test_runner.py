@@ -21,13 +21,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.runner import Runner
 from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.config import Setting
 from MonkTrader.const import RUN_TYPE
+from MonkTrader.runner import Runner
 from MonkTrader.utils.timefunc import utc_datetime
+
 from .utils import over_written_settings
-import tempfile
 
 
 class TestStrategy(BaseStrategy):
@@ -35,7 +35,7 @@ class TestStrategy(BaseStrategy):
         pass
 
 
-async def test_runner(settings: Setting, tem_data_dir: str):
+async def test_runner(settings: Setting, tem_data_dir: str) -> None:
     custom_settings = {
         "STRATEGY": TestStrategy,
         "START_TIME": utc_datetime(2018, 1, 1),

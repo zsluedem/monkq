@@ -21,38 +21,3 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, TypeVar
-
-if TYPE_CHECKING:
-    from MonkTrader.assets.instrument import Instrument  # noqa: F401  pragma: no cover
-    from MonkTrader.assets.order import BaseOrder  # noqa: F401  pragma: no cover
-
-T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
-T_ORDER = TypeVar("T_ORDER", bound="BaseOrder")
-
-
-class AbcInstrument(ABC):
-    pass
-
-
-class AbcAccount(ABC):
-    pass
-
-
-class AbcPosition(ABC):
-    pass
-
-
-class AbcPositions(ABC):
-    @abstractmethod
-    def get(self, instrument: AbcInstrument) -> AbcPosition:
-        raise NotImplementedError()
-
-
-class AbcOrder(ABC):
-    pass
-
-
-class AbcTrade(ABC):
-    pass

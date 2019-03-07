@@ -27,6 +27,7 @@ import json
 import ssl
 import time
 from collections import defaultdict, namedtuple
+from dataclasses import dataclass, field
 from decimal import Decimal
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
@@ -34,7 +35,6 @@ from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 from aiohttp import (  # type: ignore
     ClientSession, ClientWebSocketResponse, WSMsgType,
 )
-from dataclasses import dataclass, field
 from logbook import Logger
 from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.exchange.bitmex.auth import gen_header_dict

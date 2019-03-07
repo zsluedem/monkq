@@ -22,9 +22,9 @@
 # SOFTWARE.
 #
 from collections import defaultdict
+from dataclasses import dataclass, field
 from typing import Dict, List, Type
 
-from dataclasses import dataclass, field
 from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT, SIDE
 from MonkTrader.assets.instrument import FutureInstrument
 from MonkTrader.assets.order import FutureLimitOrder

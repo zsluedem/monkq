@@ -22,9 +22,9 @@
 # SOFTWARE.
 #
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, Type, TypeVar
 
-from dataclasses import dataclass
 from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.exception import MarginError, MarginNotEnoughError

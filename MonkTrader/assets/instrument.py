@@ -21,10 +21,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import dataclasses
 import datetime
 from typing import Optional, Type, TypeVar
 
-import dataclasses
 from dateutil.parser import parse
 from MonkTrader.exchange.base import BaseExchange
 

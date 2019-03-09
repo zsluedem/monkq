@@ -127,5 +127,3 @@ class BaseSimExchange(BaseExchange):
 
     def match_open_orders(self) -> None:
         raise NotImplementedError()
-
-

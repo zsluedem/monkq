@@ -23,7 +23,6 @@
 #
 from asyncio import get_event_loop
 
-
 from MonkTrader.config import Setting
 from MonkTrader.context import Context
 from MonkTrader.stat import Statistic
@@ -63,6 +62,6 @@ class Runner():
     def lastly(self) -> None:
         pass
 
-    def run(self):
+    def run(self) -> None:
         loop = get_event_loop()
         loop.run_until_complete(self._run())

@@ -33,7 +33,6 @@ from aiohttp import (  # type:ignore
 )
 from aiohttp.helpers import sentinel
 from logbook import Logger
-from MonkTrader.config import settings
 from MonkTrader.exception import (
     AuthError, HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
     NotFoundError, RateLimitError,
@@ -69,7 +68,7 @@ def authentication_required(fn: F) -> F:
 class BitMexHTTPInterface():
 
     def __init__(self, exchange_setting: dict,
-                 connector: TCPConnector, session: ClientSession, ssl: ssl.SSLContext, proxy: Optional[str]=None,
+                 connector: TCPConnector, session: ClientSession, ssl: ssl.SSLContext, proxy: Optional[str] = None,
                  loop: Optional[asyncio.AbstractEventLoop] = None):
         """
         :param exchange_setting:

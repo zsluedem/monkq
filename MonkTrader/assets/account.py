@@ -48,6 +48,10 @@ class BaseAccount():
     def deal(self, trade: Trade) -> None:
         raise NotImplementedError()
 
+    @property
+    def total_capital(self) -> float:
+        return self.wallet_balance
+
 
 @dataclass()
 class FutureAccount(BaseAccount):
@@ -130,6 +134,10 @@ class FutureAccount(BaseAccount):
     @property
     def margin_balance(self) -> float:
         return self.wallet_balance + self.unrealised_pnl
+
+    @property
+    def total_capital(self) -> float:
+        return self.margin_balance
 
     @property
     def available_balance(self) -> float:

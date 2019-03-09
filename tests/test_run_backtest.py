@@ -1,10 +1,9 @@
 import os
 import tempfile
-import sys
-from unittest.mock import patch
-from .utils import change_current_working_dir, add_path
 
 from MonkTrader.__main__ import cmd_main
+
+from .utils import add_path, change_current_working_dir
 
 test_strategy = """
 from MonkTrader.base_strategy import BaseStrategy

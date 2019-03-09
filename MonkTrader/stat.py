@@ -35,4 +35,4 @@ class Statistic():
         self.collected_data: List[Tuple[datetime.datetime, float]] = []
 
     def collect_daily(self) -> None:
-        self.collected_data.append((self.context.now, self.account.margin_balance))
+        self.collected_data.append((self.context.now, self.account.total_capital))

@@ -101,7 +101,6 @@ def startstrategy(ctx: click.Context, name: str, directory: str) -> None:
 
             old_path = os.path.join(root, filename)
 
-
             if filename.endswith(('.py-tpl')):
                 filename = filename.replace('.py-tpl', '.py')
                 new_path = os.path.join(target_dir, relative_dir, filename)

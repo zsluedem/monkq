@@ -27,7 +27,8 @@ import sys
 import tempfile
 
 from MonkTrader.config import Setting
-from .utils import random_string, change_default_module_settings
+
+from .utils import change_default_module_settings, random_string
 
 setting_content = """
 A = 123

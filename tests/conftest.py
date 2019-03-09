@@ -29,7 +29,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from MonkTrader.config import Setting
-from MonkTrader.exchange.base import BaseExchange  # noqa
+from MonkTrader.exchange.base import BaseSimExchange  # noqa
 from MonkTrader.exchange.bitmex.const import (
     INSTRUMENT_FILENAME, KLINE_FILE_NAME,
 )
@@ -43,7 +43,7 @@ def settings() -> Generator[Setting, None, None]:
 
 @pytest.fixture()
 def exchange() -> Generator[MagicMock, None, None]:
-    yield MagicMock(BaseExchange)
+    yield MagicMock(BaseSimExchange)
 
 
 @pytest.fixture()

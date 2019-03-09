@@ -30,10 +30,11 @@ from MonkTrader.runner import Runner
 
 @cmd_main.command()
 @click.pass_context
-def runstrategy(ctx: click.Context):
+def runstrategy(ctx: click.Context) -> None:
     settings = gen_settings()
     runner = Runner(settings)
     runner.run()
+
 
 if __name__ == '__main__':
     cmd_main()

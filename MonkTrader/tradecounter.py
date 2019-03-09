@@ -27,12 +27,12 @@ from typing import Dict, Optional, ValuesView
 from MonkTrader.assets.order import BaseOrder, LimitOrder, MarketOrder
 from MonkTrader.assets.trade import Trade
 from MonkTrader.exception import ImpossibleError
-from MonkTrader.exchange.base import BaseExchange, BaseSimExchange
+from MonkTrader.exchange.base import BaseSimExchange
 from MonkTrader.utils.id import gen_unique_id
 
 
 class TradeCounter():
-    def __init__(self, exchange: BaseExchange) -> None:
+    def __init__(self, exchange: BaseSimExchange) -> None:
         self._open_orders: Dict[str, BaseOrder] = {}
         self.exchange: BaseSimExchange = exchange
 

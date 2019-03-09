@@ -8,7 +8,7 @@ def test_statistic() -> None:
     account = MagicMock()
     context = MagicMock()
     context.now = utc_datetime(2018, 1, 1)
-    account.wallet_balance = 1000000
+    account.total_capital = 1000000
     stat = Statistic(account, context)
 
     stat.collect_daily()

@@ -49,7 +49,7 @@ class Instrument():
     taker_fee: float = 0
 
     @classmethod
-    def create(cls: Type[T_INSTRUMENT], key_map: dict, values: dict, exchange: BaseSimExchange) -> T_INSTRUMENT:
+    def create(cls: Type[T_INSTRUMENT], key_map: dict, values: dict, exchange: BaseExchange) -> T_INSTRUMENT:
         annotation_dict = {}
         for mro in cls.__mro__[::-1]:
             if mro is object:

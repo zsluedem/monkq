@@ -184,8 +184,8 @@ class BitmexExchange(BaseExchange):
 
         self._trace_config = TraceConfig()
         self._ssl = ssl.create_default_context()
-        if context.settings.SSL_PATH:
-            self._ssl.load_verify_locations(context.settings.SSL_PATH)
+        if context.settings.SSL_PATH:  # type:ignore
+            self._ssl.load_verify_locations(context.settings.SSL_PATH)  # type:ignore
 
         self.api_key = exchange_setting.get("API_KEY", '')
         self.api_secret = exchange_setting.get("API_SECRET", '')
@@ -201,7 +201,7 @@ class BitmexExchange(BaseExchange):
                                   session=self.session, ws_url=ws_url,
                                   api_key=self.api_key, api_secret=self.api_secret,
                                   ssl=self._ssl, http_proxy=None)
-        proxy = self.context.settings.HTTP_PROXY or None
+        proxy = self.context.settings.HTTP_PROXY or None  # type:ignore
 
         self.http_interface = BitMexHTTPInterface(exchange_setting, self._connector,
                                                   self.session, self._ssl, proxy, loop)

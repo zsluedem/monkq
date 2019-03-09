@@ -29,10 +29,12 @@ from dateutil.tz import tzutc
 from MonkTrader.assets.account import BaseAccount, FutureAccount
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.positions import BasePosition, FuturePosition
-from MonkTrader.exchange.base import BaseExchange  # noqa: F401
+from MonkTrader.exchange.base import (  # noqa: F401
+    BaseExchange, BaseSimExchange,
+)
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
-T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseExchange")
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseSimExchange")
 
 
 @pytest.fixture()

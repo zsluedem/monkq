@@ -49,6 +49,6 @@ def exchange() -> Generator[MagicMock, None, None]:
 @pytest.fixture()
 def tem_data_dir() -> Generator[str, None, None]:
     with tempfile.TemporaryDirectory() as tmp:
-        shutil.copy(get_resource_path('bitmex/instruments.json'), os.path.join(tmp, INSTRUMENT_FILENAME))
+        shutil.copy(get_resource_path('test_instrument.json'), os.path.join(tmp, INSTRUMENT_FILENAME))
         shutil.copy(get_resource_path('test_table.hdf'), os.path.join(tmp, KLINE_FILE_NAME))
         yield tmp

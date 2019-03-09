@@ -1,9 +1,7 @@
 import os
 
 from MonkTrader.const import RUN_TYPE
-
-# Mongodb uri which is used to load data or download data in.
-DATABASE_URI = "mongodb://127.0.0.1:27017"
+from MonkTrader.utils.timefunc import utc_datetime
 
 # HTTP Proxy
 HTTP_PROXY = ""
@@ -15,8 +13,8 @@ FREQUENCY = 'tick'  # tick, 1m ,5m ,1h
 
 LOG_LEVEL = 'INFO'  # DEBUG, INFO, NOTICE, WARNING, ERROR
 
-START_TIME = '2018-01-01T00:00:00Z'
-END_TIME = '2018-06-01T00:00:00Z'
+START_TIME = utc_datetime(2018, 1, 1)
+END_TIME = utc_datetime(2018, 6, 1)
 
 RUN_TYPE = RUN_TYPE.BACKTEST  # type: ignore
 
@@ -29,6 +27,7 @@ EXCHANGES = {  # type: ignore
         'engine': 'MonkTrader.exchange.bitmex',
         "IS_TEST": True,
         "API_KEY": '',
-        "API_SECRET": ''
+        "API_SECRET": '',
+        "START_WALLET_BALANCE": 100000
     }
 }

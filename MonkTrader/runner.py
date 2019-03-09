@@ -21,6 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from asyncio import get_event_loop
+
 
 from MonkTrader.config import Setting
 from MonkTrader.context import Context
@@ -44,7 +46,7 @@ class Runner():
         # TODO no bitmex hard code
         self.stat = Statistic(self.context.exchanges['bitmex'].get_account(), self.context)
 
-    async def run(self) -> None:
+    async def _run(self) -> None:
         for time in self.ticker.timer():
             self.context.now = time
 
@@ -53,5 +55,14 @@ class Runner():
             for key, exchange in self.context.exchanges.items():
                 await exchange.apply_trade()
 
-            if time.minute == 0 and time.second == 0 and time.microsecond == 0:
+            if time.hour == 0 and time.minute == 0 and time.second == 0 and time.microsecond == 0:
                 self.stat.collect_daily()
+
+        self.lastly()
+
+    def lastly(self) -> None:
+        pass
+
+    def run(self):
+        loop = get_event_loop()
+        loop.run_until_complete(self._run())

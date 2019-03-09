@@ -69,7 +69,7 @@ def authentication_required(fn: F) -> F:
 class BitMexHTTPInterface():
 
     def __init__(self, exchange_setting: dict,
-                 connector: TCPConnector, session: ClientSession, ssl: ssl.SSLContext,
+                 connector: TCPConnector, session: ClientSession, ssl: ssl.SSLContext, proxy: Optional[str]=None,
                  loop: Optional[asyncio.AbstractEventLoop] = None):
         """
         :param exchange_setting:
@@ -92,6 +92,7 @@ class BitMexHTTPInterface():
             base_url = BITMEX_API_URL
         self.base_url = base_url
 
+        self._proxy = proxy
         self._ssl = ssl
 
         self.api_key = exchange_setting.get("API_KEY", '')
@@ -227,11 +228,6 @@ class BitMexHTTPInterface():
         if query:
             url_obj = url_obj.with_query(query)
 
-        if settings.HTTP_PROXY:
-            proxy = settings.HTTP_PROXY
-        else:
-            proxy = None
-
         headers = {}
 
         if postdict:
@@ -259,7 +255,7 @@ class BitMexHTTPInterface():
 
         try:
             resp = await self.session.request(method=method, url=str(url_obj),
-                                              proxy=proxy, headers=headers,
+                                              proxy=self._proxy, headers=headers,
                                               data=data,
                                               ssl=self._ssl, timeout=timeout)
             if 200 <= resp.status < 300:

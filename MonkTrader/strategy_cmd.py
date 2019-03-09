@@ -21,18 +21,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
-from typing import List, Tuple
 
-from MonkTrader.assets.account import BaseAccount
-from MonkTrader.context import Context
+import click
+from MonkTrader.__main__ import cmd_main
+from MonkTrader.config import gen_settings
+from MonkTrader.runner import Runner
 
 
-class Statistic():
-    def __init__(self, account: BaseAccount, context: Context):
-        self.account = account
-        self.context = context
-        self.collected_data: List[Tuple[datetime.datetime, float]] = []
+@cmd_main.command()
+@click.pass_context
+def runstrategy(ctx: click.Context):
+    settings = gen_settings()
+    runner = Runner(settings)
+    runner.run()
 
-    def collect_daily(self) -> None:
-        self.collected_data.append((self.context.now, self.account.margin_balance))
+if __name__ == '__main__':
+    cmd_main()

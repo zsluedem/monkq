@@ -78,7 +78,9 @@ async def test_exchange(mock_httpinterface: MagicMock, loop: AbstractEventLoop) 
     WS = MagicMock()
     ws = WS()
     ws.setup = CoroutineMock(return_value=None)
-    exchange = BitmexExchange(MagicMock(), 'bitmex', {"IS_TEST": True}, loop)
+    context = MagicMock()
+    context.settings.SSL_PATH = None
+    exchange = BitmexExchange(context, 'bitmex', {"IS_TEST": True}, loop)
     exchange.http_interface = mock_httpinterface
     exchange.ws = ws
     await exchange.setup()

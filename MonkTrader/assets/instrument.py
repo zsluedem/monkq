@@ -111,3 +111,8 @@ class PerpetualInstrument(FutureInstrument):
     @property
     def funding_rate(self) -> float:
         return 0
+
+
+@dataclasses.dataclass(frozen=True)
+class AbandonInstrument(Instrument):
+    pass

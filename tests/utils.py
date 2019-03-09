@@ -23,11 +23,13 @@
 #
 import random
 import string
+import os
 import sys
 from contextlib import contextmanager
 from typing import Any, Generator
 
-from MonkTrader.config import Setting
+
+from MonkTrader.config import Setting, SETTING_MODULE
 
 
 def random_string(length: int) -> str:
@@ -48,3 +50,18 @@ def add_path(path: str) -> Generator[None, None, None]:
     sys.path.insert(0, path)
     yield
     sys.path.pop(0)
+
+
+@contextmanager
+def change_current_working_dir(target_dir: str) -> Generator[str, None, None]:
+    current = os.getcwd()
+    os.chdir(target_dir)
+    yield target_dir
+    os.chdir(current)
+
+
+@contextmanager
+def change_default_module_settings(module_setiings:str) -> Generator[None, None, None]:
+    os.environ.setdefault(SETTING_MODULE, module_setiings)
+    yield
+    os.environ.pop(SETTING_MODULE)

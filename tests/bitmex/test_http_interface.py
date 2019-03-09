@@ -330,7 +330,7 @@ async def test_bitmex_http_interface(normal_bitmex_server: TestServer, loop: asy
         session = ClientSession(loop=loop, connector=connector)
 
         exchange = BitMexHTTPInterface({'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": True},
-                                       connector, session, ssl_context, loop)
+                                       connector, session, ssl_context, None, loop)
         symbol = "XBTUSD"
 
         await exchange.get_instrument_info(symbol)
@@ -363,7 +363,7 @@ async def test_bitmex_http_interface_error(abnormal_bitmex_server: TestServer,
         session = ClientSession(loop=loop, connector=connector)
 
         exchange = BitMexHTTPInterface({'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": False},
-                                       connector, session, ssl_context, loop)
+                                       connector, session, ssl_context, None, loop)
 
         symbol = "XBTUSD"
         with pytest.raises(MarginNotEnoughError):

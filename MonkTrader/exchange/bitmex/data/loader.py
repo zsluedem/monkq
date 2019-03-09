@@ -83,7 +83,15 @@ class BitmexDataloader(DataLoader):
         'OCECCS': UpsideInstrument,  # call options
         'FFCCSX': FutureInstrument,  # normal futures contracts
         'FFWCSX': PerpetualInstrument,  # perpetual  futures contracts
+        'FXXXS': FutureInstrument,
+        'FFICSX': FutureInstrument,
+        'FMXXS': FutureInstrument
     }
+
+    # abandon typ in Bitmex
+    # https://www.onixs.biz/fix-dictionary/4.4/app_6_d.html
+    # below are all index like instrument
+    _abandon_instrument_type = ('MRIXXX', 'MRRXXX', 'MRCXXX')
 
     def __init__(self, exchange: 'BitmexSimulateExchange', context: Context, data_dir: str) -> None:
         self.data_dir = data_dir
@@ -101,6 +109,8 @@ class BitmexDataloader(DataLoader):
         with open(instruments_file) as f:
             instruments_raw = json.load(f)
         for instrument_raw in instruments_raw:
+            if instrument_raw['typ'] in self._abandon_instrument_type:
+                continue
             instrument_cls = self.instrument_cls.get(instrument_raw['typ'])
             if instrument_cls is None:
                 raise LoadDataError(_("Unsupport instrument type {}").format(instrument_raw['typ']))

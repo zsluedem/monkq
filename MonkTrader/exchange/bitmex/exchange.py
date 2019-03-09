@@ -33,7 +33,6 @@ from MonkTrader.assets.account import FutureAccount
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.order import FutureLimitOrder, FutureMarketOrder
 from MonkTrader.assets.positions import FuturePosition
-from MonkTrader.config import settings
 from MonkTrader.context import Context
 from MonkTrader.exchange.base import BaseExchange
 from MonkTrader.exchange.base.info import ExchangeInfo
@@ -182,8 +181,8 @@ class BitmexExchange(BaseExchange):
 
         self._trace_config = TraceConfig()
         self._ssl = ssl.create_default_context()
-        if settings.SSL_PATH:
-            self._ssl.load_verify_locations(settings.SSL_PATH)
+        if context.settings.SSL_PATH:
+            self._ssl.load_verify_locations(context.settings.SSL_PATH)
 
         self.api_key = exchange_setting.get("API_KEY", '')
         self.api_secret = exchange_setting.get("API_SECRET", '')
@@ -199,8 +198,10 @@ class BitmexExchange(BaseExchange):
                                   session=self.session, ws_url=ws_url,
                                   api_key=self.api_key, api_secret=self.api_secret,
                                   ssl=self._ssl, http_proxy=None)
+        proxy = self.context.settings.HTTP_PROXY or None
 
-        self.http_interface = BitMexHTTPInterface(exchange_setting, self._connector, self.session, self._ssl, loop)
+        self.http_interface = BitMexHTTPInterface(exchange_setting, self._connector,
+                                                  self.session, self._ssl, proxy, loop)
 
     async def setup(self) -> None:
         await self.ws.setup()

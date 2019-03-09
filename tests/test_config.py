@@ -27,6 +27,7 @@ import sys
 import tempfile
 
 from MonkTrader.config import Setting
+from .utils import random_string, change_default_module_settings
 
 setting_content = """
 A = 123
@@ -36,10 +37,12 @@ B = 321
 
 def test_settings() -> None:
     with tempfile.TemporaryDirectory() as temp:
-        with open(os.path.join(temp, 'settings.py'), 'w') as f:
-            f.write(setting_content)
-        sys.path.insert(0, temp)
-        setting = Setting()
-        sys.path.pop(0)
-        assert setting.A == 123  # type: ignore
-        assert setting.B == 321  # type: ignore
+        name = random_string(6)
+        with change_default_module_settings('{}_settings'.format(name)):
+            with open(os.path.join(temp, '{}_settings.py'.format(name)), 'w') as f:
+                f.write(setting_content)
+            sys.path.insert(0, temp)
+            setting = Setting()
+            sys.path.pop(0)
+            assert setting.A == 123  # type: ignore
+            assert setting.B == 321  # type: ignore

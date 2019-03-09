@@ -45,9 +45,8 @@ T_D = TypeVar("T_D", bound=DataProcessor)
 
 
 @click.group()
-@click.option('-c', '--config', type=str)
 @click.pass_context
-def cmd_main(ctx: click.Context, config: str) -> None:
+def cmd_main(ctx: click.Context) -> None:
     StreamHandler(sys.stdout).push_application()
 
 
@@ -101,9 +100,19 @@ def startstrategy(ctx: click.Context, name: str, directory: str) -> None:
                 continue
 
             old_path = os.path.join(root, filename)
-            new_path = os.path.join(target_dir, relative_dir, filename)
 
-            shutil.copyfile(old_path, new_path)
+
+            if filename.endswith(('.py-tpl')):
+                filename = filename.replace('.py-tpl', '.py')
+                new_path = os.path.join(target_dir, relative_dir, filename)
+                with open(old_path) as template_f:
+                    content = template_f.read()
+                content = content.replace("@name@", name)
+                with open(new_path, 'w') as new_file:
+                    new_file.write(content)
+            else:
+                new_path = os.path.join(target_dir, relative_dir, filename)
+                shutil.copyfile(old_path, new_path)
             shutil.copymode(old_path, new_path)
             make_writable(new_path)
 

@@ -35,7 +35,7 @@ class TestStrategy(BaseStrategy):
         pass
 
 
-async def test_runner(settings: Setting, tem_data_dir: str) -> None:
+def test_runner(settings: Setting, tem_data_dir: str) -> None:
     custom_settings = {
         "STRATEGY": TestStrategy,
         "START_TIME": utc_datetime(2018, 1, 1),
@@ -57,4 +57,4 @@ async def test_runner(settings: Setting, tem_data_dir: str) -> None:
     with over_written_settings(settings, **custom_settings):
         runner = Runner(settings)
 
-        await runner.run()
+        runner.run()

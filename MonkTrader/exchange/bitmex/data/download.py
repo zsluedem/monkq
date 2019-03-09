@@ -110,7 +110,7 @@ class BitMexDownloader(DataProcessor):
             elif mode == 'hdf':
                 self.Streamer = HDFQuoteStream
             else:
-                raise ValueError
+                raise ValueError()
         elif kind == 'trade':
             self.link = TRADE_LINK
             if mode == 'csv':
@@ -120,7 +120,7 @@ class BitMexDownloader(DataProcessor):
             elif mode == 'hdf':
                 self.Streamer = HDFTradeStream
             else:
-                raise ValueError
+                raise ValueError()
         elif kind == 'instruments':
             self.link = SYMBOL_LINK
             self.Streamer = SymbolsStreamRequest

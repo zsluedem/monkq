@@ -57,7 +57,7 @@ def authentication_required(fn: F) -> F:
     """Annotation for methods that require auth."""
 
     def wrapped(self: Any, *args: Any, **kwargs: Any) -> F:
-        if not (self.api_key):
+        if not self.api_key:
             raise AuthError(_("You must be authenticated to use this method"))
         else:
             return fn(self, *args, **kwargs)
@@ -110,6 +110,7 @@ class BitMexHTTPInterface():
         content = await resp.json()
         return content
 
+    @authentication_required
     async def place_limit_order(self, symbol: str,
                                 price: float, quantity: float, timeout: int = sentinel,
                                 max_retry: int = 0) -> str:
@@ -123,6 +124,7 @@ class BitMexHTTPInterface():
         order_info = await resp.json()
         return order_info['orderID']
 
+    @authentication_required
     async def place_market_order(self, symbol: str,
                                  quantity: float, timeout: int = sentinel,
                                  max_retry: int = 0) -> str:
@@ -137,6 +139,7 @@ class BitMexHTTPInterface():
         order_info = await resp.json()
         return order_info['orderID']
 
+    @authentication_required
     async def amend_order(self, order_id: str, quantity: Optional[float] = None,
                           price: Optional[float] = None, timeout: int = sentinel,
                           max_retry: int = 0) -> ClientResponse:

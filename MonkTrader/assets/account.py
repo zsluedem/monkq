@@ -152,8 +152,6 @@ class FutureAccount(BaseAccount):
         else:
             if position_effect == POSITION_EFFECT.CLOSE or position_effect == POSITION_EFFECT.CLOSE_PART:
                 profit_quantity = abs(trade.exec_quantity)
-            elif abs(position.quantity) >= abs(trade.exec_quantity):
-                profit_quantity = abs(trade.exec_quantity)
             else:
                 profit_quantity = abs(position.quantity)
 

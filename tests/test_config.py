@@ -27,6 +27,7 @@ import sys
 import tempfile
 
 from MonkTrader.config import Setting
+from MonkTrader.config.default_settings import FREQUENCY
 
 from .utils import change_default_module_settings, random_string
 
@@ -47,3 +48,14 @@ def test_settings() -> None:
             sys.path.pop(0)
             assert setting.A == 123  # type: ignore
             assert setting.B == 321  # type: ignore
+
+
+def test_settings_import_error() -> None:
+    with tempfile.TemporaryDirectory() as temp:
+        name = random_string(6)
+        with change_default_module_settings('{}_settings'.format(name)):
+            sys.path.insert(0, temp)
+            setting = Setting()
+            sys.path.pop(0)
+
+            assert setting.FREQUENCY == FREQUENCY  # type:ignore

@@ -23,7 +23,6 @@
 #
 
 import datetime
-import os
 from typing import IO, List, Optional, Union
 
 import numpy as np
@@ -66,7 +65,7 @@ def _side_converters(side: str) -> SIDE:
     elif side == 'Sell':
         return np.float64(SIDE.SELL.value)
     else:
-        return np.float64(SIDE.UNKNOWN.value)
+        return np.float64(SIDE.UNKNOWN.value)  # pragma: no cover
 
 
 def _tick_direction(tick_direction: str) -> TICK_DIRECTION:
@@ -79,7 +78,7 @@ def _tick_direction(tick_direction: str) -> TICK_DIRECTION:
     elif tick_direction == 'ZeroPlusTick':
         return np.float64(TICK_DIRECTION.ZERO_PLUS_TICK.value)
     else:
-        return np.float64(TICK_DIRECTION.UNKNOWN.value)
+        return np.float64(TICK_DIRECTION.UNKNOWN.value)  # pragma: no cover
 
 
 def read_trade_tar(path: Union[str, IO], with_detailed: bool = False, with_symbol: bool = True,
@@ -212,24 +211,3 @@ def check_1m_data_integrity(df: pandas.DataFrame, start: datetime.datetime, end:
     start = start + relativedelta(minutes=1)
     total_date = pandas.date_range(start, end, freq='min')
     return len(df) == len(total_date) and df.index[0] == start and df.index[-1] == end
-
-
-def tarcsv2hdf(csv_file: str, key: str, output: str = '') -> None:
-    frame = read_trade_tar(csv_file, False, False, 'timestamp')
-    frame.to_hdf(os.path.join(output, 'trade.hdf'), key, mode='a',
-                 format='table', data_columns=True, index=False,
-                 complib='blosc:blosclz', complevel=9, append=True)
-
-
-def convert_all_trade_data2hdf(data_dir: str, output: str = '') -> None:
-    base = os.path.join(data_dir, '')
-    directories = os.listdir(base)
-    directories.sort()
-    for directory in directories:
-        print('date {}'.format(directory))
-        date_file = os.path.join(base, directory)
-        symbols_files = os.listdir(date_file)
-        for path in symbols_files:
-            print(path)
-            symbol = path.split('.')[0]
-            tarcsv2hdf(os.path.join(date_file, path), symbol, output)

@@ -9,7 +9,7 @@ HTTP_PROXY = ""
 # used only for testing
 SSL_PATH = ''
 
-FREQUENCY = 'tick'  # tick, 1m ,5m ,1h
+FREQUENCY = '1m'  # tick, 1m ,5m ,1h
 
 LOG_LEVEL = 'INFO'  # DEBUG, INFO, NOTICE, WARNING, ERROR
 

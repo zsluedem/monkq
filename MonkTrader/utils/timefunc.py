@@ -51,6 +51,6 @@ def local_tz_offset() -> Optional[datetime.timedelta]:
 
 local_offset = local_tz_offset()
 if local_offset is None:
-    local_offset_seconds = 0.
+    local_offset_seconds = 0.  # pragma: no cover
 else:
     local_offset_seconds = local_offset.total_seconds()

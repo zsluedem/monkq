@@ -22,13 +22,11 @@
 # SOFTWARE.
 #
 import asyncio
-import decimal
 import json
 import ssl
 import time
 from collections import defaultdict, namedtuple
 from dataclasses import dataclass, field
-from decimal import Decimal
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 
@@ -37,6 +35,7 @@ from aiohttp import (  # type: ignore
 )
 from logbook import Logger
 from MonkTrader.base_strategy import BaseStrategy
+from MonkTrader.exception import ImpossibleError
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
 from MonkTrader.utils.i18n import _
 
@@ -63,15 +62,6 @@ def findItemByKeys(keys: list, table: list, matchData: dict) -> Optional[Dict]:
         if matched:
             return item
     return None
-
-
-def toNearest(num: float, tickSize: float) -> float:
-    """Given a number, round it to the nearest tick. Very useful for sussing float error
-       out of numbers: e.g. toNearest(401.46, 0.01) -> 401.46, whereas processing is
-       normally with floats would give you 401.46000000000004.
-       Use this after adding/subtracting/multiplying numbers."""
-    tickDec = Decimal(str(tickSize))
-    return float((Decimal(round(num / tickSize, 0)) * tickDec))
 
 
 def timestamp_update(func: F) -> F:
@@ -209,42 +199,6 @@ class BitmexWebsocket():
     def error(self, error: str) -> None:
         pass
 
-    def get_instrument(self, symbol: Optional[str] = None) -> dict:
-        if symbol is None:
-            return self._data['instrument']
-        instruments = self._data['instrument']
-        matchingInstruments = [i for i in instruments if i['symbol'] == symbol]
-        if len(matchingInstruments) == 0:
-            raise Exception(_('Unable to find instrument or index with symbol: {}').format(symbol))
-        instrument = matchingInstruments[0]
-        # Turn the 'tickSize' into 'tickLog' for use in rounding
-        # http://stackoverflow.com/a/6190291/832202
-        instrument['tickLog'] = decimal.Decimal(str(instrument['tickSize'])).as_tuple().exponent * -1
-        return instrument
-
-    def get_ticker(self, symbol: str) -> Dict[str, float]:
-        '''Return a ticker object. Generated from instrument.'''
-
-        instrument = self.get_instrument(symbol)
-
-        # If this is an index, we have to get the data from the last trade.
-        if instrument['symbol'][0] == '.':
-            ticker = {}
-            ticker['mid'] = ticker['buy'] = ticker['sell'] = ticker['last'] = instrument['markPrice']
-        # Normal instrument
-        else:
-            bid = instrument['bidPrice'] or instrument['lastPrice']
-            ask = instrument['askPrice'] or instrument['lastPrice']
-            ticker = {
-                "last": instrument['lastPrice'],
-                "buy": bid,
-                "sell": ask,
-                "mid": (bid + ask) / 2
-            }
-
-        # The instrument has a tickSize. Use it to round values.
-        return {k: toNearest(float(v or 0), instrument['tickSize']) for k, v in ticker.items()}
-
     @timestamp_update
     def _on_message(self, message: dict) -> None:
         '''Handler for parsing WS messages.'''
@@ -378,5 +332,5 @@ class BitmexWebsocket():
                         item = findItemByKeys(self._keys[table], self._data[table], deleteData)
                         self._data[table].remove(item)
             else:
-                raise Exception(_("Unknown action: {}").format(action))
+                raise ImpossibleError(_("Unknown action: {}").format(action))
         logger.debug(_("Tick data process time: {}").format(round(time.time() - start, 7)))

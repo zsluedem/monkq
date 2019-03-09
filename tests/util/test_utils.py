@@ -26,12 +26,13 @@ import csv
 import datetime
 import gzip
 import os
+import stat
 import tempfile
 
 import pytest
 import pytz
 from MonkTrader.utils.csv import CsvFileDefaultDict, CsvZipDefaultDict
-from MonkTrader.utils.filefunc import assure_dir
+from MonkTrader.utils.filefunc import assure_dir, make_writable
 from MonkTrader.utils.timefunc import is_aware_datetime
 
 
@@ -94,3 +95,16 @@ def test_aware_datetime() -> None:
 
     d2 = datetime.datetime(2018, 1, 1, 12, tzinfo=pytz.utc)
     assert is_aware_datetime(d2)
+
+
+def test_make_writeable() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        filename = os.path.join(tmp, 'test')
+        with open(filename, 'w') as f:
+            f.write('ss')
+
+        os.chmod(filename, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+
+        make_writable(filename)
+
+        assert os.access(filename, os.W_OK)

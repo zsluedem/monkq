@@ -129,12 +129,6 @@ def read_quote_tar(path: Union[str, IO], with_symbol: bool = True, index: Option
     return t_frame
 
 
-def _trade_to_kline(frame: pandas.DataFrame, frequency: str) -> pandas.DataFrame:
-    kline = frame['price'].resample(frequency).ohlc()
-    kline['value'] = frame['grossValue'].resample(frequency).sum()
-    return kline
-
-
 def trades_to_1m_kline(frame: pandas.DataFrame) -> pandas.DataFrame:
     re_df = frame.resample('1Min', label=KLINE_SIDE, closed=KLINE_SIDE)
     kline = re_df['price'].ohlc()

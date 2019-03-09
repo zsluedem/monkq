@@ -404,3 +404,5 @@ async def test_bitmex_auth_error(loop: asyncio.AbstractEventLoop) -> None:
 
     with pytest.raises(AuthError):
         await http_interface.place_limit_order(symbol, 10, 100)
+
+    await session.close()

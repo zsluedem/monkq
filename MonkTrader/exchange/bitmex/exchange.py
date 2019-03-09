@@ -34,7 +34,7 @@ from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.order import FutureLimitOrder, FutureMarketOrder
 from MonkTrader.assets.positions import FuturePosition
 from MonkTrader.context import Context
-from MonkTrader.exchange.base import BaseExchange
+from MonkTrader.exchange.base import BaseExchange, BaseSimExchange
 from MonkTrader.exchange.base.info import ExchangeInfo
 from MonkTrader.exchange.bitmex.const import (
     BITMEX_TESTNET_WEBSOCKET_URL, BITMEX_WEBSOCKET_URL,
@@ -61,7 +61,7 @@ bitmex_info = ExchangeInfo(name="bitmex",
                            info="famous exchange")
 
 
-class BitmexSimulateExchange(BaseExchange):
+class BitmexSimulateExchange(BaseSimExchange):
     def __init__(self, context: Context, name: str, exchange_setting: dict) -> None:
         super(BitmexSimulateExchange, self).__init__(context, name, exchange_setting)
         data_dir = context.settings.DATA_DIR  # type:ignore
@@ -75,6 +75,9 @@ class BitmexSimulateExchange(BaseExchange):
         return
 
     async def get_last_price(self, instrument: FutureInstrument) -> float:
+        return self._data.get_last_price(instrument)
+
+    def last_price(self, instrument: FutureInstrument) -> float:
         return self._data.get_last_price(instrument)
 
     def exchange_info(self) -> ExchangeInfo:
@@ -126,8 +129,8 @@ class BitmexSimulateExchange(BaseExchange):
     def get_account(self) -> FutureAccount:
         return self._account
 
-    async def apply_trade(self) -> None:
-        await self._trade_counter.match()
+    def match_open_orders(self) -> None:
+        self._trade_counter.match()
 
 
 class BitmexExchange(BaseExchange):

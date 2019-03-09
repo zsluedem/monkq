@@ -27,22 +27,22 @@ from typing import Dict, Optional, ValuesView
 from MonkTrader.assets.order import BaseOrder, LimitOrder, MarketOrder
 from MonkTrader.assets.trade import Trade
 from MonkTrader.exception import ImpossibleError
-from MonkTrader.exchange.base import BaseExchange
+from MonkTrader.exchange.base import BaseExchange, BaseSimExchange
 from MonkTrader.utils.id import gen_unique_id
 
 
 class TradeCounter():
     def __init__(self, exchange: BaseExchange) -> None:
         self._open_orders: Dict[str, BaseOrder] = {}
-        self.exchange: BaseExchange = exchange
+        self.exchange: BaseSimExchange = exchange
 
         self._traded_orders: Dict[str, BaseOrder] = {}
 
-    async def match(self) -> None:
+    def match(self) -> None:
         close_order_ids = []
         for order in self._open_orders.values():
             if isinstance(order, MarketOrder):
-                trade = Trade(order, await self.exchange.get_last_price(order.instrument), order.quantity,
+                trade = Trade(order, self.exchange.last_price(order.instrument), order.quantity,
                               gen_unique_id())
             elif isinstance(order, LimitOrder):
                 trade = Trade(order, order.price, order.quantity, gen_unique_id())

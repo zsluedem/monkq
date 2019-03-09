@@ -149,4 +149,4 @@ async def test_bitmex_exchange_simulate(tem_data_dir: str, instrument: FutureIns
     account = sim_exchange.get_account()
     assert account.wallet_balance == 1000000
 
-    await sim_exchange.apply_trade()
+    sim_exchange.match_open_orders()

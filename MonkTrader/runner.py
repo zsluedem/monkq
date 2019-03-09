@@ -53,7 +53,7 @@ class Runner():
             await self.context.strategy.handle_bar()
 
             for key, exchange in self.context.exchanges.items():
-                await exchange.apply_trade()
+                exchange.match_open_orders()
 
             if time.hour == 0 and time.minute == 0 and time.second == 0 and time.microsecond == 0:
                 self.stat.collect_daily()

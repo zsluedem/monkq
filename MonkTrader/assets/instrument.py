@@ -26,14 +26,14 @@ import datetime
 from typing import Optional, Type, TypeVar
 
 from dateutil.parser import parse
-from MonkTrader.exchange.base import BaseExchange
+from MonkTrader.exchange.base import BaseExchange, BaseSimExchange
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 
 
 @dataclasses.dataclass(frozen=True)
 class Instrument():
-    exchange: BaseExchange
+    exchange: BaseSimExchange
     symbol: str
 
     listing_date: Optional[datetime.datetime] = None
@@ -49,7 +49,7 @@ class Instrument():
     taker_fee: float = 0
 
     @classmethod
-    def create(cls: Type[T_INSTRUMENT], key_map: dict, values: dict, exchange: BaseExchange) -> T_INSTRUMENT:
+    def create(cls: Type[T_INSTRUMENT], key_map: dict, values: dict, exchange: BaseSimExchange) -> T_INSTRUMENT:
         annotation_dict = {}
         for mro in cls.__mro__[::-1]:
             if mro is object:
@@ -76,7 +76,7 @@ class Instrument():
 
     @property
     def last_price(self) -> float:
-        return self.exchange.get_last_price(self)  # type:ignore
+        return self.exchange.last_price(self)
 
 
 @dataclasses.dataclass(frozen=True)

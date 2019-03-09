@@ -120,16 +120,12 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    # def order_book(self) -> None:
-    #     raise NotImplementedError()
-    # def withdraw(self) -> None:
-    #     raise NotImplementedError()s
-    #
-    # def deposit(self) -> None:
-    #     raise NotImplementedError()
 
-    # def place_stop_limit_order(self) -> None:
-    #     raise NotImplementedError()
-    #
-    # def place_stop_market_order(self) -> None:
-    #     raise NotImplementedError()
+class BaseSimExchange(BaseExchange):
+    def last_price(self, instrument: Any) -> float:
+        raise NotImplementedError()
+
+    def match_open_orders(self) -> None:
+        raise NotImplementedError()
+
+

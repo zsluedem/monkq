@@ -45,7 +45,7 @@ RUN_TYPE = RUN_TYPE.BACKTEST  # type: ignore
 
 STRATEGY = "strategy.TestStrategy"
 
-DATA_DIR = "@data_dir@"
+DATA_DIR = r"@data_dir@"
 
 EXCHANGES = {
     'bitmex': {

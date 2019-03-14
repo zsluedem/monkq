@@ -25,17 +25,17 @@ from typing import TypeVar
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.assets.account import BaseAccount, FutureAccount
-from MonkTrader.assets.const import DIRECTION, POSITION_EFFECT
-from MonkTrader.assets.instrument import FutureInstrument, Instrument
-from MonkTrader.assets.order import BaseOrder
-from MonkTrader.assets.positions import (
+from monkq.assets.account import BaseAccount, FutureAccount
+from monkq.assets.const import DIRECTION, POSITION_EFFECT
+from monkq.assets.instrument import FutureInstrument, Instrument
+from monkq.assets.order import BaseOrder
+from monkq.assets.positions import (
     BasePosition, CrossPosition, FutureBasePosition,
     FutureCrossIsolatePosition, IsolatedPosition, PositionManager,
 )
-from MonkTrader.assets.trade import Trade
-from MonkTrader.exception import MarginError, MarginNotEnoughError
-from MonkTrader.exchange.base import BaseExchange  # noqa: F401
+from monkq.assets.trade import Trade
+from monkq.exception import MarginError, MarginNotEnoughError
+from monkq.exchange.base import BaseExchange  # noqa: F401
 
 from ..utils import random_string
 

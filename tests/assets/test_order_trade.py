@@ -25,13 +25,13 @@
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.assets.account import FutureAccount
-from MonkTrader.assets.const import DIRECTION, ORDER_STATUS, SIDE
-from MonkTrader.assets.instrument import FutureInstrument, Instrument
-from MonkTrader.assets.order import (
+from monkq.assets.account import FutureAccount
+from monkq.assets.const import DIRECTION, ORDER_STATUS, SIDE
+from monkq.assets.instrument import FutureInstrument, Instrument
+from monkq.assets.order import (
     BaseOrder, FutureLimitOrder, FutureMarketOrder,
 )
-from MonkTrader.assets.trade import Trade
+from monkq.assets.trade import Trade
 
 from ..utils import random_string
 

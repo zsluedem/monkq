@@ -7,17 +7,17 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas
-from MonkTrader.exchange.bitmex.const import (
+from monkq.exchange.bitmex.const import (
     INSTRUMENT_FILENAME, KLINE_FILE_NAME, TRADE_FILE_NAME,
 )
-from MonkTrader.exchange.bitmex.data.kline import (
+from monkq.exchange.bitmex.data.kline import (
     BitMexKlineTransform, KlineFullFill,
 )
-from MonkTrader.exchange.bitmex.data.utils import (
+from monkq.exchange.bitmex.data.utils import (
     check_1m_data_integrity, fullfill_1m_kline_with_start_end,
     trades_to_1m_kline,
 )
-from MonkTrader.utils.timefunc import utc_datetime
+from monkq.utils.timefunc import utc_datetime
 from tests.tools import (
     random_kline_data, random_kline_data_with_start_end, random_trade_frame,
 )
@@ -158,7 +158,7 @@ def test_BitMexKlineTransform_from_scratch() -> None:
 
         write_hdf(hdf2, target, "TRXH19")
 
-        with patch("MonkTrader.exchange.bitmex.data.kline.HDF_TRADE_TO_KLINE_CHUNK_SIZE", 5):
+        with patch("monkq.exchange.bitmex.data.kline.HDF_TRADE_TO_KLINE_CHUNK_SIZE", 5):
             b = BitMexKlineTransform(tmp, tmp)
             b.do_all()
 

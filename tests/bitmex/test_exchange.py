@@ -30,13 +30,13 @@ from unittest.mock import MagicMock
 import pandas
 import pytest
 from asynctest import CoroutineMock
-from MonkTrader.assets.instrument import FutureInstrument
-from MonkTrader.exchange.bitmex.exchange import (
+from monkq.assets.instrument import FutureInstrument
+from monkq.exchange.bitmex.exchange import (
     BitmexExchange, BitmexSimulateExchange, bitmex_info,
 )
-from MonkTrader.tradecounter import TradeCounter
-from MonkTrader.utils.id import gen_unique_id
-from MonkTrader.utils.timefunc import utc_datetime
+from monkq.tradecounter import TradeCounter
+from monkq.utils.id import gen_unique_id
+from monkq.utils.timefunc import utc_datetime
 
 from ..tools import get_resource_path
 

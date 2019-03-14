@@ -33,18 +33,18 @@ from unittest.mock import MagicMock, patch
 import pandas
 import pytest
 from dateutil.relativedelta import relativedelta
-from MonkTrader.assets.const import SIDE
-from MonkTrader.const import TICK_DIRECTION
-from MonkTrader.exception import DataDownloadError
-from MonkTrader.exchange.bitmex.const import (
+from monkq.assets.const import SIDE
+from monkq.const import TICK_DIRECTION
+from monkq.exception import DataDownloadError
+from monkq.exchange.bitmex.const import (
     INSTRUMENT_FILENAME, QUOTE_FILE_NAME, START_DATE, TRADE_FILE_NAME,
 )
-from MonkTrader.exchange.bitmex.data.download import (
+from monkq.exchange.bitmex.data.download import (
     BitMexDownloader, BitMexProcessPoints, DatePoint, HDFQuoteStream,
     HDFTradeStream, QuoteZipFileStream, SymbolsStreamRequest, TarStreamRequest,
     TradeZipFileStream,
 )
-from MonkTrader.utils.timefunc import utc_datetime
+from monkq.utils.timefunc import utc_datetime
 from pytz import utc
 from tests.tools import (
     random_quote_frame, random_quote_hdf, random_trade_frame, random_trade_hdf,
@@ -401,7 +401,7 @@ def test_quote_zip_file_stream_exception() -> None:
 
 
 def test_quote_hdf_stream() -> None:
-    with patch("MonkTrader.exchange.bitmex.data.download.requests") as m:
+    with patch("monkq.exchange.bitmex.data.download.requests") as m:
         resp = m.get()
         resp.raw = io.BytesIO(stream_quote_gzip)
         with tempfile.TemporaryDirectory() as tmp:
@@ -442,9 +442,9 @@ def test_quote_hdf_stream_exception() -> None:
         stream = HDFTradeStream(point=point)
         append = random_quote_frame(3, d)
         with pytest.raises(DataDownloadError):
-            with patch("MonkTrader.exchange.bitmex.data.download.read_quote_tar"):
-                with patch("MonkTrader.exchange.bitmex.data.download.requests"):
-                    with patch("MonkTrader.exchange.bitmex.data.download.classify_df") as f:
+            with patch("monkq.exchange.bitmex.data.download.read_quote_tar"):
+                with patch("monkq.exchange.bitmex.data.download.requests"):
+                    with patch("monkq.exchange.bitmex.data.download.classify_df") as f:
                         f.items.return_value = [
                             ("XBTUSD", append),
                             ("ETHUSD", 's')]
@@ -464,9 +464,9 @@ def test_trade_hdf_stream_exception() -> None:
         stream = HDFTradeStream(point=point)
         append = random_trade_frame(3, d)
         with pytest.raises(DataDownloadError):
-            with patch("MonkTrader.exchange.bitmex.data.download.read_trade_tar"):
-                with patch("MonkTrader.exchange.bitmex.data.download.requests"):
-                    with patch("MonkTrader.exchange.bitmex.data.download.classify_df") as f:
+            with patch("monkq.exchange.bitmex.data.download.read_trade_tar"):
+                with patch("monkq.exchange.bitmex.data.download.requests"):
+                    with patch("monkq.exchange.bitmex.data.download.classify_df") as f:
                         f().items.return_value = [
                             ("XBTUSD", append),
                             ("ETHUSD", 's')]
@@ -478,7 +478,7 @@ def test_trade_hdf_stream_exception() -> None:
 
 
 def test_trade_hdf_stream() -> None:
-    with patch("MonkTrader.exchange.bitmex.data.download.requests") as m:
+    with patch("monkq.exchange.bitmex.data.download.requests") as m:
         resp = m.get()
         resp.raw = io.BytesIO(stream_trade_gzip)
         with tempfile.TemporaryDirectory() as tmp:

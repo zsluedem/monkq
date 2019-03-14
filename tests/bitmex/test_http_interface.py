@@ -31,12 +31,12 @@ from unittest.mock import patch
 import pytest
 from aiohttp import ClientSession, TCPConnector, web  # type:ignore
 from aiohttp.test_utils import TestServer
-from MonkTrader.assets.account import APIKey
-from MonkTrader.exception import (
+from monkq.assets.account import APIKey
+from monkq.exception import (
     HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
     NotFoundError, RateLimitError,
 )
-from MonkTrader.exchange.bitmex.http import BitMexHTTPInterface
+from monkq.exchange.bitmex.http import BitMexHTTPInterface
 from tests.tools import get_resource_path
 
 TEST_API_KEY = "ae86vJ85yU8Mh5r6iSv68asb"
@@ -324,7 +324,7 @@ async def abnormal_bitmex_server(
 
 
 async def test_bitmex_http_interface(normal_bitmex_server: TestServer, loop: asyncio.AbstractEventLoop) -> None:
-    with patch("MonkTrader.exchange.bitmex.http.BITMEX_TESTNET_API_URL",
+    with patch("monkq.exchange.bitmex.http.BITMEX_TESTNET_API_URL",
                'http://127.0.0.1:{}/'.format(normal_bitmex_server.port)):
         ssl_context = ssl.create_default_context()
         connector = TCPConnector(keepalive_timeout=90)  # type:ignore
@@ -358,7 +358,7 @@ async def test_bitmex_http_interface(normal_bitmex_server: TestServer, loop: asy
 
 async def test_bitmex_http_interface_error(abnormal_bitmex_server: TestServer,
                                            loop: asyncio.AbstractEventLoop) -> None:
-    with patch("MonkTrader.exchange.bitmex.http.BITMEX_API_URL",
+    with patch("monkq.exchange.bitmex.http.BITMEX_API_URL",
                'http://127.0.0.1:{}/'.format(abnormal_bitmex_server.port)):
         ssl_context = ssl.create_default_context()
         connector = TCPConnector(keepalive_timeout=90)  # type:ignore

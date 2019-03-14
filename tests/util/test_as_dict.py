@@ -23,11 +23,11 @@
 #
 from unittest.mock import MagicMock
 
-from MonkTrader.assets.order import BaseOrder, LimitOrder, MarketOrder
-from MonkTrader.utils.as_dict import (
+from monkq.assets.order import BaseOrder, LimitOrder, MarketOrder
+from monkq.utils.as_dict import (
     base_order_to_dict, limit_order_to_dict, market_order_to_dict,
 )
-from MonkTrader.utils.id import gen_unique_id
+from monkq.utils.id import gen_unique_id
 
 
 def test_base_order_to_dict() -> None:

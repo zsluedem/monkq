@@ -28,9 +28,9 @@ from typing import Generator
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.config import Setting
-from MonkTrader.exchange.base import BaseSimExchange  # noqa
-from MonkTrader.exchange.bitmex.const import (
+from monkq.config import Setting
+from monkq.exchange.base import BaseSimExchange  # noqa
+from monkq.exchange.bitmex.const import (
     INSTRUMENT_FILENAME, KLINE_FILE_NAME,
 )
 from tests.tools import get_resource_path

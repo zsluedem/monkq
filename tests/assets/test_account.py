@@ -25,12 +25,12 @@ from typing import List, TypeVar
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.assets.account import FutureAccount
-from MonkTrader.assets.instrument import FutureInstrument, Instrument  # noqa
-from MonkTrader.assets.order import FutureLimitOrder
-from MonkTrader.assets.positions import FuturePosition
-from MonkTrader.assets.trade import Trade
-from MonkTrader.exchange.base import BaseExchange  # noqa: F401
+from monkq.assets.account import FutureAccount
+from monkq.assets.instrument import FutureInstrument, Instrument  # noqa
+from monkq.assets.order import FutureLimitOrder
+from monkq.assets.positions import FuturePosition
+from monkq.assets.trade import Trade
+from monkq.exchange.base import BaseExchange  # noqa: F401
 
 from ..utils import random_string
 

@@ -26,10 +26,10 @@ from typing import Generator, TypeVar
 
 import pytest
 from dateutil.tz import tzutc
-from MonkTrader.assets.account import BaseAccount, FutureAccount
-from MonkTrader.assets.instrument import FutureInstrument, Instrument
-from MonkTrader.assets.positions import BasePosition, FuturePosition
-from MonkTrader.exchange.base import (  # noqa: F401
+from monkq.assets.account import BaseAccount, FutureAccount
+from monkq.assets.instrument import FutureInstrument, Instrument
+from monkq.assets.positions import BasePosition, FuturePosition
+from monkq.exchange.base import (  # noqa: F401
     BaseExchange, BaseSimExchange,
 )
 

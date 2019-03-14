@@ -3,13 +3,13 @@ import tempfile
 from typing import Generator
 
 import pytest
-from MonkTrader.__main__ import cmd_main
-from MonkTrader.config import SETTING_MODULE
+from monkq.__main__ import cmd_main
+from monkq.config import SETTING_MODULE
 
 from .utils import add_path, change_current_working_dir, random_string
 
 test_strategy = """
-from MonkTrader.base_strategy import BaseStrategy
+from monkq.base_strategy import BaseStrategy
 
 class TestStrategy(BaseStrategy):
     def __init__(self, context):
@@ -36,8 +36,8 @@ class TestStrategy(BaseStrategy):
 test_settings = """
 import os
 
-from MonkTrader.const import RUN_TYPE
-from MonkTrader.utils.timefunc import utc_datetime
+from monkq.const import RUN_TYPE
+from monkq.utils.timefunc import utc_datetime
 
 # HTTP Proxy
 HTTP_PROXY = ""
@@ -60,7 +60,7 @@ DATA_DIR = r"@data_dir@"
 
 EXCHANGES = {
     'bitmex': {
-        'ENGINE': 'MonkTrader.exchange.bitmex.default_sim_exchange',
+        'ENGINE': 'monkq.exchange.bitmex.default_sim_exchange',
         "IS_TEST": True,
         "API_KEY": '',
         "API_SECRET": '',
@@ -72,13 +72,13 @@ ACCOUNTS = [
         'NAME': 'bitmex_account',
         'EXCHANGE': 'bitmex',
         "START_WALLET_BALANCE": 100000,
-        'ACCOUNT_MODEL': 'MonkTrader.assets.account.FutureAccount'
+        'ACCOUNT_MODEL': 'monkq.assets.account.FutureAccount'
     }
 ]
 
-TRADE_COUNTER = "MonkTrader.tradecounter.TradeCounter"
+TRADE_COUNTER = "monkq.tradecounter.TradeCounter"
 
-STATISTIC = "MonkTrader.stat.Statistic"
+STATISTIC = "monkq.stat.Statistic"
 """
 
 

@@ -30,8 +30,8 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web  # type:ignore
 from aiohttp.test_utils import TestServer
-from MonkTrader.base_strategy import BaseStrategy
-from MonkTrader.exchange.bitmex.websocket import (
+from monkq.base_strategy import BaseStrategy
+from monkq.exchange.bitmex.websocket import (
     INTERVAL_FACTOR, BitmexWebsocket,
 )
 from tests.tools import get_resource_path

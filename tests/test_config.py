@@ -26,8 +26,8 @@ import os
 import sys
 import tempfile
 
-from MonkTrader.config import Setting
-from MonkTrader.config.default_settings import FREQUENCY
+from monkq.config import Setting
+from monkq.config.default_settings import FREQUENCY
 
 from .utils import change_default_module_settings, random_string
 

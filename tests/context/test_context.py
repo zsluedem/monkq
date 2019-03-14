@@ -25,18 +25,18 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from MonkTrader.assets.account import FutureAccount
-from MonkTrader.base_strategy import BaseStrategy
-from MonkTrader.config import Setting
-from MonkTrader.context import Context
-from MonkTrader.exception import SettingError
-from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange
-from MonkTrader.stat import Statistic
-from MonkTrader.tradecounter import TradeCounter
+from monkq.assets.account import FutureAccount
+from monkq.base_strategy import BaseStrategy
+from monkq.config import Setting
+from monkq.context import Context
+from monkq.exception import SettingError
+from monkq.exchange.bitmex.exchange import BitmexSimulateExchange
+from monkq.stat import Statistic
+from monkq.tradecounter import TradeCounter
 
 
 def test_context_load_default() -> None:
-    with patch("MonkTrader.exchange.bitmex.exchange.BitmexDataloader"):
+    with patch("monkq.exchange.bitmex.exchange.BitmexDataloader"):
         settings = Setting()
         context = Context(settings)
 
@@ -70,7 +70,7 @@ class TestAccount(FutureAccount):
 
 
 def test_context_custom_setting() -> None:
-    with patch("MonkTrader.exchange.bitmex.exchange.BitmexDataloader"):
+    with patch("monkq.exchange.bitmex.exchange.BitmexDataloader"):
         settings = Setting()
         settings.STRATEGY = TestStrategy  # type:ignore
         settings.TRADE_COUNTER = TestTradeCounter  # type:ignore

@@ -24,7 +24,7 @@
 
 import time
 
-from MonkTrader.exchange.bitmex.auth import (
+from monkq.exchange.bitmex.auth import (
     expire_ts, gen_header_dict, generate_expires, generate_signature,
 )
 

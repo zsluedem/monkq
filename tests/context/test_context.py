@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from MonkTrader.assets.account import FutureAccount
@@ -36,16 +36,17 @@ from MonkTrader.tradecounter import TradeCounter
 
 
 def test_context_load_default() -> None:
-    settings = Setting()
-    context = Context(settings)
+    with patch("MonkTrader.exchange.bitmex.exchange.BitmexDataloader"):
+        settings = Setting()
+        context = Context(settings)
 
-    context.setup_context()
+        context.setup_context()
 
-    assert isinstance(context.strategy, BaseStrategy)
-    assert isinstance(context.trade_counter, TradeCounter)
-    assert isinstance(context.stat, Statistic)
-    assert isinstance(context.accounts['bitmex_account'], FutureAccount)
-    assert isinstance(context.exchanges['bitmex'], BitmexSimulateExchange)
+        assert isinstance(context.strategy, BaseStrategy)
+        assert isinstance(context.trade_counter, TradeCounter)
+        assert isinstance(context.stat, Statistic)
+        assert isinstance(context.accounts['bitmex_account'], FutureAccount)
+        assert isinstance(context.exchanges['bitmex'], BitmexSimulateExchange)
 
 
 class TestStrategy(BaseStrategy):
@@ -69,21 +70,22 @@ class TestAccount(FutureAccount):
 
 
 def test_context_custom_setting() -> None:
-    settings = Setting()
-    settings.STRATEGY = TestStrategy  # type:ignore
-    settings.TRADE_COUNTER = TestTradeCounter  # type:ignore
-    settings.STATISTIC = TestStatistic  # type:ignore
-    settings.ACCOUNTS[0]['ACCOUNT_MODEL'] = TestAccount  # type:ignore
-    settings.EXCHANGES['bitmex']['ENGINE'] = TestExchange  # type:ignore
+    with patch("MonkTrader.exchange.bitmex.exchange.BitmexDataloader"):
+        settings = Setting()
+        settings.STRATEGY = TestStrategy  # type:ignore
+        settings.TRADE_COUNTER = TestTradeCounter  # type:ignore
+        settings.STATISTIC = TestStatistic  # type:ignore
+        settings.ACCOUNTS[0]['ACCOUNT_MODEL'] = TestAccount  # type:ignore
+        settings.EXCHANGES['bitmex']['ENGINE'] = TestExchange  # type:ignore
 
-    context = Context(settings)
-    context.setup_context()
+        context = Context(settings)
+        context.setup_context()
 
-    assert isinstance(context.strategy, TestStrategy)
-    assert isinstance(context.trade_counter, TestTradeCounter)
-    assert isinstance(context.stat, TestStatistic)
-    assert isinstance(context.accounts, dict)
-    assert isinstance(context.exchanges, dict)
+        assert isinstance(context.strategy, TestStrategy)
+        assert isinstance(context.trade_counter, TestTradeCounter)
+        assert isinstance(context.stat, TestStatistic)
+        assert isinstance(context.accounts, dict)
+        assert isinstance(context.exchanges, dict)
 
 
 def test_context_load_strategy_error() -> None:

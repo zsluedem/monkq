@@ -40,7 +40,7 @@ T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseExchange")
 
 def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
+    exchange.get_open_orders.return_value = open_orders
     exchange.last_price.return_value = 10
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
@@ -207,7 +207,7 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
 
 def test_future_account_order_margin_two_direction(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
+    exchange.get_open_orders.return_value = open_orders
     exchange.last_price.return_value = 10
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
@@ -231,7 +231,7 @@ def test_future_account_order_margin_two_direction(exchange: MagicMock, future_i
 
 def test_future_account_order_margin_long_position(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
+    exchange.get_open_orders.return_value = open_orders
     exchange.last_price.return_value = 10
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
@@ -276,7 +276,7 @@ def test_future_account_order_margin_long_position(exchange: MagicMock, future_i
 
 def test_future_account_order_margin_short_position(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
+    exchange.get_open_orders.return_value = open_orders
     exchange.last_price.return_value = 10
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
@@ -322,7 +322,7 @@ def test_future_account_order_margin_short_position(exchange: MagicMock, future_
 def test_future_account_order_margin_multiple_instruments(exchange: MagicMock, future_instrument: FutureInstrument,
                                                           future_instrument2: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
+    exchange.get_open_orders.return_value = open_orders
     exchange.last_price.return_value = 10
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
@@ -339,7 +339,7 @@ def test_future_account_order_margin_multiple_instruments(exchange: MagicMock, f
 
 def test_future_accoutn_order_margin_leverage(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
+    exchange.get_open_orders.return_value = open_orders
     exchange.last_price.return_value = 10
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
@@ -368,7 +368,7 @@ def test_future_account_position_margin(exchange: MagicMock, future_instrument: 
                                         future_instrument2: FutureInstrument) -> None:
     # test the position margin of the account when the account have two different positions
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
+    exchange.get_open_orders.return_value = open_orders
     exchange.last_price.return_value = 10
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)

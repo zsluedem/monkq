@@ -22,70 +22,101 @@
 # SOFTWARE.
 #
 
-import os
+from unittest.mock import MagicMock
 
 import pytest
+from MonkTrader.assets.account import FutureAccount
 from MonkTrader.base_strategy import BaseStrategy
 from MonkTrader.config import Setting
-from MonkTrader.const import RUN_TYPE
 from MonkTrader.context import Context
 from MonkTrader.exception import SettingError
-from tests.utils import add_path, over_written_settings
+from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange
+from MonkTrader.stat import Statistic
+from MonkTrader.tradecounter import TradeCounter
 
 
-class Strategy(BaseStrategy):
+def test_context_load_default() -> None:
+    settings = Setting()
+    context = Context(settings)
+
+    context.setup_context()
+
+    assert isinstance(context.strategy, BaseStrategy)
+    assert isinstance(context.trade_counter, TradeCounter)
+    assert isinstance(context.stat, Statistic)
+    assert isinstance(context.accounts['bitmex_account'], FutureAccount)
+    assert isinstance(context.exchanges['bitmex'], BitmexSimulateExchange)
+
+
+class TestStrategy(BaseStrategy):
     pass
 
 
-def test_context_load_exchanges_realtime(settings: Setting) -> None:
-    exchange_settings = {
-        'test': {
-            'engine': 'exchange_mod',
-            'test': True
-        }
-    }
-    with add_path(os.path.dirname(__file__)):
-        with over_written_settings(settings, EXCHANGES=exchange_settings,
-                                   RUN_TYPE=RUN_TYPE.REALTIME) as custom_settings:
-            context = Context(custom_settings)
-            context.load_exchanges()
+class TestStatistic(Statistic):
+    pass
 
 
-def test_context_load_exchanges_backtest(settings: Setting) -> None:
-    exchange_settings = {
-        'test': {
-            'engine': 'exchange_mod',
-            'test': True
-        }
-    }
-    with add_path(os.path.dirname(__file__)):
-        with over_written_settings(settings, EXCHANGES=exchange_settings,
-                                   RUN_TYPE=RUN_TYPE.BACKTEST) as custom_settings:
-            context = Context(custom_settings)
-            context.load_exchanges()
+class TestTradeCounter(TradeCounter):
+    pass
 
 
-def test_context_load_exchanges_exception(settings: Setting) -> None:
-    exchange_settings = {
-        'test': {
-            'engine': 'exchange_mod',
-            'test': True
-        }
-    }
-    with add_path(os.path.dirname(__file__)):
-        with over_written_settings(settings, EXCHANGES=exchange_settings,
-                                   RUN_TYPE="NO") as custom_settings:
-            context = Context(custom_settings)
-            with pytest.raises(SettingError):
-                context.load_exchanges()
+class TestExchange(BitmexSimulateExchange):
+    pass
 
 
-def test_context_load_strategy(settings: Setting) -> None:
-    with add_path(os.path.dirname(__file__)):
-        with over_written_settings(settings, STRATEGY="MonkTrader.base_strategy.BaseStrategy") as custom_settings:
-            context = Context(custom_settings)
-            context.load_strategy()
+class TestAccount(FutureAccount):
+    pass
 
-    with over_written_settings(settings, STRATEGY=Strategy) as custom_settings:
-        context = Context(custom_settings)
+
+def test_context_custom_setting() -> None:
+    settings = Setting()
+    settings.STRATEGY = TestStrategy  # type:ignore
+    settings.TRADE_COUNTER = TestTradeCounter  # type:ignore
+    settings.STATISTIC = TestStatistic  # type:ignore
+    settings.ACCOUNTS[0]['ACCOUNT_MODEL'] = TestAccount  # type:ignore
+    settings.EXCHANGES['bitmex']['ENGINE'] = TestExchange  # type:ignore
+
+    context = Context(settings)
+    context.setup_context()
+
+    assert isinstance(context.strategy, TestStrategy)
+    assert isinstance(context.trade_counter, TestTradeCounter)
+    assert isinstance(context.stat, TestStatistic)
+    assert isinstance(context.accounts, dict)
+    assert isinstance(context.exchanges, dict)
+
+
+def test_context_load_strategy_error() -> None:
+    settings = Setting()
+    settings.STRATEGY = MagicMock()  # type:ignore
+
+    context = Context(settings)
+    with pytest.raises(SettingError):
         context.load_strategy()
+
+
+def test_context_load_statistic_error() -> None:
+    settings = Setting()
+    settings.STATISTIC = MagicMock  # type:ignore
+
+    context = Context(settings)
+    with pytest.raises(SettingError):
+        context.load_statistic()
+
+
+def test_context_load_trade_counter_error() -> None:
+    settings = Setting()
+    settings.TRADE_COUNTER = MagicMock()  # type:ignore
+
+    context = Context(settings)
+    context.load_statistic()
+    with pytest.raises(SettingError):
+        context.load_trade_counter()
+
+
+def test_context_load_accounts_error() -> None:
+    pass
+
+
+def test_context_load_exchanges_error() -> None:
+    pass

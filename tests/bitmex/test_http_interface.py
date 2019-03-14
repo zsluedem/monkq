@@ -31,8 +31,9 @@ from unittest.mock import patch
 import pytest
 from aiohttp import ClientSession, TCPConnector, web  # type:ignore
 from aiohttp.test_utils import TestServer
+from MonkTrader.assets.account import APIKey
 from MonkTrader.exception import (
-    AuthError, HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
+    HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
     NotFoundError, RateLimitError,
 )
 from MonkTrader.exchange.bitmex.http import BitMexHTTPInterface
@@ -329,27 +330,28 @@ async def test_bitmex_http_interface(normal_bitmex_server: TestServer, loop: asy
         connector = TCPConnector(keepalive_timeout=90)  # type:ignore
         session = ClientSession(loop=loop, connector=connector)
 
-        exchange = BitMexHTTPInterface({'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": True},
-                                       connector, session, ssl_context, None, loop)
+        api_key = APIKey(api_key=TEST_API_KEY, api_secret=TEST_API_SECRET)
+
+        exchange = BitMexHTTPInterface({"IS_TEST": True}, connector, session, ssl_context, None, loop)
         symbol = "XBTUSD"
 
         await exchange.get_instrument_info(symbol)
 
-        order_id = await exchange.place_limit_order('XBTUSD', 3200, 100)
+        order_id = await exchange.place_limit_order(api_key, 'XBTUSD', 3200, 100)
 
-        assert await exchange.amend_order(order_id=order_id, price=3300)
+        assert await exchange.amend_order(order_id=order_id, price=3300, api_key=api_key)
 
-        assert await exchange.cancel_order(order_id=order_id)
+        assert await exchange.cancel_order(order_id=order_id, api_key=api_key)
 
-        await exchange.place_market_order(symbol, 100)
+        await exchange.place_market_order(api_key, symbol, 100)
 
-        await exchange.open_orders_http()
+        await exchange.open_orders_http(api_key=api_key)
 
-        await exchange.active_instruments()
+        await exchange.active_instruments(api_key=api_key)
 
-        await exchange.get_recent_trades(symbol, 3)
+        await exchange.get_recent_trades(symbol, 3, api_key=api_key)
 
-        await exchange.get_kline(symbol, "1m", 3)
+        await exchange.get_kline(symbol, "1m", 3, api_key=api_key)
 
         await exchange.session.close()
 
@@ -361,6 +363,7 @@ async def test_bitmex_http_interface_error(abnormal_bitmex_server: TestServer,
         ssl_context = ssl.create_default_context()
         connector = TCPConnector(keepalive_timeout=90)  # type:ignore
         session = ClientSession(loop=loop, connector=connector)
+        api_key = APIKey(api_key=TEST_API_KEY, api_secret=TEST_API_SECRET)
 
         http_interface = BitMexHTTPInterface(
             {'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": False},
@@ -368,16 +371,16 @@ async def test_bitmex_http_interface_error(abnormal_bitmex_server: TestServer,
 
         symbol = "XBTUSD"
         with pytest.raises(MarginNotEnoughError):
-            await http_interface.place_limit_order(symbol, 10, 100)
+            await http_interface.place_limit_order(api_key, symbol, 10, 100)
 
         with pytest.raises(HttpAuthError):
-            await http_interface.amend_order("random", 10, 100)
+            await http_interface.amend_order(api_key, "random", 10, 100)
 
         with pytest.raises(HttpError):
-            await http_interface.open_orders_http()
+            await http_interface.open_orders_http(api_key)
 
         with pytest.raises(MaxRetryError):
-            await http_interface.active_instruments(timeout=TIMEOUT)
+            await http_interface.active_instruments(TIMEOUT, api_key)
 
         with pytest.raises(MaxRetryError):
             await http_interface.get_recent_trades(symbol)
@@ -389,20 +392,6 @@ async def test_bitmex_http_interface_error(abnormal_bitmex_server: TestServer,
             await http_interface.get_instrument_info(symbol)
 
         with pytest.raises(NotFoundError):
-            await http_interface.cancel_order("random")
+            await http_interface.cancel_order(api_key, "random")
 
         await http_interface.session.close()
-
-
-async def test_bitmex_auth_error(loop: asyncio.AbstractEventLoop) -> None:
-    ssl_context = ssl.create_default_context()
-    connector = TCPConnector(keepalive_timeout=90)  # type:ignore
-    session = ClientSession(loop=loop, connector=connector)
-
-    http_interface = BitMexHTTPInterface({'IS_TEST': True}, connector, session, ssl_context, None, None)
-    symbol = "XBTUSD"
-
-    with pytest.raises(AuthError):
-        await http_interface.place_limit_order(symbol, 10, 100)
-
-    await session.close()

@@ -23,17 +23,17 @@
 #
 import asyncio
 import ssl
-from typing import Any, Callable, Dict, List, Optional, TypeVar, ValuesView
+from typing import TYPE_CHECKING, Dict, List, Optional, TypeVar, ValuesView
 
 import pandas
 from aiohttp import ClientSession, TCPConnector, TraceConfig  # type:ignore
 from aiohttp.helpers import sentinel
 from logbook import Logger
-from MonkTrader.assets.account import FutureAccount
+from MonkTrader.assets.account import FutureAccount, RealFutureAccount
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
-from MonkTrader.assets.order import FutureLimitOrder, FutureMarketOrder
-from MonkTrader.assets.positions import FuturePosition
-from MonkTrader.context import Context
+from MonkTrader.assets.order import (
+    ORDER_T, FutureLimitOrder, FutureMarketOrder,
+)
 from MonkTrader.exchange.base import BaseExchange, BaseSimExchange
 from MonkTrader.exchange.base.info import ExchangeInfo
 from MonkTrader.exchange.bitmex.const import (
@@ -49,12 +49,13 @@ from MonkTrader.utils.id import gen_unique_id
 
 from .log import logger_group
 
+if TYPE_CHECKING:
+    from MonkTrader.context import Context
+
+
 logger = Logger('exchange.bitmex.exchange')
 logger_group.add_logger(logger)
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
-
-FuncType = Callable[..., Any]
-F = TypeVar('F', bound=FuncType)
 
 bitmex_info = ExchangeInfo(name="bitmex",
                            location="unknown",
@@ -62,14 +63,11 @@ bitmex_info = ExchangeInfo(name="bitmex",
 
 
 class BitmexSimulateExchange(BaseSimExchange):
-    def __init__(self, context: Context, name: str, exchange_setting: dict) -> None:
+    def __init__(self, context: "Context", name: str, exchange_setting: dict) -> None:
         super(BitmexSimulateExchange, self).__init__(context, name, exchange_setting)
         data_dir = context.settings.DATA_DIR  # type:ignore
         self._data = BitmexDataloader(self, context, data_dir)
-        self._trade_counter = TradeCounter(self)
-        wallet_balance = exchange_setting['START_WALLET_BALANCE']
-        self._account = FutureAccount(exchange=self, position_cls=FuturePosition,
-                                      wallet_balance=wallet_balance)
+        self._trade_counter: TradeCounter = context.trade_counter
 
     async def setup(self) -> None:
         return
@@ -83,20 +81,20 @@ class BitmexSimulateExchange(BaseSimExchange):
     def exchange_info(self) -> ExchangeInfo:
         return bitmex_info
 
-    async def place_limit_order(self, instrument: FutureInstrument,
+    async def place_limit_order(self, account: FutureAccount, instrument: FutureInstrument,
                                 price: float, quantity: float) -> str:
         if isinstance(instrument, FutureInstrument):
-            order = FutureLimitOrder(account=self._account, instrument=instrument, price=price, quantity=quantity,
+            order = FutureLimitOrder(account=account, instrument=instrument, price=price, quantity=quantity,
                                      order_id=gen_unique_id())
         else:
             raise NotImplementedError()
         self._trade_counter.submit_order(order)
         return order.order_id
 
-    async def place_market_order(self, instrument: FutureInstrument,
+    async def place_market_order(self, account: FutureAccount, instrument: FutureInstrument,
                                  quantity: float) -> str:
         if isinstance(instrument, FutureInstrument):
-            order = FutureMarketOrder(account=self._account, instrument=instrument, quantity=quantity,
+            order = FutureMarketOrder(account=account, instrument=instrument, quantity=quantity,
                                       order_id=gen_unique_id())
         else:
             raise NotImplementedError()
@@ -104,16 +102,18 @@ class BitmexSimulateExchange(BaseSimExchange):
         return order.order_id
 
     # TODO
-    async def amend_order(self, order_id: str, quantity: Optional[float], price: Optional[float]) -> bool:
+    async def amend_order(self, account: FutureAccount, order_id: str, quantity: Optional[float],
+                          price: Optional[float]) -> bool:
         raise NotImplementedError()
 
-    async def cancel_order(self, order_id: str) -> bool:
+    async def cancel_order(self, account: FutureAccount, order_id: str) -> bool:
         self._trade_counter.cancel_order(order_id)
         return True
 
-    async def open_orders(self) -> List[dict]:
+    async def open_orders(self, account: FutureAccount) -> List[dict]:
         outcome = []
-        open_orders = self._trade_counter.open_orders()
+        open_orders: ValuesView[ORDER_T] = self._trade_counter.open_orders()
+        order: ORDER_T
         for order in open_orders:
             outcome.append(base_order_to_dict(order))
         return outcome
@@ -126,11 +126,11 @@ class BitmexSimulateExchange(BaseSimExchange):
                         count: int = 100, including_now: bool = False) -> pandas.DataFrame:
         return self._data.get_kline(instrument, count)
 
-    def get_account(self) -> FutureAccount:
-        return self._account
-
     def match_open_orders(self) -> None:
         self._trade_counter.match()
+
+    def get_open_orders(self, account: FutureAccount) -> List[ORDER_T]:
+        return list(self._trade_counter.open_orders())
 
 
 class BitmexExchange(BaseExchange):
@@ -159,7 +159,7 @@ class BitmexExchange(BaseExchange):
         'rootSymbol': 'root_symbol'
     }
 
-    def __init__(self, context: Context, name: str, exchange_setting: dict,
+    def __init__(self, context: "Context", name: str, exchange_setting: dict,
                  loop: Optional[asyncio.AbstractEventLoop] = None):
         """
         :param exchange_setting:
@@ -225,40 +225,41 @@ class BitmexExchange(BaseExchange):
     def exchange_info(self) -> ExchangeInfo:
         return bitmex_info
 
-    async def place_limit_order(self, instrument: FutureInstrument,
+    async def place_limit_order(self, account: RealFutureAccount, instrument: FutureInstrument,
                                 price: float, quantity: float, timeout: int = sentinel,
                                 max_retry: int = 0) -> str:
         target = instrument.symbol
-        return await self.http_interface.place_limit_order(target, price, quantity, timeout, max_retry)
+        return await self.http_interface.place_limit_order(account.api_key, target, price, quantity, timeout,
+                                                           max_retry)
 
-    async def place_market_order(self, instrument: FutureInstrument,
+    async def place_market_order(self, account: RealFutureAccount, instrument: FutureInstrument,
                                  quantity: float, timeout: int = sentinel,
                                  max_retry: int = 0) -> str:
         target = instrument.symbol
 
-        return await self.http_interface.place_market_order(target, quantity, timeout, max_retry)
+        return await self.http_interface.place_market_order(account.api_key, target, quantity, timeout, max_retry)
 
-    async def amend_order(self, order_id: str, quantity: Optional[float] = None,
+    async def amend_order(self, account: RealFutureAccount, order_id: str, quantity: Optional[float] = None,
                           price: Optional[float] = None, timeout: int = sentinel,
                           max_retry: int = 0) -> bool:
 
-        resp = await self.http_interface.amend_order(order_id, quantity, price, timeout, max_retry)
+        resp = await self.http_interface.amend_order(account.api_key, order_id, quantity, price, timeout, max_retry)
         if 300 > resp.status >= 200:
             return True
         else:
             return False
 
-    async def cancel_order(self, order_id: str, timeout: int = sentinel,
+    async def cancel_order(self, account: RealFutureAccount, order_id: str, timeout: int = sentinel,
                            max_retry: int = 0) -> bool:
 
-        resp = await self.http_interface.cancel_order(order_id, timeout, max_retry)
+        resp = await self.http_interface.cancel_order(account.api_key, order_id, timeout, max_retry)
         if 300 > resp.status >= 200:
             return True
         else:
             return False
 
-    async def open_orders(self) -> List[dict]:
-        return await self.http_interface.open_orders_http()
+    async def open_orders(self, account: RealFutureAccount) -> List[dict]:
+        return await self.http_interface.open_orders_http(account.api_key)
 
     async def available_instruments(self, timeout: int = sentinel) -> ValuesView[Instrument]:
         if self._available_instrument_cache:

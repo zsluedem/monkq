@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Union
 
 from MonkTrader.assets.const import DIRECTION, ORDER_STATUS, SIDE
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
@@ -117,3 +117,6 @@ class FutureMarketOrder(MarketOrder):
     @property
     def direction(self) -> DIRECTION:
         return DIRECTION.LONG if self.quantity > 0 else DIRECTION.SHORT
+
+
+ORDER_T = Union[FutureLimitOrder, FutureLimitOrder, MarketOrder, LimitOrder, StopLimitOrder, StopMarketOrder]

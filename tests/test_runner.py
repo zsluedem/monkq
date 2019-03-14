@@ -35,7 +35,8 @@ class TestStrategy(BaseStrategy):
         pass
 
 
-def test_runner(settings: Setting, tem_data_dir: str) -> None:
+def test_runner(tem_data_dir: str) -> None:
+    settings = Setting()
     custom_settings = {
         "STRATEGY": TestStrategy,
         "START_TIME": utc_datetime(2018, 1, 1),
@@ -52,8 +53,9 @@ def test_runner(settings: Setting, tem_data_dir: str) -> None:
                 "START_WALLET_BALANCE": 100000
             }
         }
-
     }
+
+    settings.__dict__.update(custom_settings)
     with over_written_settings(settings, **custom_settings):
         runner = Runner(settings)
 

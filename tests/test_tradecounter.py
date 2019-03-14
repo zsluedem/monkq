@@ -31,10 +31,12 @@ from MonkTrader.utils.id import gen_unique_id
 
 
 def test_trader_counter() -> None:
+    stat = MagicMock()
     exchange = MagicMock()
     account = MagicMock()
+    account.exchange = exchange
 
-    trade_counter = TradeCounter(exchange)
+    trade_counter = TradeCounter(stat)
 
     exchange.last_price.return_value = 20.
 

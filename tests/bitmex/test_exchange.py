@@ -34,6 +34,7 @@ from MonkTrader.assets.instrument import FutureInstrument
 from MonkTrader.exchange.bitmex.exchange import (
     BitmexExchange, BitmexSimulateExchange, bitmex_info,
 )
+from MonkTrader.tradecounter import TradeCounter
 from MonkTrader.utils.id import gen_unique_id
 from MonkTrader.utils.timefunc import utc_datetime
 
@@ -87,20 +88,21 @@ async def test_exchange(mock_httpinterface: MagicMock, loop: AbstractEventLoop) 
 
     instrument = MagicMock()
     instrument.symbol = "XBTUSD"
+    account = MagicMock()
     assert await exchange.get_last_price(instrument) == 100
 
     #
     assert exchange.exchange_info() == bitmex_info
 
-    order = await exchange.place_limit_order(instrument, 10, 100)
+    order = await exchange.place_limit_order(account, instrument, 10, 100)
 
-    await exchange.place_market_order(instrument, 100)
+    await exchange.place_market_order(account, instrument, 100)
 
-    await exchange.amend_order(order, 200, 10)
+    await exchange.amend_order(account, order, 200, 10)
 
-    await exchange.cancel_order(order)
+    await exchange.cancel_order(account, order)
     # TODO
-    await exchange.open_orders()
+    await exchange.open_orders(account)
 
     await exchange.available_instruments()
     # use cache below
@@ -116,7 +118,9 @@ async def test_exchange(mock_httpinterface: MagicMock, loop: AbstractEventLoop) 
 
 async def test_bitmex_exchange_simulate(tem_data_dir: str, instrument: FutureInstrument) -> None:
     context = MagicMock()
-
+    account = MagicMock()
+    trade_counter = TradeCounter(MagicMock())
+    context.trade_counter = trade_counter
     context.settings.DATA_DIR = tem_data_dir
     sim_exchange = BitmexSimulateExchange(context, 'bitmex', {"START_WALLET_BALANCE": 1000000})
 
@@ -127,13 +131,13 @@ async def test_bitmex_exchange_simulate(tem_data_dir: str, instrument: FutureIns
 
     assert sim_exchange.exchange_info() == bitmex_info
 
-    order_id = await sim_exchange.place_limit_order(instrument, 10, 100)
+    order_id = await sim_exchange.place_limit_order(account, instrument, 10, 100)
 
-    market_order_id = await sim_exchange.place_market_order(instrument, 100)
+    market_order_id = await sim_exchange.place_market_order(account, instrument, 100)
 
-    await sim_exchange.cancel_order(order_id)
+    await sim_exchange.cancel_order(account, order_id)
 
-    open_orders = await sim_exchange.open_orders()
+    open_orders = await sim_exchange.open_orders(account)
 
     assert len(open_orders) == 1
 
@@ -145,8 +149,5 @@ async def test_bitmex_exchange_simulate(tem_data_dir: str, instrument: FutureIns
     kline = await sim_exchange.get_kline(instrument)
 
     assert kline.index[-1] == utc_datetime(2016, 10, 3, 12, 29)
-
-    account = sim_exchange.get_account()
-    assert account.wallet_balance == 1000000
 
     sim_exchange.match_open_orders()

@@ -32,7 +32,6 @@ from MonkTrader.assets.instrument import (
     DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
     UpsideInstrument,
 )
-from MonkTrader.context import Context
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataError
 from MonkTrader.exchange.bitmex.const import (
@@ -47,6 +46,7 @@ from MonkTrader.utils.i18n import _
 from ..log import logger_group
 
 if TYPE_CHECKING:
+    from MonkTrader.context import Context
     from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange  # pragma: no cover
 
 logger = Logger('exchange.bitmex.dataloader')
@@ -93,7 +93,7 @@ class BitmexDataloader(DataLoader):
     # below are all index like instrument
     _abandon_instrument_type = ('MRIXXX', 'MRRXXX', 'MRCXXX')
 
-    def __init__(self, exchange: 'BitmexSimulateExchange', context: Context, data_dir: str) -> None:
+    def __init__(self, exchange: 'BitmexSimulateExchange', context: "Context", data_dir: str) -> None:
         self.data_dir = data_dir
         self.instruments: Dict[str, Instrument] = dict()
         self.exchange = exchange

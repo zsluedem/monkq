@@ -24,38 +24,44 @@
 
 from typing import Dict, Optional, ValuesView
 
-from MonkTrader.assets.order import BaseOrder, LimitOrder, MarketOrder
+from logbook import Logger
+from MonkTrader.assets.order import ORDER_T, LimitOrder, MarketOrder
 from MonkTrader.assets.trade import Trade
 from MonkTrader.exception import ImpossibleError
-from MonkTrader.exchange.base import BaseSimExchange
+from MonkTrader.stat import Statistic
 from MonkTrader.utils.id import gen_unique_id
 
+from .log import core_log_group
 
-class TradeCounter():
-    def __init__(self, exchange: BaseSimExchange) -> None:
-        self._open_orders: Dict[str, BaseOrder] = {}
-        self.exchange: BaseSimExchange = exchange
+logger = Logger('trade_counter')
+core_log_group.add_logger(logger)
 
-        self._traded_orders: Dict[str, BaseOrder] = {}
+
+class TradeCounter:
+    def __init__(self, stat: Statistic) -> None:
+        self._open_orders: Dict[str, ORDER_T] = {}
+        self.stat = stat
+        self._traded_orders: Dict[str, ORDER_T] = {}
 
     def match(self) -> None:
         close_order_ids = []
         for order in self._open_orders.values():
             if isinstance(order, MarketOrder):
-                trade = Trade(order, self.exchange.last_price(order.instrument), order.quantity,
-                              gen_unique_id())
+                trade = Trade(order, order.account.exchange.last_price(order.instrument),
+                              order.quantity, gen_unique_id())
             elif isinstance(order, LimitOrder):
                 trade = Trade(order, order.price, order.quantity, gen_unique_id())
             else:
                 raise ImpossibleError("Unsupported order type {}".format(type(order)))
 
+            logger.debug("Trade counter match a trade {}".format(trade))
             order.deal(trade)
             if order.remain_quantity == 0:
                 close_order_ids.append(order.order_id)
         for order_id in close_order_ids:
             self._open_orders.pop(order_id)
 
-    def submit_order(self, order: BaseOrder) -> None:
+    def submit_order(self, order: ORDER_T) -> None:
         self._open_orders[order.order_id] = order
 
     def cancel_order(self, order_id: str) -> None:
@@ -65,5 +71,5 @@ class TradeCounter():
     def amend_order(self, order_id: str, quantity: Optional[float], price: Optional[float]) -> None:
         raise NotImplementedError()
 
-    def open_orders(self) -> ValuesView[BaseOrder]:
+    def open_orders(self) -> ValuesView[ORDER_T]:
         return self._open_orders.values()

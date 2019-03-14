@@ -49,8 +49,8 @@ def test_startstrategy() -> None:
             assert f.read() == """from MonkTrader.strategy_cmd import cmd_main
 import os
 
+os.environ.setdefault("MONKTRADER_SETTING_MODULE", 'strategy1_settings')
 if __name__ == '__main__':
-    os.environ.setdefault("MONKTRADER_SETTING_MODULE", 'strategy1_settings')
     cmd_main()
 """
 
@@ -66,7 +66,7 @@ HTTP_PROXY = ""
 # used only for testing
 SSL_PATH = ''
 
-FREQUENCY = 'tick'  # tick, 1m ,5m ,1h
+FREQUENCY = '1m'  # tick, 1m ,5m ,1h
 
 LOG_LEVEL = 'INFO'  # DEBUG, INFO, NOTICE, WARNING, ERROR
 
@@ -81,13 +81,23 @@ DATA_DIR = os.path.expanduser("~/.monk/data")
 
 EXCHANGES = {  # type: ignore
     'bitmex': {
-        'engine': 'MonkTrader.exchange.bitmex',
+        'ENGINE': 'MonkTrader.exchange.bitmex',
         "IS_TEST": True,
-        "API_KEY": '',
-        "API_SECRET": '',
-        "START_WALLET_BALANCE": 100000
     }
 }
+
+ACCOUNTS = [
+    {
+        'NAME': 'bitmex_account',
+        'EXCHANGE': 'bitmex',
+        "START_WALLET_BALANCE": 100000,
+        'ACCOUNT_MODEL': 'MonkTrader.assets.account.FutureAccount'
+    }
+]
+
+TRADE_COUNTER = "MonkTrader.tradecounter.TradeCounter"
+
+STATISTIC = "MonkTrader.stat.Statistic"
 """
 
         with open(os.path.join(tem_dir, 'strategy1', 'strategy.py')) as f:

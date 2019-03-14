@@ -50,7 +50,7 @@ def test_settings() -> None:
             assert setting.B == 321  # type: ignore
 
 
-def test_settings_import_error() -> None:
+def test_settings_default_value() -> None:
     with tempfile.TemporaryDirectory() as temp:
         name = random_string(6)
         with change_default_module_settings('{}_settings'.format(name)):

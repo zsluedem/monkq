@@ -21,42 +21,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.base_strategy import BaseStrategy
-from MonkTrader.config import Setting
-from MonkTrader.const import RUN_TYPE
+
+import click
+from MonkTrader.__main__ import cmd_main
+from MonkTrader.config import gen_settings
 from MonkTrader.runner import Runner
-from MonkTrader.utils.timefunc import utc_datetime
-
-from .utils import over_written_settings
 
 
-class TestStrategy(BaseStrategy):
-    async def handle_bar(self) -> None:
-        pass
+@cmd_main.command()
+@click.pass_context
+def runstrategy(ctx: click.Context) -> None:
+    settings = gen_settings()
+    runner = Runner(settings)
+    runner.run()
 
 
-def test_runner(tem_data_dir: str) -> None:
-    settings = Setting()
-    custom_settings = {
-        "STRATEGY": TestStrategy,
-        "START_TIME": utc_datetime(2018, 1, 1),
-        "END_TIME": utc_datetime(2018, 2, 1),
-        "RUN_TYPE": RUN_TYPE.BACKTEST,
-        "FREQUENCY": "1m",
-        "DATA_DIR": tem_data_dir,
-        "EXCHANGE": {
-            "bitmex": {
-                'engine': 'MonkTrader.exchange.bitmex',
-                "IS_TEST": True,
-                "API_KEY": '',
-                "API_SECRET": '',
-                "START_WALLET_BALANCE": 100000
-            }
-        }
-    }
-
-    settings.__dict__.update(custom_settings)
-    with over_written_settings(settings, **custom_settings):
-        runner = Runner(settings)
-
-        runner.run()
+if __name__ == '__main__':
+    cmd_main()

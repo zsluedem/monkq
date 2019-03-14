@@ -32,7 +32,6 @@ from MonkTrader.assets.instrument import (
     DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
     UpsideInstrument,
 )
-from MonkTrader.context import Context
 from MonkTrader.data import DataLoader
 from MonkTrader.exception import LoadDataError
 from MonkTrader.exchange.bitmex.const import (
@@ -47,6 +46,7 @@ from MonkTrader.utils.i18n import _
 from ..log import logger_group
 
 if TYPE_CHECKING:
+    from MonkTrader.context import Context
     from MonkTrader.exchange.bitmex.exchange import BitmexSimulateExchange  # pragma: no cover
 
 logger = Logger('exchange.bitmex.dataloader')
@@ -83,9 +83,17 @@ class BitmexDataloader(DataLoader):
         'OCECCS': UpsideInstrument,  # call options
         'FFCCSX': FutureInstrument,  # normal futures contracts
         'FFWCSX': PerpetualInstrument,  # perpetual  futures contracts
+        'FXXXS': FutureInstrument,
+        'FFICSX': FutureInstrument,
+        'FMXXS': FutureInstrument
     }
 
-    def __init__(self, exchange: 'BitmexSimulateExchange', context: Context, data_dir: str) -> None:
+    # abandon typ in Bitmex
+    # https://www.onixs.biz/fix-dictionary/4.4/app_6_d.html
+    # below are all index like instrument
+    _abandon_instrument_type = ('MRIXXX', 'MRRXXX', 'MRCXXX')
+
+    def __init__(self, exchange: 'BitmexSimulateExchange', context: "Context", data_dir: str) -> None:
         self.data_dir = data_dir
         self.instruments: Dict[str, Instrument] = dict()
         self.exchange = exchange
@@ -101,6 +109,8 @@ class BitmexDataloader(DataLoader):
         with open(instruments_file) as f:
             instruments_raw = json.load(f)
         for instrument_raw in instruments_raw:
+            if instrument_raw['typ'] in self._abandon_instrument_type:
+                continue
             instrument_cls = self.instrument_cls.get(instrument_raw['typ'])
             if instrument_cls is None:
                 raise LoadDataError(_("Unsupport instrument type {}").format(instrument_raw['typ']))

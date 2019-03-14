@@ -21,34 +21,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
-from typing import TYPE_CHECKING, Dict, List, Union
-
-from MonkTrader.assets.order import (
-    BaseOrder, FutureLimitOrder, FutureMarketOrder,
-)
-from MonkTrader.assets.trade import Trade
-
-if TYPE_CHECKING:
-    from MonkTrader.context import Context
-
-DAILY_STAT_TYPE = Dict[str, Union[float, datetime.datetime]]
+from MonkTrader.assets.const import SIDE
+from MonkTrader.const import TICK_DIRECTION
+from MonkTrader.exchange.bitmex.data.utils import read_trade_tar
+from tests.tools import get_resource_path
 
 
-class Statistic():
-    def __init__(self, context: "Context"):
-        self.context = context
-        self.daily_capital: List[DAILY_STAT_TYPE] = []
-        self.order_collections: List[BaseOrder] = []
-        self.trade_collections: List[Trade] = []
+def test_read_trade_tar() -> None:
+    path = get_resource_path('bitmex/20170430.csv.gz')
+    df = read_trade_tar(path, True)
+    assert df['side'][0] == SIDE.BUY.value
+    assert df['side'][1] == SIDE.SELL.value
 
-    def collect_daily(self) -> None:
-        accounts_capital: DAILY_STAT_TYPE = {k: v.total_capital for k, v in self.context.accounts.items()}
-        accounts_capital.update({'timestamp': self.context.now})
-        self.daily_capital.append(accounts_capital)
-
-    def collect_order(self, order: Union[FutureLimitOrder, FutureMarketOrder]) -> None:
-        self.order_collections.append(order)
-
-    def collect_trade(self, trade: Trade) -> None:
-        self.trade_collections.append(trade)
+    assert df['tickDirection'][0] == TICK_DIRECTION.MINUS_TICK.value
+    assert df['tickDirection'][1] == TICK_DIRECTION.ZERO_MINUS_TICK.value
+    assert df['tickDirection'][2] == TICK_DIRECTION.PLUS_TICK.value
+    assert df['tickDirection'][3] == TICK_DIRECTION.ZERO_PLUS_TICK.value

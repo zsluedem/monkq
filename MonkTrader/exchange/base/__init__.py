@@ -21,21 +21,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import TYPE_CHECKING, Any, List, Optional, ValuesView
+from typing import (
+    TYPE_CHECKING, Any, Generic, Iterable, List, Optional, TypeVar, ValuesView,
+)
 
 import pandas
-from MonkTrader.context import Context
 
 from .info import ExchangeInfo
 
 if TYPE_CHECKING:
-    from MonkTrader.assets.account import BaseAccount  # pragma: no cover
+    from MonkTrader.context import Context  # pragma: no cover
+    from MonkTrader.assets.account import BaseAccount  # noqa pragma: no cover
     from MonkTrader.assets.instrument import Instrument  # noqa  pragma: no cover
-    from MonkTrader.assets.order import BaseOrder  # noqa   pragma: no cover
+    from MonkTrader.assets.order import BaseOrder, ORDER_T  # noqa   pragma: no cover
+
+ACCOUNT_T = TypeVar("ACCOUNT_T", bound="BaseAccount")
 
 
-class BaseExchange:
-    def __init__(self, context: Context, name: str, exchange_setting: dict) -> None:
+class BaseExchange(Generic[ACCOUNT_T]):
+    def __init__(self, context: "Context", name: str, exchange_setting: dict) -> None:
         self.context = context
         self.name = name
         self.exchange_setting = exchange_setting
@@ -55,7 +59,7 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def place_limit_order(self, instrument: Any,
+    async def place_limit_order(self, account: ACCOUNT_T, instrument: Any,
                                 price: float, quantity: float) -> str:
         """
         create a new limit order in the exchange.
@@ -64,7 +68,7 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def place_market_order(self, instrument: Any,
+    async def place_market_order(self, account: ACCOUNT_T, instrument: Any,
                                  quantity: float) -> str:
         """
         create a new market order in the exchange.
@@ -73,13 +77,14 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def amend_order(self, order_id: str, quantity: Optional[float], price: Optional[float]) -> bool:
+    async def amend_order(self, account: ACCOUNT_T, order_id: str, quantity: Optional[float],
+                          price: Optional[float]) -> bool:
         """
         amend an order price , quantitu or etc.
         """
         raise NotImplementedError()
 
-    async def cancel_order(self, order_id: str) -> bool:
+    async def cancel_order(self, account: ACCOUNT_T, order_id: str) -> bool:
         """
         cancel an order from the exchange by the order id.
         If you cancel the order successfully, it would return True
@@ -87,19 +92,16 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    async def open_orders(self) -> List[dict]:
+    async def open_orders(self, account: ACCOUNT_T) -> List[dict]:
         """
         get all the open orders
         """
         raise NotImplementedError()
 
-    def get_order(self, order_id: str) -> "BaseOrder":
+    def get_order(self, account: ACCOUNT_T, order_id: str) -> "BaseOrder":
         """
         get the order obj by th order_id returned when the order was created.
         """
-        raise NotImplementedError()
-
-    def get_account(self) -> "BaseAccount":
         raise NotImplementedError()
 
     async def available_instruments(self) -> ValuesView["Instrument"]:
@@ -120,16 +122,13 @@ class BaseExchange:
         """
         raise NotImplementedError()
 
-    # def order_book(self) -> None:
-    #     raise NotImplementedError()
-    # def withdraw(self) -> None:
-    #     raise NotImplementedError()s
-    #
-    # def deposit(self) -> None:
-    #     raise NotImplementedError()
 
-    # def place_stop_limit_order(self) -> None:
-    #     raise NotImplementedError()
-    #
-    # def place_stop_market_order(self) -> None:
-    #     raise NotImplementedError()
+class BaseSimExchange(BaseExchange):
+    def last_price(self, instrument: Any) -> float:
+        raise NotImplementedError()
+
+    def match_open_orders(self) -> None:
+        raise NotImplementedError()
+
+    def get_open_orders(self, account: Any) -> Iterable["ORDER_T"]:
+        raise NotImplementedError()

@@ -74,25 +74,25 @@ class DownloadProcess(ABC):
     """
 
     def __init__(self, point: Point) -> None:
-        ...
+        ...  # pragma: no cover
 
     def process(self) -> None:
         """
         process the data after the raw_process data
         :return:
         """
-        ...
+        ...  # pragma: no cover
 
     def rollback(self) -> None:
         """
         If there is anything wrong happening in the process, the whole process would rollback
         :return:
         """
-        ...
+        ...  # pragma: no cover
 
     @classmethod
     def get_start(cls, obj: str) -> datetime.datetime:
-        ...
+        ...  # pragma: no cover
 
 
 class DataLoader(ABC):
@@ -101,4 +101,4 @@ class DataLoader(ABC):
         raise NotImplementedError()
 
     def load(self) -> None:
-        self.load_instruments()
+        self.load_instruments()  # pragma: no cover

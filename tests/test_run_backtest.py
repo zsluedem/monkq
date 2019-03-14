@@ -1,0 +1,107 @@
+import os
+import tempfile
+from typing import Generator
+
+import pytest
+from MonkTrader.__main__ import cmd_main
+from MonkTrader.config import SETTING_MODULE
+
+from .utils import add_path, change_current_working_dir, random_string
+
+test_strategy = """
+from MonkTrader.base_strategy import BaseStrategy
+
+class TestStrategy(BaseStrategy):
+    def __init__(self, context):
+        super(TestStrategy, self).__init__(context)
+        self.is_order = False
+
+        self.symbol = "XBTZ15"
+
+    async def handle_bar(self) -> None:
+        if not self.is_order:
+            bitmex_exchange = self.context.exchanges['bitmex']
+            bitmex_account = self.context.accounts['bitmex_account']
+            instruments = await bitmex_exchange.available_instruments()
+            target = None
+            for instrument in instruments:
+                if instrument.symbol == self.symbol:
+                    target = instrument
+            if target is None:
+                return
+            await bitmex_exchange.place_market_order(bitmex_account, instrument, 100)
+            self.is_order = True
+"""
+
+test_settings = """
+import os
+
+from MonkTrader.const import RUN_TYPE
+from MonkTrader.utils.timefunc import utc_datetime
+
+# HTTP Proxy
+HTTP_PROXY = ""
+
+# used only for testing
+SSL_PATH = ''
+
+FREQUENCY = '1m'  # tick, 1m ,5m ,1h
+
+LOG_LEVEL = 'INFO'  # DEBUG, INFO, NOTICE, WARNING, ERROR
+
+START_TIME = utc_datetime(2015, 6, 1)
+END_TIME = utc_datetime(2015, 12, 1)
+
+RUN_TYPE = RUN_TYPE.BACKTEST  # type: ignore
+
+STRATEGY = "strategy.TestStrategy"
+
+DATA_DIR = r"@data_dir@"
+
+EXCHANGES = {
+    'bitmex': {
+        'ENGINE': 'MonkTrader.exchange.bitmex.default_sim_exchange',
+        "IS_TEST": True,
+        "API_KEY": '',
+        "API_SECRET": '',
+    }
+}
+
+ACCOUNTS = [
+    {
+        'NAME': 'bitmex_account',
+        'EXCHANGE': 'bitmex',
+        "START_WALLET_BALANCE": 100000,
+        'ACCOUNT_MODEL': 'MonkTrader.assets.account.FutureAccount'
+    }
+]
+
+TRADE_COUNTER = "MonkTrader.tradecounter.TradeCounter"
+
+STATISTIC = "MonkTrader.stat.Statistic"
+"""
+
+
+@pytest.fixture()
+def start_strategy_condition(tem_data_dir: str) -> Generator[None, None, None]:
+    strateg_name = "strategy1m_{}".format(random_string(6))
+    with tempfile.TemporaryDirectory() as tem_dir:
+        cmd_main.main(['startstrategy', '-n', strateg_name, '-d', tem_dir], standalone_mode=False)
+
+        with open(os.path.join(tem_dir, "{}/{}_settings.py".format(strateg_name, strateg_name)), 'w') as f:
+            f.write(test_settings.replace("@data_dir@", tem_data_dir))
+
+        with open(os.path.join(tem_dir, "{}/strategy.py".format(strateg_name)), 'w') as f:
+            f.write(test_strategy)
+
+        with change_current_working_dir(os.path.join(tem_dir, strateg_name)) as strategy_dir:
+            with add_path(strategy_dir):
+                yield
+
+    os.environ.pop(SETTING_MODULE)
+
+
+def test_run_1m_backtest(start_strategy_condition: None) -> None:
+    from manage import cmd_main as strategy_cmd
+
+    strategy_cmd.main(['runstrategy'], standalone_mode=False)

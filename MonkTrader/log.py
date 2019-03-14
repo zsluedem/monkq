@@ -21,34 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import datetime
-from typing import TYPE_CHECKING, Dict, List, Union
+import logbook
 
-from MonkTrader.assets.order import (
-    BaseOrder, FutureLimitOrder, FutureMarketOrder,
-)
-from MonkTrader.assets.trade import Trade
-
-if TYPE_CHECKING:
-    from MonkTrader.context import Context
-
-DAILY_STAT_TYPE = Dict[str, Union[float, datetime.datetime]]
-
-
-class Statistic():
-    def __init__(self, context: "Context"):
-        self.context = context
-        self.daily_capital: List[DAILY_STAT_TYPE] = []
-        self.order_collections: List[BaseOrder] = []
-        self.trade_collections: List[Trade] = []
-
-    def collect_daily(self) -> None:
-        accounts_capital: DAILY_STAT_TYPE = {k: v.total_capital for k, v in self.context.accounts.items()}
-        accounts_capital.update({'timestamp': self.context.now})
-        self.daily_capital.append(accounts_capital)
-
-    def collect_order(self, order: Union[FutureLimitOrder, FutureMarketOrder]) -> None:
-        self.order_collections.append(order)
-
-    def collect_trade(self, trade: Trade) -> None:
-        self.trade_collections.append(trade)
+core_log_group = logbook.LoggerGroup()

@@ -26,7 +26,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from MonkTrader.assets.account import FutureAccount
-from MonkTrader.assets.const import ORDER_STATUS, SIDE
+from MonkTrader.assets.const import DIRECTION, ORDER_STATUS, SIDE
 from MonkTrader.assets.instrument import FutureInstrument, Instrument
 from MonkTrader.assets.order import (
     BaseOrder, FutureLimitOrder, FutureMarketOrder,
@@ -127,6 +127,7 @@ def test_future_limit_order(future_instrument: FutureInstrument, future_account:
     assert order1.order_status == ORDER_STATUS.NOT_TRADED
     assert order1.remain_quantity == 100
     assert order1.remain_value == 1100
+    assert order1.direction == DIRECTION.LONG
 
     trade1 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6))
     order1.deal(trade1)
@@ -160,6 +161,7 @@ def test_future_limit_order(future_instrument: FutureInstrument, future_account:
     assert order2.order_status == ORDER_STATUS.NOT_TRADED
     assert order2.remain_quantity == -100
     assert order2.remain_value == 1300
+    assert order2.direction == DIRECTION.SHORT
 
     trade3 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
     order2.deal(trade3)
@@ -189,6 +191,7 @@ def test_future_market_order(future_instrument: FutureInstrument, future_account
     assert order1.side == SIDE.BUY
     assert order1.order_status == ORDER_STATUS.NOT_TRADED
     assert order1.remain_quantity == 100
+    assert order1.direction == DIRECTION.LONG
 
     trade1 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6))
     order1.deal(trade1)
@@ -216,6 +219,7 @@ def test_future_market_order(future_instrument: FutureInstrument, future_account
     assert order2.side == SIDE.SELL
     assert order2.order_status == ORDER_STATUS.NOT_TRADED
     assert order2.remain_quantity == -100
+    assert order2.direction == DIRECTION.SHORT
 
     trade3 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
     order2.deal(trade3)

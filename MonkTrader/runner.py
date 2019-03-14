@@ -21,11 +21,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from asyncio import get_event_loop
 
+from logbook import Logger
 from MonkTrader.config import Setting
 from MonkTrader.context import Context
 from MonkTrader.stat import Statistic
 from MonkTrader.ticker import FrequencyTicker
+
+from .log import core_log_group
+
+logger = Logger('runner')
+core_log_group.add_logger(logger)
 
 
 class Runner():
@@ -33,8 +40,7 @@ class Runner():
         self.setting = settings
 
         self.context = Context(settings)
-        self.context.load_strategy()
-        self.context.load_exchanges()
+        self.context.setup_context()
 
         self.start_datetime = settings.START_TIME  # type: ignore
         self.end_datetime = settings.END_TIME  # type: ignore
@@ -42,16 +48,26 @@ class Runner():
         self.ticker = FrequencyTicker(self.start_datetime, self.end_datetime, '1m')
 
         # TODO no bitmex hard code
-        self.stat = Statistic(self.context.exchanges['bitmex'].get_account(), self.context)
+        self.stat = Statistic(self.context)
 
-    async def run(self) -> None:
-        for time in self.ticker.timer():
-            self.context.now = time
-
+    async def _run(self) -> None:
+        for current_time in self.ticker.timer():
+            self.context.now = current_time
+            logger.debug("Handler time {}".format(current_time))
             await self.context.strategy.handle_bar()
 
             for key, exchange in self.context.exchanges.items():
-                await exchange.apply_trade()
+                exchange.match_open_orders()  # type:ignore
 
-            if time.minute == 0 and time.second == 0 and time.microsecond == 0:
+            if current_time.hour == 0 and current_time.minute == 0 \
+                    and current_time.second == 0 and current_time.microsecond == 0:
                 self.stat.collect_daily()
+
+        self.lastly()
+
+    def lastly(self) -> None:
+        pass
+
+    def run(self) -> None:
+        loop = get_event_loop()
+        loop.run_until_complete(self._run())

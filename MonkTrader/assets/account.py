@@ -32,12 +32,18 @@ from MonkTrader.assets.positions import (
     BasePosition, FuturePosition, PositionManager,
 )
 from MonkTrader.assets.trade import Trade
-from MonkTrader.exchange.base import BaseExchange
+from MonkTrader.exchange.base import BaseSimExchange
+
+
+@dataclass()
+class APIKey():
+    api_secret: str
+    api_key: str
 
 
 @dataclass()
 class BaseAccount():
-    exchange: BaseExchange
+    exchange: BaseSimExchange
     position_cls: Type[BasePosition]
     positions: PositionManager = field(init=False)
     wallet_balance: float = 0
@@ -48,10 +54,19 @@ class BaseAccount():
     def deal(self, trade: Trade) -> None:
         raise NotImplementedError()
 
+    @property
+    def total_capital(self) -> float:
+        return self.wallet_balance
+
+
+@dataclass()
+class RealFutureAccount(BaseAccount):
+    api_key: APIKey = APIKey('', '')
+
 
 @dataclass()
 class FutureAccount(BaseAccount):
-    position_cls: Type[FuturePosition]
+    position_cls: Type[BasePosition] = FuturePosition
 
     @property
     def position_margin(self) -> float:
@@ -64,8 +79,9 @@ class FutureAccount(BaseAccount):
         :return:
         """
         d: Dict[FutureInstrument, List[FutureLimitOrder]] = defaultdict(list)
-        for order in self.exchange.open_orders():  # type: ignore
-            d[order.instrument].append(order)
+        for order in self.exchange.get_open_orders(self):
+            if isinstance(order, FutureLimitOrder):
+                d[order.instrument].append(order)
         return sum([self._order_margin(instrument, orders) for instrument, orders in d.items()])
 
     def _order_margin(self, instrument: FutureInstrument, orders: List[FutureLimitOrder]) -> float:
@@ -132,6 +148,10 @@ class FutureAccount(BaseAccount):
         return self.wallet_balance + self.unrealised_pnl
 
     @property
+    def total_capital(self) -> float:
+        return self.margin_balance
+
+    @property
     def available_balance(self) -> float:
         return self.margin_balance - self.order_margin - self.position_margin
 
@@ -143,8 +163,6 @@ class FutureAccount(BaseAccount):
             pass
         else:
             if position_effect == POSITION_EFFECT.CLOSE or position_effect == POSITION_EFFECT.CLOSE_PART:
-                profit_quantity = abs(trade.exec_quantity)
-            elif abs(position.quantity) >= abs(trade.exec_quantity):
                 profit_quantity = abs(trade.exec_quantity)
             else:
                 profit_quantity = abs(position.quantity)

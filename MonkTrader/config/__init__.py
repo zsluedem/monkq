@@ -24,6 +24,7 @@
 import os
 import sys
 import warnings
+from importlib import import_module
 
 import lazy_object_proxy
 from MonkTrader.config import (  # type: ignore
@@ -32,8 +33,9 @@ from MonkTrader.config import (  # type: ignore
 from MonkTrader.utils.i18n import _
 
 # SETTINGS_ENV_VARIABLE = "SETTINGS_ENV_VARIABLE"
+SETTING_MODULE = "MONKTRADER_SETTING_MODULE"
 
-SETTING_FILE = 'settings'
+DEFAULT_SETTING_MODULE = 'settings'
 
 
 class Setting:
@@ -43,8 +45,9 @@ class Setting:
                 setattr(self, setting, getattr(default_settings, setting))
 
         # self.SETTING_MODULE = module
+        setting_module = os.environ.get(SETTING_MODULE, DEFAULT_SETTING_MODULE)
         try:
-            mod = __import__(SETTING_FILE)
+            mod = import_module(setting_module)
         except ImportError:
             warnings.warn(_("Can not find settings.py in the current path,"
                             " we are going to use the default settings."))

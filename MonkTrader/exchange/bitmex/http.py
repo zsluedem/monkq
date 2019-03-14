@@ -26,16 +26,16 @@ import datetime
 import json
 import ssl
 import time
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
+from typing import Dict, List, Optional, Union
 
 from aiohttp import (  # type:ignore
     ClientResponse, ClientSession, ClientTimeout, TCPConnector,
 )
 from aiohttp.helpers import sentinel
 from logbook import Logger
-from MonkTrader.config import settings
+from MonkTrader.assets.account import APIKey
 from MonkTrader.exception import (
-    AuthError, HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
+    HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
     NotFoundError, RateLimitError,
 )
 from MonkTrader.exchange.bitmex.auth import gen_header_dict
@@ -50,26 +50,11 @@ from .log import logger_group
 logger = Logger('exchange.bitmex.exchange.http')
 logger_group.add_logger(logger)
 
-FuncType = Callable[..., Any]
-F = TypeVar('F', bound=FuncType)
-
-
-def authentication_required(fn: F) -> F:
-    """Annotation for methods that require auth."""
-
-    def wrapped(self: Any, *args: Any, **kwargs: Any) -> F:
-        if not (self.api_key):
-            raise AuthError(_("You must be authenticated to use this method"))
-        else:
-            return fn(self, *args, **kwargs)
-
-    return cast(F, wrapped)
-
 
 class BitMexHTTPInterface():
 
     def __init__(self, exchange_setting: dict,
-                 connector: TCPConnector, session: ClientSession, ssl: ssl.SSLContext,
+                 connector: TCPConnector, session: ClientSession, ssl: ssl.SSLContext, proxy: Optional[str] = None,
                  loop: Optional[asyncio.AbstractEventLoop] = None):
         """
         :param exchange_setting:
@@ -92,25 +77,24 @@ class BitMexHTTPInterface():
             base_url = BITMEX_API_URL
         self.base_url = base_url
 
+        self._proxy = proxy
         self._ssl = ssl
-
-        self.api_key = exchange_setting.get("API_KEY", '')
-        self.api_secret = exchange_setting.get("API_SECRET", '')
 
         self._connector = connector  # type:ignore
         self.session = session
 
     async def get_instrument_info(self, symbol: str,
-                                  timeout: int = sentinel, max_retry: int = 0) -> List[dict]:
+                                  timeout: int = sentinel, max_retry: int = 0,
+                                  api_key: Optional[APIKey] = None) -> List[dict]:
         query = {
             "symbol": symbol,
         }
         resp = await self._curl_bitmex(path='instrument', query=query,
-                                       timeout=timeout, max_retry=max_retry)
+                                       timeout=timeout, max_retry=max_retry, api_key=api_key)
         content = await resp.json()
         return content
 
-    async def place_limit_order(self, symbol: str,
+    async def place_limit_order(self, api_key: APIKey, symbol: str,
                                 price: float, quantity: float, timeout: int = sentinel,
                                 max_retry: int = 0) -> str:
         postdict = {
@@ -119,11 +103,11 @@ class BitMexHTTPInterface():
             "orderQty": quantity
         }
         resp = await self._curl_bitmex(path="order", postdict=postdict, method="POST",
-                                       timeout=timeout, max_retry=max_retry)
+                                       timeout=timeout, max_retry=max_retry, api_key=api_key)
         order_info = await resp.json()
         return order_info['orderID']
 
-    async def place_market_order(self, symbol: str,
+    async def place_market_order(self, api_key: APIKey, symbol: str,
                                  quantity: float, timeout: int = sentinel,
                                  max_retry: int = 0) -> str:
         postdict = {
@@ -133,11 +117,11 @@ class BitMexHTTPInterface():
         }
         resp = await self._curl_bitmex(path="order", postdict=postdict,
                                        method="POST", timeout=timeout,
-                                       max_retry=max_retry)
+                                       max_retry=max_retry, api_key=api_key)
         order_info = await resp.json()
         return order_info['orderID']
 
-    async def amend_order(self, order_id: str, quantity: Optional[float] = None,
+    async def amend_order(self, api_key: APIKey, order_id: str, quantity: Optional[float] = None,
                           price: Optional[float] = None, timeout: int = sentinel,
                           max_retry: int = 0) -> ClientResponse:
         postdict: Dict[str, Union[str, float]] = {
@@ -149,10 +133,9 @@ class BitMexHTTPInterface():
             postdict.update({'price': price})
         return await self._curl_bitmex(path="order", postdict=postdict,
                                        method="PUT", timeout=timeout,
-                                       max_retry=max_retry)
+                                       max_retry=max_retry, api_key=api_key)
 
-    @authentication_required
-    async def cancel_order(self, order_id: str, timeout: int = sentinel,
+    async def cancel_order(self, api_key: APIKey, order_id: str, timeout: int = sentinel,
                            max_retry: int = 0) -> ClientResponse:
         path = "order"
         postdict = {
@@ -160,24 +143,25 @@ class BitMexHTTPInterface():
         }
         return await self._curl_bitmex(path=path, postdict=postdict,
                                        method="DELETE", timeout=timeout,
-                                       max_retry=max_retry)
+                                       max_retry=max_retry, api_key=api_key)
 
-    @authentication_required
-    async def open_orders_http(self, timeout: int = sentinel, max_retry: int = 0) -> List[dict]:
+    async def open_orders_http(self, api_key: APIKey, timeout: int = sentinel, max_retry: int = 0) -> List[dict]:
         query = {"filter": '{"open": true}', "count": 500}
         resp = await self._curl_bitmex(path='order', query=query,
                                        method="GET", timeout=timeout,
-                                       max_retry=max_retry)
+                                       max_retry=max_retry, api_key=api_key)
         return await resp.json()
 
-    async def active_instruments(self, timeout: int = sentinel) -> List[dict]:
+    async def active_instruments(self, timeout: int = sentinel,
+                                 api_key: Optional[APIKey] = None) -> List[dict]:
         resp = await self._curl_bitmex(path='instrument/active', method='GET',
-                                       max_retry=0, timeout=timeout)
+                                       max_retry=0, timeout=timeout, api_key=api_key)
         return await resp.json()
 
     async def get_kline(self, symbol: str, freq: str,
                         count: int = 100, including_now: bool = False,
-                        timeout: int = sentinel, max_retry: int = 5) -> List[dict]:
+                        timeout: int = sentinel, max_retry: int = 5,
+                        api_key: Optional[APIKey] = None) -> List[dict]:
         query = {
             "symbol": symbol,
             "partial": "true" if including_now else "false",
@@ -186,13 +170,13 @@ class BitMexHTTPInterface():
             "count": count
         }
         resp = await self._curl_bitmex(path='trade/bucketed', query=query,
-                                       timeout=timeout, max_retry=max_retry)
+                                       timeout=timeout, max_retry=max_retry, api_key=api_key)
 
         return await resp.json()
 
     async def get_recent_trades(self, symbol: str,
                                 count: int = 100, timeout: int = sentinel,
-                                max_retry: int = 5) -> List[dict]:
+                                max_retry: int = 5, api_key: Optional[APIKey] = None) -> List[dict]:
         query = {
             "symbol": symbol,
             "count": count,
@@ -200,12 +184,12 @@ class BitMexHTTPInterface():
         }
         resp = await self._curl_bitmex(path="trade", query=query,
                                        method="GET", timeout=timeout,
-                                       max_retry=max_retry)
+                                       max_retry=max_retry, api_key=api_key)
         return await resp.json()
 
     async def _curl_bitmex(self, path: str, query: Optional[dict] = None, postdict: Optional[dict] = None,
                            timeout: int = sentinel, method: str = None,
-                           max_retry: int = 5) -> ClientResponse:  # type:ignore
+                           max_retry: int = 5, api_key: Optional[APIKey] = None) -> ClientResponse:
         url = self.base_url + path
 
         url_obj = URL(url)
@@ -227,11 +211,6 @@ class BitMexHTTPInterface():
         if query:
             url_obj = url_obj.with_query(query)
 
-        if settings.HTTP_PROXY:
-            proxy = settings.HTTP_PROXY
-        else:
-            proxy = None
-
         headers = {}
 
         if postdict:
@@ -240,7 +219,8 @@ class BitMexHTTPInterface():
         else:
             data = ''
 
-        headers.update(gen_header_dict(self.api_secret, self.api_key, method, str(url_obj), data))
+        if api_key:
+            headers.update(gen_header_dict(api_key.api_secret, api_key.api_key, method, str(url_obj), data))
 
         if timeout is not sentinel:
             timeout = ClientTimeout(total=timeout)
@@ -259,7 +239,7 @@ class BitMexHTTPInterface():
 
         try:
             resp = await self.session.request(method=method, url=str(url_obj),
-                                              proxy=proxy, headers=headers,
+                                              proxy=self._proxy, headers=headers,
                                               data=data,
                                               ssl=self._ssl, timeout=timeout)
             if 200 <= resp.status < 300:
@@ -283,7 +263,10 @@ class BitMexHTTPInterface():
                         logger.warning(_('Account out of funds. The message: {}').format(error["message"]))
                         raise MarginNotEnoughError(message)
                 elif resp.status == 401:
-                    raise HttpAuthError(self.api_key, self.api_secret)
+                    if api_key:
+                        raise HttpAuthError(api_key.api_key, api_key.api_secret)
+                    else:
+                        raise HttpAuthError('', '')
                 elif resp.status == 403:
                     raise HttpError(url=resp.request_info.url, method=resp.request_info.method,
                                     body=json.dumps(postdict), headers=resp.request_info.headers,

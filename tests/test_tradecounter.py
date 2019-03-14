@@ -30,16 +30,15 @@ from MonkTrader.tradecounter import TradeCounter
 from MonkTrader.utils.id import gen_unique_id
 
 
-async def test_trader_counter() -> None:
+def test_trader_counter() -> None:
+    stat = MagicMock()
     exchange = MagicMock()
     account = MagicMock()
+    account.exchange = exchange
 
-    trade_counter = TradeCounter(exchange)
+    trade_counter = TradeCounter(stat)
 
-    async def last_price() -> float:
-        return 20.
-
-    exchange.get_last_price.return_value = last_price()
+    exchange.last_price.return_value = 20.
 
     order1 = LimitOrder(account=account, order_id=gen_unique_id(), instrument=MagicMock(), quantity=100, price=10)
     order2 = LimitOrder(account=account, order_id=gen_unique_id(), instrument=MagicMock(), quantity=200, price=20)
@@ -54,7 +53,7 @@ async def test_trader_counter() -> None:
         trade_counter.amend_order(order2.order_id, 100, 20)
 
     assert len(trade_counter.open_orders()) == 2
-    await trade_counter.match()
+    trade_counter.match()
 
     assert len(order2.trades) == 1
     assert len(order3.trades) == 1

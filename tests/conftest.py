@@ -29,7 +29,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from MonkTrader.config import Setting
-from MonkTrader.exchange.base import BaseExchange  # noqa
+from MonkTrader.exchange.base import BaseSimExchange  # noqa
 from MonkTrader.exchange.bitmex.const import (
     INSTRUMENT_FILENAME, KLINE_FILE_NAME,
 )
@@ -43,12 +43,12 @@ def settings() -> Generator[Setting, None, None]:
 
 @pytest.fixture()
 def exchange() -> Generator[MagicMock, None, None]:
-    yield MagicMock(BaseExchange)
+    yield MagicMock(BaseSimExchange)
 
 
 @pytest.fixture()
 def tem_data_dir() -> Generator[str, None, None]:
     with tempfile.TemporaryDirectory() as tmp:
-        shutil.copy(get_resource_path('bitmex/instruments.json'), os.path.join(tmp, INSTRUMENT_FILENAME))
+        shutil.copy(get_resource_path('test_instrument.json'), os.path.join(tmp, INSTRUMENT_FILENAME))
         shutil.copy(get_resource_path('test_table.hdf'), os.path.join(tmp, KLINE_FILE_NAME))
         yield tmp

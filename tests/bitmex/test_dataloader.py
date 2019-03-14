@@ -22,19 +22,33 @@
 # SOFTWARE.
 #
 
+import os
+import shutil
+import tempfile
+from typing import Generator
 from unittest.mock import MagicMock
 
+import pytest
 from MonkTrader.assets.instrument import (
     DownsideInstrument, FutureInstrument, PerpetualInstrument,
     UpsideInstrument,
 )
+from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
 from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
 from MonkTrader.utils.timefunc import utc_datetime
+from tests.tools import get_resource_path
 
 
-def test_bitmex_dataloader_instruments(exchange: MagicMock, tem_data_dir: str) -> None:
+@pytest.fixture()
+def instrument_dir() -> Generator[str, None, None]:
+    with tempfile.TemporaryDirectory() as tmp:
+        shutil.copy(get_resource_path('bitmex/instruments.json'), os.path.join(tmp, INSTRUMENT_FILENAME))
+        yield tmp
+
+
+def test_bitmex_dataloader_instruments(exchange: MagicMock, instrument_dir: str) -> None:
     context = MagicMock()
-    dataloader = BitmexDataloader(exchange, context, tem_data_dir)
+    dataloader = BitmexDataloader(exchange, context, instrument_dir)
     dataloader.load_instruments()
 
     XBT7D_D95 = dataloader.instruments.get('XBT7D_D95')

@@ -34,13 +34,9 @@ from monkq.assets.instrument import (
 )
 from monkq.data import DataLoader
 from monkq.exception import LoadDataError
-from monkq.exchange.bitmex.const import (
-    INSTRUMENT_FILENAME, KLINE_FILE_NAME,
-)
+from monkq.exchange.bitmex.const import INSTRUMENT_FILENAME, KLINE_FILE_NAME
 from monkq.lazyhdf import LazyHDFTableStore
-from monkq.utils.dataframe import (
-    kline_dataframe_window, make_datetime_exactly,
-)
+from monkq.utils.dataframe import kline_dataframe_window, make_datetime_exactly
 from monkq.utils.i18n import _
 
 from ..log import logger_group

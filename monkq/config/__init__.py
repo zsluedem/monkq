@@ -27,9 +27,7 @@ import warnings
 from importlib import import_module
 
 import lazy_object_proxy
-from monkq.config import (  # type: ignore
-    default_settings as default_settings,
-)
+from monkq.config import default_settings as default_settings  # type: ignore
 from monkq.utils.i18n import _
 
 # SETTINGS_ENV_VARIABLE = "SETTINGS_ENV_VARIABLE"

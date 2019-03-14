@@ -29,9 +29,7 @@ from dateutil.tz import tzutc
 from monkq.assets.account import BaseAccount, FutureAccount
 from monkq.assets.instrument import FutureInstrument, Instrument
 from monkq.assets.positions import BasePosition, FuturePosition
-from monkq.exchange.base import (  # noqa: F401
-    BaseExchange, BaseSimExchange,
-)
+from monkq.exchange.base import BaseExchange, BaseSimExchange  # noqa: F401
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseSimExchange")

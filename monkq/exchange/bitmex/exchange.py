@@ -31,9 +31,7 @@ from aiohttp.helpers import sentinel
 from logbook import Logger
 from monkq.assets.account import FutureAccount, RealFutureAccount
 from monkq.assets.instrument import FutureInstrument, Instrument
-from monkq.assets.order import (
-    ORDER_T, FutureLimitOrder, FutureMarketOrder,
-)
+from monkq.assets.order import ORDER_T, FutureLimitOrder, FutureMarketOrder
 from monkq.exchange.base import BaseExchange, BaseSimExchange
 from monkq.exchange.base.info import ExchangeInfo
 from monkq.exchange.bitmex.const import (

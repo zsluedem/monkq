@@ -31,10 +31,8 @@ from monkq.base_strategy import BaseStrategy
 from monkq.config import Setting
 from monkq.const import RUN_TYPE
 from monkq.exception import SettingError
-from monkq.exchange.base import \
-    BaseExchange  # noqa: F401 pragma: no cover
-from monkq.exchange.base import \
-    BaseSimExchange  # noqa: F401 pragma: no cover
+from monkq.exchange.base import BaseExchange  # noqa: F401 pragma: no cover
+from monkq.exchange.base import BaseSimExchange  # noqa: F401 pragma: no cover
 from monkq.stat import Statistic
 from monkq.tradecounter import TradeCounter
 

@@ -39,9 +39,7 @@ from monkq.exception import (
     NotFoundError, RateLimitError,
 )
 from monkq.exchange.bitmex.auth import gen_header_dict
-from monkq.exchange.bitmex.const import (
-    BITMEX_API_URL, BITMEX_TESTNET_API_URL,
-)
+from monkq.exchange.bitmex.const import BITMEX_API_URL, BITMEX_TESTNET_API_URL
 from monkq.utils.i18n import _
 from yarl import URL
 

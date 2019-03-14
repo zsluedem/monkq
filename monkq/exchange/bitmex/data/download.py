@@ -37,9 +37,7 @@ from logbook import Logger
 from monkq.config.global_settings import (
     HDF_FILE_COMPRESS_LEVEL, HDF_FILE_COMPRESS_LIB,
 )
-from monkq.data import (
-    DataProcessor, DownloadProcess, Point, ProcessPoints,
-)
+from monkq.data import DataProcessor, DownloadProcess, Point, ProcessPoints
 from monkq.exception import DataDownloadError
 from monkq.exchange.bitmex.const import (
     INSTRUMENT_FILENAME, QUOTE_FILE_NAME, QUOTE_LINK, START_DATE, SYMBOL_LINK,

@@ -24,9 +24,7 @@
 import datetime
 from typing import TYPE_CHECKING, Dict, List, Union
 
-from monkq.assets.order import (
-    BaseOrder, FutureLimitOrder, FutureMarketOrder,
-)
+from monkq.assets.order import BaseOrder, FutureLimitOrder, FutureMarketOrder
 from monkq.assets.trade import Trade
 
 if TYPE_CHECKING:

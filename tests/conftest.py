@@ -30,9 +30,7 @@ from unittest.mock import MagicMock
 import pytest
 from monkq.config import Setting
 from monkq.exchange.base import BaseSimExchange  # noqa
-from monkq.exchange.bitmex.const import (
-    INSTRUMENT_FILENAME, KLINE_FILE_NAME,
-)
+from monkq.exchange.bitmex.const import INSTRUMENT_FILENAME, KLINE_FILE_NAME
 from tests.tools import get_resource_path
 
 

@@ -28,9 +28,7 @@ import pytest
 from monkq.assets.account import FutureAccount
 from monkq.assets.const import DIRECTION, ORDER_STATUS, SIDE
 from monkq.assets.instrument import FutureInstrument, Instrument
-from monkq.assets.order import (
-    BaseOrder, FutureLimitOrder, FutureMarketOrder,
-)
+from monkq.assets.order import BaseOrder, FutureLimitOrder, FutureMarketOrder
 from monkq.assets.trade import Trade
 
 from ..utils import random_string

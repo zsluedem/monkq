@@ -25,9 +25,9 @@
 from unittest.mock import MagicMock, call
 
 import pytest
-from MonkTrader.assets.order import LimitOrder, MarketOrder
-from MonkTrader.tradecounter import TradeCounter
-from MonkTrader.utils.id import gen_unique_id
+from monkq.assets.order import LimitOrder, MarketOrder
+from monkq.tradecounter import TradeCounter
+from monkq.utils.id import gen_unique_id
 
 
 def test_trader_counter() -> None:

@@ -2,8 +2,8 @@ from typing import Generator
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.stat import Statistic
-from MonkTrader.utils.timefunc import utc_datetime
+from monkq.stat import Statistic
+from monkq.utils.timefunc import utc_datetime
 
 
 @pytest.fixture()

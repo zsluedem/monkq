@@ -26,8 +26,8 @@ from typing import Generator, TypeVar
 
 import pytest
 from dateutil.tz import tzutc
-from MonkTrader.assets.instrument import FutureInstrument, Instrument  # noqa
-from MonkTrader.exchange.base import BaseExchange, BaseSimExchange  # noqa
+from monkq.assets.instrument import FutureInstrument, Instrument  # noqa
+from monkq.exchange.base import BaseExchange, BaseSimExchange  # noqa
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseSimExchange")

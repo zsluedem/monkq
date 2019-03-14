@@ -31,9 +31,9 @@ import tempfile
 
 import pytest
 import pytz
-from MonkTrader.utils.csv import CsvFileDefaultDict, CsvZipDefaultDict
-from MonkTrader.utils.filefunc import assure_dir, make_writable
-from MonkTrader.utils.timefunc import is_aware_datetime
+from monkq.utils.csv import CsvFileDefaultDict, CsvZipDefaultDict
+from monkq.utils.filefunc import assure_dir, make_writable
+from monkq.utils.timefunc import is_aware_datetime
 
 
 def test_assure_home() -> None:

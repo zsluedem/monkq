@@ -1,6 +1,0 @@
-from MonkTrader.strategy_cmd import cmd_main
-import os
-
-os.environ.setdefault("MONKTRADER_SETTING_MODULE", '@name@_settings')
-if __name__ == '__main__':
-    cmd_main()

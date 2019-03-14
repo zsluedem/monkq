@@ -24,9 +24,9 @@
 
 import numpy as np
 import pytest
-from MonkTrader.exception import DataError
-from MonkTrader.lazyhdf import LazyHDFTableStore
-from MonkTrader.utils.timefunc import utc_datetime
+from monkq.exception import DataError
+from monkq.lazyhdf import LazyHDFTableStore
+from monkq.utils.timefunc import utc_datetime
 from tests.tools import get_resource_path
 
 

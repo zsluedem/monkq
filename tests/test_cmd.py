@@ -25,11 +25,11 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from MonkTrader.__main__ import cmd_main
+from monkq.__main__ import cmd_main
 
 
 def test_download() -> None:
-    with patch("MonkTrader.__main__.BitMexDownloader") as downloader:
+    with patch("monkq.__main__.BitMexDownloader") as downloader:
         with tempfile.TemporaryDirectory() as tem_dir:
             cmd_main.main(['download', '--kind', 'trade', '--dst_dir', tem_dir], standalone_mode=False)
 
@@ -46,10 +46,10 @@ def test_startstrategy() -> None:
             assert f.read() == ''
 
         with open(os.path.join(tem_dir, 'strategy1', 'manage.py')) as f:
-            assert f.read() == """from MonkTrader.strategy_cmd import cmd_main
+            assert f.read() == """from monkq.strategy_cmd import cmd_main
 import os
 
-os.environ.setdefault("MONKTRADER_SETTING_MODULE", 'strategy1_settings')
+os.environ.setdefault("MONKQ_SETTING_MODULE", 'strategy1_settings')
 if __name__ == '__main__':
     cmd_main()
 """
@@ -57,8 +57,8 @@ if __name__ == '__main__':
         with open(os.path.join(tem_dir, 'strategy1', 'settings.py')) as f:
             assert f.read() == """import os
 
-from MonkTrader.const import RUN_TYPE
-from MonkTrader.utils.timefunc import utc_datetime
+from monkq.const import RUN_TYPE
+from monkq.utils.timefunc import utc_datetime
 
 # HTTP Proxy
 HTTP_PROXY = ""
@@ -81,7 +81,7 @@ DATA_DIR = os.path.expanduser("~/.monk/data")
 
 EXCHANGES = {  # type: ignore
     'bitmex': {
-        'ENGINE': 'MonkTrader.exchange.bitmex',
+        'ENGINE': 'monkq.exchange.bitmex',
         "IS_TEST": True,
     }
 }
@@ -91,17 +91,17 @@ ACCOUNTS = [
         'NAME': 'bitmex_account',
         'EXCHANGE': 'bitmex',
         "START_WALLET_BALANCE": 100000,
-        'ACCOUNT_MODEL': 'MonkTrader.assets.account.FutureAccount'
+        'ACCOUNT_MODEL': 'monkq.assets.account.FutureAccount'
     }
 ]
 
-TRADE_COUNTER = "MonkTrader.tradecounter.TradeCounter"
+TRADE_COUNTER = "monkq.tradecounter.TradeCounter"
 
-STATISTIC = "MonkTrader.stat.Statistic"
+STATISTIC = "monkq.stat.Statistic"
 """
 
         with open(os.path.join(tem_dir, 'strategy1', 'strategy.py')) as f:
-            assert f.read() == """from MonkTrader.base_strategy import BaseStrategy
+            assert f.read() == """from monkq.base_strategy import BaseStrategy
 
 
 class MyStrategy(BaseStrategy):

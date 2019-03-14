@@ -29,13 +29,13 @@ from typing import Generator
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.assets.instrument import (
+from monkq.assets.instrument import (
     DownsideInstrument, FutureInstrument, PerpetualInstrument,
     UpsideInstrument,
 )
-from MonkTrader.exchange.bitmex.const import INSTRUMENT_FILENAME
-from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
-from MonkTrader.utils.timefunc import utc_datetime
+from monkq.exchange.bitmex.const import INSTRUMENT_FILENAME
+from monkq.exchange.bitmex.data.loader import BitmexDataloader
+from monkq.utils.timefunc import utc_datetime
 from tests.tools import get_resource_path
 
 

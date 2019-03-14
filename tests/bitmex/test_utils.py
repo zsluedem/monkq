@@ -21,9 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.assets.const import SIDE
-from MonkTrader.const import TICK_DIRECTION
-from MonkTrader.exchange.bitmex.data.utils import read_trade_tar
+from monkq.assets.const import SIDE
+from monkq.const import TICK_DIRECTION
+from monkq.exchange.bitmex.data.utils import read_trade_tar
 from tests.tools import get_resource_path
 
 

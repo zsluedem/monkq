@@ -26,8 +26,8 @@ import datetime
 import pytest
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzutc
-from MonkTrader.exception import SettingError
-from MonkTrader.ticker import FrequencyTicker
+from monkq.exception import SettingError
+from monkq.ticker import FrequencyTicker
 
 start_time = datetime.datetime(2018, 1, 1, tzinfo=tzutc())
 end_time = datetime.datetime(2018, 1, 3, tzinfo=tzutc())

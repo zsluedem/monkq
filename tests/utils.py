@@ -28,7 +28,7 @@ import sys
 from contextlib import contextmanager
 from typing import Any, Generator
 
-from MonkTrader.config import SETTING_MODULE, Setting
+from monkq.config import SETTING_MODULE, Setting
 
 
 def random_string(length: int) -> str:

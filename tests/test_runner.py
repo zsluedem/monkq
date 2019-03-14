@@ -21,11 +21,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from MonkTrader.base_strategy import BaseStrategy
-from MonkTrader.config import Setting
-from MonkTrader.const import RUN_TYPE
-from MonkTrader.runner import Runner
-from MonkTrader.utils.timefunc import utc_datetime
+from monkq.base_strategy import BaseStrategy
+from monkq.config import Setting
+from monkq.const import RUN_TYPE
+from monkq.runner import Runner
+from monkq.utils.timefunc import utc_datetime
 
 from .utils import over_written_settings
 
@@ -46,7 +46,7 @@ def test_runner(tem_data_dir: str) -> None:
         "DATA_DIR": tem_data_dir,
         "EXCHANGE": {
             "bitmex": {
-                'engine': 'MonkTrader.exchange.bitmex',
+                'engine': 'monkq.exchange.bitmex',
                 "IS_TEST": True,
                 "API_KEY": '',
                 "API_SECRET": '',

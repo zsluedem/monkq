@@ -25,11 +25,11 @@
 import os
 from unittest.mock import MagicMock, patch
 
-from MonkTrader.utils.i18n import LazyTranslation
+from monkq.utils.i18n import LazyTranslation
 
 
 def test_lazytranslation_not_setting() -> None:
-    with patch("MonkTrader.utils.i18n.gettext", MagicMock()) as mockg:
+    with patch("monkq.utils.i18n.gettext", MagicMock()) as mockg:
         mockg.find.return_value = None
         trans = LazyTranslation()
         trans.setup("CN")
@@ -39,7 +39,7 @@ def test_lazytranslation_not_setting() -> None:
 
 
 def test_lazytranslation() -> None:
-    with patch("MonkTrader.utils.i18n.gettext", MagicMock()) as mockg:
+    with patch("monkq.utils.i18n.gettext", MagicMock()) as mockg:
         mockg.find.return_value = os.path.abspath(__file__)
         trans = LazyTranslation()
         trans.setup("CN")

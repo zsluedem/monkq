@@ -41,3 +41,5 @@ ACCOUNTS = [
 TRADE_COUNTER = "monkq.tradecounter.TradeCounter"
 
 STATISTIC = "monkq.stat.Statistic"
+
+REPORT_FILE = 'result.pkl'

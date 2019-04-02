@@ -21,6 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import os
+
 from monkq.base_strategy import BaseStrategy
 from monkq.config import Setting
 from monkq.const import RUN_TYPE
@@ -52,7 +54,8 @@ def test_runner(tem_data_dir: str) -> None:
                 "API_SECRET": '',
                 "START_WALLET_BALANCE": 100000
             }
-        }
+        },
+        "REPORT_FILE": os.path.join(tem_data_dir, 'result.pkl')
     }
 
     settings.__dict__.update(custom_settings)

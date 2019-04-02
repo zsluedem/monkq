@@ -1,10 +1,12 @@
 import os
+import pickle
 import tempfile
 from typing import Generator
 
 import pytest
 from monkq.__main__ import cmd_main
 from monkq.config import SETTING_MODULE
+from monkq.utils.timefunc import utc_datetime
 
 from .utils import add_path, change_current_working_dir, random_string
 
@@ -85,7 +87,7 @@ REPORT_FILE = r"@tmp@/result.pkl"
 
 
 @pytest.fixture()
-def start_strategy_condition(tem_data_dir: str) -> Generator[None, None, None]:
+def start_strategy_condition(tem_data_dir: str) -> Generator[str, None, None]:
     strateg_name = "strategy1m_{}".format(random_string(6))
     with tempfile.TemporaryDirectory() as tem_dir:
         cmd_main.main(['startstrategy', '-n', strateg_name, '-d', tem_dir], standalone_mode=False)
@@ -98,12 +100,23 @@ def start_strategy_condition(tem_data_dir: str) -> Generator[None, None, None]:
 
         with change_current_working_dir(os.path.join(tem_dir, strateg_name)) as strategy_dir:
             with add_path(strategy_dir):
-                yield
+                yield tem_dir
 
     os.environ.pop(SETTING_MODULE)
 
 
-def test_run_1m_backtest(start_strategy_condition: None) -> None:
+def test_run_1m_backtest(start_strategy_condition: str) -> None:
     from manage import cmd_main as strategy_cmd
 
     strategy_cmd.main(['runstrategy'], standalone_mode=False)
+
+    with open(os.path.join(start_strategy_condition, 'result.pkl'), 'rb') as f:
+        obj = pickle.load(f)
+
+    daily_capital = obj['daily_capital']
+
+    assert pytest.approx(daily_capital[-1]['bitmex_account'], 113324.03)
+    assert daily_capital[-1]['timestamp'] == utc_datetime(2015, 12, 1)
+
+    assert pytest.approx(daily_capital[1]['bitmex_account'], 98721.99024999999)
+    assert daily_capital[1]['timestamp'] == utc_datetime(2015, 6, 2)

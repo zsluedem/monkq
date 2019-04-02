@@ -47,21 +47,26 @@ class Runner():
 
         self.ticker = FrequencyTicker(self.start_datetime, self.end_datetime, '1m')
 
-        # TODO no bitmex hard code
         self.stat = Statistic(self.context)
 
     async def _run(self) -> None:
+        self.stat.collect_daily()
+
         for current_time in self.ticker.timer():
             self.context.now = current_time
             logger.debug("Handler time {}".format(current_time))
+
             await self.context.strategy.handle_bar()
 
             for key, exchange in self.context.exchanges.items():
                 exchange.match_open_orders()  # type:ignore
 
             if current_time.hour == 0 and current_time.minute == 0 \
-                    and current_time.second == 0 and current_time.microsecond == 0:
+                    and current_time.second == 0 and current_time.microsecond == 0 \
+                    and current_time != self.start_datetime and current_time != self.end_datetime:
                 self.stat.collect_daily()
+
+        self.stat.collect_daily()
 
         self.lastly()
 

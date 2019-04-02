@@ -66,7 +66,7 @@ class Runner():
         self.lastly()
 
     def lastly(self) -> None:
-        pass
+        self.stat.report()
 
     def run(self) -> None:
         loop = get_event_loop()

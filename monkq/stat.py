@@ -22,6 +22,7 @@
 # SOFTWARE.
 #
 import datetime
+import pickle
 from typing import TYPE_CHECKING, Dict, List, Union
 
 from monkq.assets.order import BaseOrder, FutureLimitOrder, FutureMarketOrder
@@ -36,6 +37,7 @@ DAILY_STAT_TYPE = Dict[str, Union[float, datetime.datetime]]
 class Statistic():
     def __init__(self, context: "Context"):
         self.context = context
+        self.report_file: str = getattr(self.context.settings, 'REPORT_FILE', 'result.pkl')
         self.daily_capital: List[DAILY_STAT_TYPE] = []
         self.order_collections: List[BaseOrder] = []
         self.trade_collections: List[Trade] = []
@@ -50,3 +52,14 @@ class Statistic():
 
     def collect_trade(self, trade: Trade) -> None:
         self.trade_collections.append(trade)
+
+    def _pickle_obj(self) -> dict:
+        return {
+            "daily_capital": self.daily_capital,
+            "orders": self.order_collections,
+            "trades": self.trade_collections
+        }
+
+    def report(self) -> None:
+        with open(self.report_file, 'wb') as f:
+            pickle.dump(self._pickle_obj(), f)

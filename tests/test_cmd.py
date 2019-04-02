@@ -98,6 +98,8 @@ ACCOUNTS = [
 TRADE_COUNTER = "monkq.tradecounter.TradeCounter"
 
 STATISTIC = "monkq.stat.Statistic"
+
+REPORT_FILE = 'result.pkl'
 """
 
         with open(os.path.join(tem_dir, 'strategy1', 'strategy.py')) as f:

@@ -79,6 +79,8 @@ ACCOUNTS = [
 TRADE_COUNTER = "monkq.tradecounter.TradeCounter"
 
 STATISTIC = "monkq.stat.Statistic"
+
+REPORT_FILE = r"@tmp@/result.pkl"
 """
 
 
@@ -89,7 +91,7 @@ def start_strategy_condition(tem_data_dir: str) -> Generator[None, None, None]:
         cmd_main.main(['startstrategy', '-n', strateg_name, '-d', tem_dir], standalone_mode=False)
 
         with open(os.path.join(tem_dir, "{}/{}_settings.py".format(strateg_name, strateg_name)), 'w') as f:
-            f.write(test_settings.replace("@data_dir@", tem_data_dir))
+            f.write(test_settings.replace("@data_dir@", tem_data_dir).replace('@tmp@', tem_dir))
 
         with open(os.path.join(tem_dir, "{}/strategy.py".format(strateg_name)), 'w') as f:
             f.write(test_strategy)

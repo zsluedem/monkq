@@ -1,5 +1,5 @@
 ======================================
-MonkTrader documentation!
+monkq documentation!
 ======================================
 
 .. toctree::

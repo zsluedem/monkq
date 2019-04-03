@@ -24,7 +24,7 @@ DATA_DIR = os.path.expanduser("~/.monk/data")
 
 EXCHANGES = {  # type: ignore
     'bitmex': {
-        'ENGINE': 'monkq.exchange.bitmex',
+        'ENGINE': 'monkq.exchange.bitmex.default_sim_exchange',
         "IS_TEST": True,
     }
 }

@@ -54,7 +54,7 @@ if __name__ == '__main__':
     cmd_main()
 """
 
-        with open(os.path.join(tem_dir, 'strategy1', 'settings.py')) as f:
+        with open(os.path.join(tem_dir, 'strategy1', 'strategy1_settings.py')) as f:
             assert f.read() == """import os
 
 from monkq.const import RUN_TYPE
@@ -81,7 +81,7 @@ DATA_DIR = os.path.expanduser("~/.monk/data")
 
 EXCHANGES = {  # type: ignore
     'bitmex': {
-        'ENGINE': 'monkq.exchange.bitmex',
+        'ENGINE': 'monkq.exchange.bitmex.default_sim_exchange',
         "IS_TEST": True,
     }
 }
@@ -110,12 +110,12 @@ class MyStrategy(BaseStrategy):
     def setup(self):  # type:ignore
         pass
 
-    def on_trade(self, message):  # type:ignore
+    async def on_trade(self, message):  # type:ignore
         pass
 
-    def tick(self, message):  # type:ignore
+    async def tick(self, message):  # type:ignore
         pass
 
-    def handle_bar(self):  # type:ignore
+    async def handle_bar(self):  # type:ignore
         pass
 """

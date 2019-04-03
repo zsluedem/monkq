@@ -103,6 +103,7 @@ def startstrategy(ctx: click.Context, name: str, directory: str) -> None:
 
             if filename.endswith(('.py-tpl')):
                 filename = filename.replace('.py-tpl', '.py')
+                filename = filename.replace('@name@', name)
                 new_path = os.path.join(target_dir, relative_dir, filename)
                 with open(old_path) as template_f:
                     content = template_f.read()

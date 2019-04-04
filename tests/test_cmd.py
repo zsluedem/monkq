@@ -107,7 +107,7 @@ REPORT_FILE = 'result.pkl'
 
 
 class MyStrategy(BaseStrategy):
-    def setup(self):  # type:ignore
+    async def setup(self):  # type:ignore
         pass
 
     async def on_trade(self, message):  # type:ignore

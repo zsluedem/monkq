@@ -50,6 +50,8 @@ class Runner():
         self.stat = Statistic(self.context)
 
     async def _run(self) -> None:
+        await self.context.strategy.setup()
+
         self.stat.collect_daily()
 
         for current_time in self.ticker.timer():

@@ -2,7 +2,7 @@ from monkq.base_strategy import BaseStrategy
 
 
 class MyStrategy(BaseStrategy):
-    def setup(self):  # type:ignore
+    async def setup(self):  # type:ignore
         pass
 
     async def on_trade(self, message):  # type:ignore

@@ -9,7 +9,7 @@ Through this tutorial, we'll walk you through the creation of a basic strategy.
 We'll assume you have already installed monkq.
 
 Create a project
-====================
+-----------------
 
 If this is your first time using monkq, you'll have to take care of some
 initial setup. Namely, you'll need to auto-generate some codes that establishes
@@ -53,6 +53,30 @@ These files are:
 * :file:`strategy.py`: This is the main file you would edit to make a strategy.
   Your strategy would stay in it.
 
-First Strategy
------------------
+Write First Strategy
+-----------------------
+
+Now, we are trying to write our first strategy. See the codes in the
+:file:`strategy.py`.
+
+.. code-block:: python
+
+    from monkq.base_strategy import BaseStrategy
+
+
+    class MyStrategy(BaseStrategy):
+        async def setup(self):  # type:ignore
+            pass
+
+        async def handle_bar(self):  # type:ignore
+            pass
+
+
+Now we are going to reimplment the `handler_bar` method and the `setup` method.
+
+1. `setup` method would be trigger in the very first place of your strategy and
+    triggered for only one time. You can setup some value or attr here.
+2. `handle_bar` method is the period calling method. The frequency to trigger
+    the `handle_bar` method depends on the :attr:`~Setting.FREQUENCY`
+    (right now monkq only support 1 minute frequency).
 

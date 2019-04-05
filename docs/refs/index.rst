@@ -5,8 +5,8 @@ Reference Manual
 .. toctree::
    :maxdepth: 2
 
-   const
    settings
    strategy
-   exchange
+   exchanges/index
    assets/index
+   utils

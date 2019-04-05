@@ -1,89 +1,148 @@
 .. _asset_position:
 
-===========
-Positions
-===========
-
-.. TODO
-
 BasePosition
 =============
 
-.. class::BasePosition
+.. class:: BasePosition
 
-    .. attribute:: instrument
+    `BasePosition` is the base position class of all the position class. All
+    the position class should inherit the attr of `BasePosition`.
 
-        pass
+    .. py:attribute:: instrument
 
-    .. attribute:: account
+        It returns the reference to the :class:`~Instrument` of the position.
 
-        pass
+    .. py:attribute:: account
 
-    .. attribute:: quantity
+        Reference to the :class:`~BaseAccount` which the position belongs to.
 
-        pass
+    .. py:attribute:: quantity
 
-    .. attribute:: open_price
+        The current holding quantity of the position.
 
-        pass
+    .. py:attribute:: open_price
 
-    .. method:: position_effect
+        The average price to open the position
 
-        pass
 
 FutureBasePosition
 ===================
 
 .. class:: FutureBasePosition
 
-    .. attribute:: direction
+    Future position class.
 
-        pass
+    .. py:attribute:: direction
 
-    .. attribute:: market_value
+        The :class:`~DIRECTION` of the position.
 
-        pass
+    .. py:attribute:: market_value
 
-    .. attribute:: open_value
+        The market value of the position at the last price of the instrument.
 
-        pass
+    .. py:attribute:: open_value
 
-    .. attribute:: unrealised_pnl
+        The total value to open the position.
 
-        pass
+    .. py:attribute:: unrealised_pnl
 
-    .. attribute:: min_open_maint_margin
+        The unrealised profit and loss of the position.
 
-        pass
+    .. py:attribute:: min_open_maint_margin
 
-    .. attribute:: open_init_margin
+        The minimum margin for this position.
+        If the margin for this position is lower than the maint_margin,
+        the position would be liquidated.
 
-        pass
+    .. py:attribute:: open_init_margin
 
-    .. attribute:: min_last_maint_margin
+        The initial margin of the position at the open price.
 
-        pass
+    .. py:attribute:: min_last_maint_margin
 
-    .. attribute:: last_init_margin
+        The maintainance margin of the position at the last price.
 
-        pass
+    .. py:attribute:: last_init_margin
 
-    .. attribute:: liq_price
+        The initial margin of the position at the last price.
 
-        pass
+    .. py:attribute:: liq_price
 
-    .. attribute:: bankruptcy_price
+        When the price hit the liq price, the position would be liquidated by
+        exchange.
 
-        pass
+    .. py:attribute:: bankruptcy_price
 
-    .. attribute:: maint_margin
+        When the price hit the bankruptcy price , the
 
-        pass
+    .. py:attribute:: maint_margin
 
-    .. attribute:: leverage
+        The maintainance margin of the position.
 
-        pass
+    .. py:attribute:: leverage
 
-    .. attribute:: position_margin
+        The current leverage of the position.
 
-        pass
+    .. py:attribute:: position_margin
+
+        The margin of the position is taking.
+
+
+.. note::
+
+    If you are not familiar with the `initial margin`
+    and `maintainance margin`. Please check
+    https://www.investopedia.com/ask/answers/033015/what-difference-between-initial-margin-and-maintenance-margin.asp
+
+
+FutureCrossIsolatePosition
+============================
+
+.. class:: FutureCrossIsolatePosition
+
+    FutureCrossIsolatePosition is a special future position. You can set the
+    position to be a cross position or a isolated position. It is two different
+    kinds of ways to calculate maintainance margin. Please check
+    https://www.bitmex.com/app/isolatedMargin to know more.
+
+    FutureCrossIsolatePosition is inherited from :class:`~FutureBasePosition`.
+    It has all the attrs which :class:`~FutureBasePosition` has.
+
+    .. py:method:: set_leverage(leverage)
+
+        :param float leverage: the leverage of the position you want to set
+
+        Set the leverage of the position. After this operation, the position
+        would be a isolated position.
+
+    .. py:method:: set_maint_margin(value)
+
+        :param float value: the margin value of the position you want to set
+
+        Set the maintainance margin of the position. After this operation,
+        the position would be a isolated position. It is like
+        :func:`~FutureCrossIsolatePosition.set_leverage` but set the margin.
+
+    .. py:method:: set_cross
+
+        Set the position to become a cross position.
+
+    .. py:attribute:: is_isolated
+
+        return a bool value. True means the position is now a isolated position
+        otherwise cross position.
+
+
+PositionManager
+==================
+
+.. class:: PositionManager(position_cls, account)
+
+    :param position_cls: position default class, :class:`BasePosition`
+        and its subclasses.
+    :param account: The :class:`BaseAccount` or its subclasses. The account
+        which the position manager belongs to.
+
+    `PositionManager` is a py:class:`collections.defaultdict` which key is
+    :class:`~Instrument` and value is :class:`~BasePosition` and its
+    subclasses.

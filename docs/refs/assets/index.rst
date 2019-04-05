@@ -8,5 +8,6 @@ Assets
     order
     position
     trade
+    const
     instrument
 

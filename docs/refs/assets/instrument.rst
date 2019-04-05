@@ -81,7 +81,7 @@ FutureInstrument
 
     .. py:attribute:: maint_margin_rate
 
-        The minimum maintain margin rate to keep the position not to liquidate.
+        The minimum maintainance margin rate to keep the position not to liquidate.
 
     .. py:attribute:: settlement_fee
 
@@ -115,5 +115,34 @@ FutureInstrument
     https://www.investopedia.com/ask/answers/033015/what-difference-between-initial-margin-and-maintenance-margin.asp
 
 
-.. class:: UpsideInstrument
+.. class:: CallOptionInstrument
 
+    CallOptionInstrument describes the call option of an instrument. It is
+    inherited from :class:`~FutureInstrument`.
+
+.. warning::
+
+    CallOptionInstrument hasn't been tested in any conditions. Please be
+    careful to use it.
+
+.. class:: PutOptionInstrument
+
+    PutOptionInstrument describes the put option of an instrument. It is
+    inherited from :class:`~FutureInstrument`.
+
+.. warning::
+
+    PutOptionInstrument hasn't been tested in any conditions. Please be
+    careful to use it.
+
+.. class:: PerpetualInstrument
+
+    PerpetualInstrument describes perpetual contract of an instrument. It is
+    inherited from :class:`~FutureInstrument` which has all the attr of
+    :class:`~FutureInstrument`.
+
+    .. py:attribute:: funding_rate
+
+        Perpetual contract would cost a fund every period time. For more
+        information, please check
+        https://www.bitmex.com/app/perpetualContractsGuide.

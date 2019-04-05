@@ -9,14 +9,14 @@ BaseAccount
 
 .. class:: BaseAccount
 
-    `BaseAccount` is the base class for all the accounts in MonkTrader.The
+    `BaseAccount` is the base class for all the accounts in monkq.The
     ``accounts`` below all have the base attrs of it.
 
-    .. attribute:: exchange
+    .. py:attribute:: exchange
 
-        The :class:`~Exchange` the account belongs to.
+        The :class:`~BaseExchange` the account belongs to.
 
-    .. attribute:: positions
+    .. py:attribute:: positions
 
         A dict-like obj :class:`~PositionManager`. You can access a specific
         position by it like:
@@ -25,44 +25,49 @@ BaseAccount
 
             position = account.positions[instrument]
 
-    .. attribute:: wallet_balance
+    .. py:attribute:: wallet_balance
 
-        THe total balance of the account have
+        The total balance of the account have
+
+    .. py:attribute:: total_capital
+
+        The total capital asset of the account including the profit and loss.
 
 FutureAccount
 ===============
 
 .. class:: FutureAccount
 
-    `FutureAccount` can hold future position. It calculates all the data
-    which future position have.
+    `FutureAccount` is inherited from :class:`~BaseAccount`.
+    `FutureAccount` can hold :class:`~FutureBasePosition`.See the attr below
+    which would use mostly.
 
-    .. attribute:: position_margin
+    .. py:attribute:: position_margin
 
         The total position margin of all the positions in the account.
 
-    .. attribute:: order_margin
+    .. py:attribute:: order_margin
 
         The total order margin of all the open orders in the account.
 
-    .. attribute:: unrealised_pnl
+    .. py:attribute:: unrealised_pnl
 
         The unrealised profit/loss of the current positions in the account.
 
-    .. attribute:: margin_balance
+    .. py:attribute:: margin_balance
 
         Equal to:
 
         :attr:`~BaseAccount.wallet_balance` +
         :attr:`~FutureAccount.unrealised_pnl`
 
-    .. attribute:: available_balance
+    .. py:attribute:: available_balance
 
         The available balance you can use for order or position change.
         It is calculated by formula below:
 
         :attr:`~FutureAccount.margin_balance` -
-        :attr:`~FutureAccount.position_balance` -
+        :attr:`~FutureAccount.position_margin` -
         :attr:`~FutureAccount.order_margin`
 
 

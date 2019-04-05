@@ -152,19 +152,20 @@ class BitmexWebsocket():
 
                 # call strategy method
                 # websocket first package is not a normal package , so we use 'limit' to skip it
-                if decode_message.get('action'):
-                    if decode_message.get('table') == 'execution':
-                        start = time.time()
-                        ret = self.strategy.on_trade(message=decode_message)
-                        if asyncio.iscoroutine(ret):
-                            await ret
-                        logger.debug(_('User on_trade process time: {}').format(round(time.time() - start, 7)))
-                    else:
-                        start = time.time()
-                        ret = self.strategy.tick(message=decode_message)
-                        if asyncio.iscoroutine(ret):
-                            await ret
-                        logger.debug(_('User tick process time: {}').format(round(time.time() - start, 7)))
+                # TODO trigger on trade and tick
+                # if decode_message.get('action'):
+                #     if decode_message.get('table') == 'execution':
+                #         start = time.time()
+                #         ret = self.strategy.on_trade(message=decode_message)
+                #         if asyncio.iscoroutine(ret):
+                #             await ret
+                #         logger.debug(_('User on_trade process time: {}').format(round(time.time() - start, 7)))
+                #     else:
+                #         start = time.time()
+                #         ret = self.strategy.tick(message=decode_message)
+                #         if asyncio.iscoroutine(ret):
+                #             await ret
+                #         logger.debug(_('User tick process time: {}').format(round(time.time() - start, 7)))
         except asyncio.CancelledError:
             logger.warning(_('Your bitmex handler has been stopped'))
 

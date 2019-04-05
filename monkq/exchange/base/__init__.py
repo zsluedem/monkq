@@ -98,12 +98,6 @@ class BaseExchange(Generic[ACCOUNT_T]):
         """
         raise NotImplementedError()
 
-    def get_order(self, account: ACCOUNT_T, order_id: str) -> "BaseOrder":
-        """
-        get the order obj by th order_id returned when the order was created.
-        """
-        raise NotImplementedError()
-
     async def available_instruments(self) -> ValuesView["Instrument"]:
         """
         return all the available instruments at the moment

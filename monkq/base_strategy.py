@@ -21,7 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from monkq.context import Context  # pragma: no cover
@@ -34,11 +34,12 @@ class BaseStrategy():
     async def setup(self) -> None:
         pass
 
-    async def on_trade(self, message: Any) -> None:
-        pass
-
-    async def tick(self, message: Any) -> None:
-        pass
+    # TODO add on_trade and tick trigger
+    # async def on_trade(self, message: Any) -> None:
+    #     pass
+    #
+    # async def tick(self, message: Any) -> None:
+    #     pass
 
     async def handle_bar(self) -> None:
         pass

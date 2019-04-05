@@ -11,49 +11,57 @@ Instrument
 
 .. class:: Instrument
 
-    .. attribute:: exchange
+    .. py:attribute:: exchange
 
-        The :class:`~Exchange` the instrument belongs to
+        The :class:`~BaseExchange` the instrument belongs to
 
-    .. attribute:: symbol
+    .. py:attribute:: symbol
 
-        The symbol of the instrument.Usually describe as "BTCUSTD".
+        The symbol of the instrument. Usually describe as "BTCUSDT".
 
-    .. attribute:: listing_date
+    .. py:attribute:: listing_date
 
-        The date the instrument listed in the :class:`~exchange`.
+        The date the instrument listed in the :class:`~BaseExchange`.
 
-    .. attribute:: expiry_date
+    .. py:attribute:: expiry_date
 
         Some instruments would be delisted in the exchange. The date when the
         instrument was delisted is the expiry_date. But as for some future
         instrument, the expiry date means the date when the constract ends.
 
-    .. TODO
+    .. py:attribute:: underlying
 
-    .. attribute:: underlying
+        The underlying crypto token of the instrument.
 
-        pass
+    .. py:attribute:: quote_currency
 
-    .. attribute:: quote_currency
+        The quote currency of the underlying token.
 
-        pass
+    .. py:attribute:: lot_size
 
-    .. attribute:: lot_size
+        The minimum lot size of the underlying token.
 
-        pass
+    .. py:attribute:: tick_size
 
-    .. attribute:: tick_size
+        The minimum tick size of quote currency.
 
-        pass
+    .. py:attribute:: maker_fee
 
-    .. attribute:: maker_fee
+        Maker fees are paid when you add liquidity to our order book by
+        placing a limit order below the ticker price for buy,
+        and above the ticker price for sell.
 
-        pass
+    .. py:attribute:: taker_fee
 
-    .. attribute:: taker_fee
+        Taker fees are paid when you remove liquidity from our order book
+        by placing any order that is executed against an order
+        on the order book.
 
-        pass
+.. note::
+
+    If you want to know more about the :attr:`~Instrument.maker_fee` and
+    :attr:`~Instrument.taker_fee` you can check
+    https://support.bitfinex.com/hc/en-us/articles/213919589-What-fees-do-you-charge-
 
 
 FutureInstrument
@@ -61,38 +69,51 @@ FutureInstrument
 
 .. class:: FutureInstrument
 
-    .. attribute:: root_symbol
+    Future contract instruments describe the future contract in exchange.
 
-        pass
+    .. py:attribute:: root_symbol
 
-    .. attribute:: init_margin_rate
+        The root symbol of the instrument.
 
-        pass
+    .. py:attribute:: init_margin_rate
 
-    .. attribute:: maint_margin_rate
+        The init margin rate to open the position
 
-        pass
+    .. py:attribute:: maint_margin_rate
 
-    .. attribute:: settlement_fee
+        The minimum maintain margin rate to keep the position not to liquidate.
 
-        pass
+    .. py:attribute:: settlement_fee
 
-    .. attribute:: settlement_currency
+        The settlement fee of the contract when the contract is to be settled.
 
-        pass
+    .. py:attribute:: settlement_currency
 
-    .. attribute:: settle_date
+        The currency when the settlement happens.
 
-        pass
+    .. py:attribute:: settle_date
 
-    .. attribute:: front_date
+        The date when the settlement happens.
 
-        pass
+    .. py:attribute:: front_date
 
-    .. attribute:: reference_symbol
+        Not clear now.
 
-        pass
+    .. py:attribute:: reference_symbol
 
-    .. attribute:: deleverage
+        The reference symbol of the instrument, mostly is index future.
 
-        pass
+    .. py:attribute:: deleverage
+
+        It is a bool value depends on whether the instrument is allowed to be
+        deleveraged.
+
+.. note::
+
+    If you are not familiar with the :attr:`~FutureInstrument.init_margin_rate`
+    and :attr:`~FutureInstrument.maint_margin_rate`. Please check
+    https://www.investopedia.com/ask/answers/033015/what-difference-between-initial-margin-and-maintenance-margin.asp
+
+
+.. class:: UpsideInstrument
+

@@ -9,7 +9,7 @@ Core Settings
 
     .. attribute:: FREQUENCY
 
-        MonkTrader only provide two options for `frequency`--`tick` and `1m`.
+        monkq only provide two options for `frequency`--`tick` and `1m`.
         `tick` means the strategy would run in the tick level. Every tick
         would trigger your strategy method.
 
@@ -24,7 +24,7 @@ Core Settings
         running, you can ignore this parameter.It is the start time of the
         backtest running. It must be smaller than `END_TIME`. It can either be
         a string like date time like `2018-01-01T00:00:00Z` or
-        :py:class:`~datetime.datetime`. MonkTrader would parse string
+        :py:class:`~datetime.datetime`. monkq would parse string
         with utc :py:class:`~datetime.datetime`.
 
     .. attribute:: END_TIME
@@ -33,7 +33,7 @@ Core Settings
         running, you can ignore this parameter. It is the end time of the
         backtest. It must be bigger than `START_TIME`. It can either be
         a string like date time like `2018-01-01T00:00:00Z` or
-        :py:class:`~datetime.datetime`. MonkTrader would parse string
+        :py:class:`~datetime.datetime`. monkq would parse string
         with utc :py:class:`~datetime.datetime`.
 
     .. attribute:: STRATEGY
@@ -42,7 +42,7 @@ Core Settings
 
     .. attribute:: DATA_DIR
 
-        The data directory where you put your download. MonkTrader would use
+        The data directory where you put your download. monkq would use
         the data directory when you run a backtest.
 
     .. attribute:: EXCHANGES

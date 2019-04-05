@@ -5,7 +5,7 @@ Asset Order
 =============
 
 Orders are classes which define how an order in the exchange and what kind of
-orders are.When you submit an order, MonkTrader would generate an order
+orders are.When you submit an order, monkq would generate an order
 class for that.Orders are always related to one :class:`~Account`.
 
 BaseOrder
@@ -13,7 +13,7 @@ BaseOrder
 
 .. class:: BaseOrder
 
-    BaseOrder is the father class of every order in MonkTrader.All the orders
+    BaseOrder is the father class of every order in monkq.All the orders
     are inherited from :class:`~BaseOrder` and they have all the attrs and
     method of it.
 

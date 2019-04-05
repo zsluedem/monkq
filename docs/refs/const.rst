@@ -1,10 +1,10 @@
-.. _MonkTrader_const:
+.. _monkq_const:
 
 ========
 Const
 ========
 
-There are many `const` in MonkTrader. Most of them are :py:class:`~enum` types
+There are many `const` in monkq. Most of them are :py:class:`~enum` types
 and used for indicating some basic unchanged constant.
 
 Direction
@@ -18,7 +18,7 @@ Direction
     position.
 
     `DIRECTION` is inherited from :py:class:`~enum`
-    in :module:`MonkTrader.assets.const`.
+    in :module:`monkq.assets.const`.
 
     .. attribute:: LONG
 
@@ -39,7 +39,7 @@ Position Effect
     of the status change for the position.
 
     `POSITION_EFFECT` is inherited from :py:class:`~enum`
-    in :module:`MonkTrader.assets.const`.
+    in :module:`monkq.assets.const`.
 
     .. attribute:: OPEN
 
@@ -78,7 +78,7 @@ Side
     `SIDE` is used to describe the side of the order and the trade.
 
     `SIDE` is inherited from :py:class:`~enum`
-    in :module:`MonkTrader.assets.const`.
+    in :module:`monkq.assets.const`.
 
 
     .. attribute:: BUY
@@ -98,7 +98,7 @@ Order Status
     `ORDER_STATUS` is used to describe the status of the order.
 
     `ORDER_STATUS` is inherited from :py:class:`~enum`
-    in :module:`MonkTrader.assets.const`.
+    in :module:`monkq.assets.const`.
 
     .. attribute:: NOT_TRADED
 

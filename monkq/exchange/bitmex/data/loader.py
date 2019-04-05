@@ -29,8 +29,8 @@ from typing import TYPE_CHECKING, Dict, Type
 import pandas
 from logbook import Logger
 from monkq.assets.instrument import (
-    PutOptionInstrument, FutureInstrument, Instrument, PerpetualInstrument,
-    CallOptionInstrument,
+    CallOptionInstrument, FutureInstrument, Instrument, PerpetualInstrument,
+    PutOptionInstrument,
 )
 from monkq.data import DataLoader
 from monkq.exception import LoadDataError

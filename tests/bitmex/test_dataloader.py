@@ -30,8 +30,8 @@ from unittest.mock import MagicMock
 
 import pytest
 from monkq.assets.instrument import (
-    PutOptionInstrument, FutureInstrument, PerpetualInstrument,
-    CallOptionInstrument,
+    CallOptionInstrument, FutureInstrument, PerpetualInstrument,
+    PutOptionInstrument,
 )
 from monkq.exchange.bitmex.const import INSTRUMENT_FILENAME
 from monkq.exchange.bitmex.data.loader import BitmexDataloader

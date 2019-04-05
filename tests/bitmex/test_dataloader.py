@@ -30,8 +30,8 @@ from unittest.mock import MagicMock
 
 import pytest
 from monkq.assets.instrument import (
-    DownsideInstrument, FutureInstrument, PerpetualInstrument,
-    UpsideInstrument,
+    CallOptionInstrument, FutureInstrument, PerpetualInstrument,
+    PutOptionInstrument,
 )
 from monkq.exchange.bitmex.const import INSTRUMENT_FILENAME
 from monkq.exchange.bitmex.data.loader import BitmexDataloader
@@ -54,7 +54,7 @@ def test_bitmex_dataloader_instruments(exchange: MagicMock, instrument_dir: str)
     XBT7D_D95 = dataloader.instruments.get('XBT7D_D95')
 
     # detailed values see file instruments.json in resource
-    assert isinstance(XBT7D_D95, DownsideInstrument)
+    assert isinstance(XBT7D_D95, PutOptionInstrument)
     assert XBT7D_D95.listing_date == utc_datetime(2018, 12, 28, 12)
     assert XBT7D_D95.expiry_date == utc_datetime(2019, 1, 4, 12)
     assert XBT7D_D95.underlying == "XBT"
@@ -77,7 +77,7 @@ def test_bitmex_dataloader_instruments(exchange: MagicMock, instrument_dir: str)
     XBT7D_U105 = dataloader.instruments.get('XBT7D_U105')
 
     # detailed values see file instruments.json in resource
-    assert isinstance(XBT7D_U105, UpsideInstrument)
+    assert isinstance(XBT7D_U105, CallOptionInstrument)
     assert XBT7D_U105.listing_date == utc_datetime(2018, 12, 28, 12)
     assert XBT7D_U105.expiry_date == utc_datetime(2019, 1, 4, 12)
     assert XBT7D_U105.underlying == "XBT"

@@ -10,3 +10,4 @@ Reference Manual
    exchanges/index
    assets/index
    utils
+   context

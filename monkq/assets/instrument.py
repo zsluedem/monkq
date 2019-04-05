@@ -97,12 +97,12 @@ class FutureInstrument(Instrument):
 
 
 @dataclasses.dataclass(frozen=True)
-class UpsideInstrument(FutureInstrument):
+class CallOptionInstrument(FutureInstrument):
     pass
 
 
 @dataclasses.dataclass(frozen=True)
-class DownsideInstrument(FutureInstrument):
+class PutOptionInstrument(FutureInstrument):
     pass
 
 

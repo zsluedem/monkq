@@ -29,8 +29,8 @@ from typing import TYPE_CHECKING, Dict, Type
 import pandas
 from logbook import Logger
 from monkq.assets.instrument import (
-    DownsideInstrument, FutureInstrument, Instrument, PerpetualInstrument,
-    UpsideInstrument,
+    PutOptionInstrument, FutureInstrument, Instrument, PerpetualInstrument,
+    CallOptionInstrument,
 )
 from monkq.data import DataLoader
 from monkq.exception import LoadDataError
@@ -75,8 +75,8 @@ instrument_map = {
 
 class BitmexDataloader(DataLoader):
     instrument_cls: Dict[str, Type[Instrument]] = {
-        'OPECCS': DownsideInstrument,  # put options
-        'OCECCS': UpsideInstrument,  # call options
+        'OPECCS': PutOptionInstrument,  # put options
+        'OCECCS': CallOptionInstrument,  # call options
         'FFCCSX': FutureInstrument,  # normal futures contracts
         'FFWCSX': PerpetualInstrument,  # perpetual  futures contracts
         'FXXXS': FutureInstrument,

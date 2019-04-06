@@ -9,6 +9,10 @@ init:
   - SET PATH=%PYTHON%;%PATH%
 
 install:
+  - '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64'
+  - curl -fsS -o C:\ta-lib-0.4.0-msvc.zip http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-msvc.zip
+  - 7z e C:\ta-lib-0.4.0-msvc.zip -oC:\ta-lib
+  - nmake C:\ta-lib\c\make\cdr\win32\msvc
   - python -m pip install .
   - python -m pip install -r requirements_dev.txt
 

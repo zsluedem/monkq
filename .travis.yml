@@ -15,6 +15,22 @@ branches:
   only:
   - master
   - dev
+env:
+  global:
+    - DEPS_DIR=$HOME/dependencies
+  matrix:
+    - WITH_TA_LIBRARY=yes
+    - TA_INCLUDE_PATH=$DEPS_DIR/include
+    - LD_LIBRARY_PATH=$DEPS_DIR/lib
+    - TA_LIBRARY_PATH=$DEPS_DIR/lib
+cache:
+  directories:
+    - $DEPS_DIR
+
+before_install:
+  - if [ $WITH_TA_LIBRARY = "yes" ]; then
+      ./tools/build_talib_from_source.bash $DEPS_DIR;
+    fi
 
 install:
   - pip install .

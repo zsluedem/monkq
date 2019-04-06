@@ -127,5 +127,5 @@ class BaseSimExchange(BaseExchange):
     def get_open_orders(self, account: Any) -> Iterable["ORDER_T"]:
         raise NotImplementedError()
 
-    def all_data(self, symbol: str) -> pandas.DataFrame:
+    def all_data(self, instrument: Any) -> pandas.DataFrame:
         raise NotImplementedError()

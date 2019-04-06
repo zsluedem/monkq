@@ -1,21 +1,26 @@
-from monkq.initer import Initer
+from typing import Generator
 from unittest.mock import MagicMock
+
 import pytest
-from tests.tools import random_kline_data_with_start_end
+from monkq.exchange.base import BaseSimExchange
+from monkq.initer import Initer
 from monkq.utils.timefunc import utc_datetime
+from tests.tools import random_kline_data_with_start_end
 
 
 @pytest.fixture()
-def context():
+def context() -> Generator[MagicMock, None, None]:
     context = MagicMock()
+    context.exchanges.__getitem__.return_value = MagicMock(BaseSimExchange)
     context.exchanges.__getitem__().all_data.return_value = random_kline_data_with_start_end(
-        utc_datetime(2018,1,1),
-        utc_datetime(2018,2,1)
+        utc_datetime(2018, 1, 1),
+        utc_datetime(2018, 2, 1)
     )
     context.now = utc_datetime(2018, 1, 10, 0, 1)
     yield context
 
-def test_initer(context: MagicMock):
+
+def test_initer(context: MagicMock) -> None:
     initer = Initer(context)
     instrument = MagicMock()
     initer.init_kline_freq('30min', instrument)
@@ -28,4 +33,3 @@ def test_initer(context: MagicMock):
     history_ma_30min = initer.history_indicator('30min', instrument, 100)
     assert len(history_ma_30min) == 100
     assert history_ma_30min.index[-1] == utc_datetime(2018, 1, 10)
-

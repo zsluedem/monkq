@@ -23,14 +23,13 @@
 #
 import datetime
 from functools import partial
+from typing import Any, List
 
 import pandas
 import talib
-from talib import abstract
-from monkq.config.global_settings import KLINE_SIDE
 from dateutil.relativedelta import relativedelta
-
-from typing import List
+from monkq.config.global_settings import KLINE_SIDE_CLOSED, KLINE_SIDE_LABEL
+from talib import abstract
 
 
 def _is_min_not_remain(obj: datetime.datetime) -> bool:
@@ -110,8 +109,8 @@ CONVERSION = {
 }
 
 
-def kline_1m_to_freq(df: pandas.DataFrame, freq: str):
-    result = df.resample(freq, closed=KLINE_SIDE, label=KLINE_SIDE).apply(CONVERSION)
+def kline_1m_to_freq(df: pandas.DataFrame, freq: str) -> pandas.DataFrame:
+    result = df.resample(freq, closed=KLINE_SIDE_CLOSED, label=KLINE_SIDE_LABEL).apply(CONVERSION)
     return result
 
 
@@ -119,8 +118,9 @@ TA_FUNCTION = talib.get_functions()
 
 
 def kline_indicator(df: pandas.DataFrame,
-                    func: str, columns: List[str], *args, **kwargs):
+                    func: str, columns: List[str],
+                    *args: Any, **kwargs: Any) -> pandas.DataFrame:
     assert func in TA_FUNCTION, "not a valid function for talib"
     func = abstract.Function(func)
-    result = func(df, *args, price=columns, **kwargs)
+    result = func(df, *args, price=columns, **kwargs)  # type:ignore
     return result

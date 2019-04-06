@@ -23,8 +23,8 @@
 #
 
 from monkq.utils.dataframe import (
-    is_datetime_not_remain, kline_dataframe_window, make_datetime_exactly,
-    kline_1m_to_freq, kline_indicator
+    is_datetime_not_remain, kline_1m_to_freq, kline_dataframe_window,
+    kline_indicator, make_datetime_exactly,
 )
 from monkq.utils.timefunc import utc_datetime
 from tests.tools import random_kline_data_with_start_end
@@ -143,9 +143,9 @@ def test_kline_1m_to_freq() -> None:
     assert df_15min['open'][0] == df_1min['open'][0]
     assert df_15min['close'][1] == df_1min.loc[utc_datetime(2016, 1, 1, 0, 15)]['close']
     assert df_15min['high'][1] == max(
-        df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 0, 15)]['high'])
+        df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 0, 15)]['high'])  # type:ignore
     assert df_15min['low'][1] == min(
-        df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 0, 15)]['low'])
+        df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 0, 15)]['low'])  # type:ignore
     assert df_15min['open'][1] == df_1min.loc[utc_datetime(2016, 1, 1, 0, 1)]['open']
 
     df_30min = kline_1m_to_freq(df_1min, '30min')
@@ -159,9 +159,9 @@ def test_kline_1m_to_freq() -> None:
     assert df_30min['open'][0] == df_1min['open'][0]
     assert df_30min['close'][1] == df_1min.loc[utc_datetime(2016, 1, 1, 0, 30)]['close']
     assert df_30min['high'][1] == max(
-        df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 0, 30)]['high'])
+        df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 0, 30)]['high'])  # type:ignore
     assert df_30min['low'][1] == min(
-        df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 0, 30)]['low'])
+        df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 0, 30)]['low'])  # type:ignore
     assert df_30min['open'][1] == df_1min.loc[utc_datetime(2016, 1, 1, 0, 1)]['open']
 
     df_1h = kline_1m_to_freq(df_1min, '60min')
@@ -174,14 +174,16 @@ def test_kline_1m_to_freq() -> None:
     assert df_1h['low'][0] == df_1min['low'][0]
     assert df_1h['open'][0] == df_1min['open'][0]
     assert df_1h['close'][1] == df_1min.loc[utc_datetime(2016, 1, 1, 1)]['close']
-    assert df_1h['high'][1] == max(df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 1)]['high'])
-    assert df_1h['low'][1] == min(df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 1)]['low'])
+    assert df_1h['high'][1] == max(
+        df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 1)]['high'])  # type:ignore
+    assert df_1h['low'][1] == min(
+        df_1min.loc[utc_datetime(2016, 1, 1, 0, 1):utc_datetime(2016, 1, 1, 1)]['low'])  # type:ignore
     assert df_1h['open'][1] == df_1min.loc[utc_datetime(2016, 1, 1, 0, 1)]['open']
 
 
-def test_kline_indicator():
+def test_kline_indicator() -> None:
     df_1min = random_kline_data_with_start_end(utc_datetime(2016, 1, 1), utc_datetime(2016, 1, 3), freq='1min')
 
     result = kline_indicator(df_1min, 'MA', ['close'], timeperiod=10)
 
-    assert result[9] == sum(df_1min['close'][:10])/10
+    assert result[9] == sum(df_1min['close'][:10]) / 10

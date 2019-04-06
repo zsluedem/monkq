@@ -29,7 +29,7 @@ import numpy as np
 import pandas
 from dateutil.relativedelta import relativedelta
 from monkq.assets.const import SIDE
-from monkq.config.global_settings import KLINE_SIDE_LABEL, KLINE_SIDE_CLOSED
+from monkq.config.global_settings import KLINE_SIDE_CLOSED, KLINE_SIDE_LABEL
 from monkq.const import TICK_DIRECTION
 
 dtypes_trades = {

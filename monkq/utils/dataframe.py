@@ -88,10 +88,8 @@ def kline_dataframe_window(df: pandas.DataFrame, endtime: datetime.datetime, cou
     freq = df.index.freq.freqstr
 
     if is_datetime_not_remain(endtime, freq):
-        endtime = endtime - df.index.freq.delta
         starttime = endtime - df.index.freq.delta * (count - 1)
     else:
-        endtime = endtime - df.index.freq.delta
         starttime = endtime - df.index.freq.delta * count
 
     return df.loc[starttime:endtime]  # type: ignore

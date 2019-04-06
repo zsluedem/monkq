@@ -148,6 +148,6 @@ async def test_bitmex_exchange_simulate(tem_data_dir: str, instrument: FutureIns
 
     kline = await sim_exchange.get_kline(instrument)
 
-    assert kline.index[-1] == utc_datetime(2016, 10, 3, 12, 29)
+    assert kline.index[-1] == utc_datetime(2016, 10, 3, 12, 30)
 
     sim_exchange.match_open_orders()

@@ -73,6 +73,10 @@ BaseExchange
 
         :return: Valueview of :class:`~Instrument`
 
+    .. comethod:: get_instrument(self, symbol)
+
+        :param str symbol: the symbol of the instrument you want to get
+
     .. comethod:: get_kline(self, instrument, count, including_now)
 
         :param instrument: an instance of :class:`~Instrument`

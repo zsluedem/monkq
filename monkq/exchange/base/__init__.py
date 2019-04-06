@@ -104,6 +104,9 @@ class BaseExchange(Generic[ACCOUNT_T]):
         """
         raise NotImplementedError()
 
+    async def get_instrument(self, symbol: str) -> "Instrument":
+        raise NotImplementedError()
+
     async def get_kline(self, instrument: Any, count: int = 100, including_now: bool = False) -> pandas.DataFrame:
         """
         get an instrument kline

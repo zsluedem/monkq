@@ -220,15 +220,8 @@ Here is the codes for that.
 
     async def handle_bar(self):  # type:ignore
         if not self.is_order:
-            target = None
-            for instrument in await self.bitmex.available_instruments():
-                if instrument.symbol == 'XBTUSD':
-                    target = instrument
-
-            if target is None:
-                return
-
-            self.exchange.place_market_order(self.account, target, 1000)
+            xbt = self.bitmex.get_instrument("XBTUSD")
+            self.exchange.place_market_order(self.account, xbt, 1000)
             self.is_order = True
 
 :meth:`~BaseExchange.available_instruments` would return valueview of the
@@ -259,15 +252,8 @@ the result of :file:`strategy.py`.
 
         async def handle_bar(self):  # type:ignore
             if not self.is_order:
-                target = None
-                for instrument in await self.bitmex.available_instruments():
-                    if instrument.symbol == 'XBTUSD':
-                        target = instrument
-
-                if target is None:
-                    return
-
-                self.exchange.place_market_order(self.account, target, 1000)
+                xbt = self.exchange.get_instrument("XBTUSD")
+                self.exchange.place_market_order(self.account, xbt, 1000)
                 self.is_order = True
 
 Now we can run this strategy to do a backtest.Run the command below in the

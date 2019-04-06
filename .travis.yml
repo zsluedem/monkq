@@ -21,9 +21,7 @@ install:
   - pip install -r requirements_dev.txt
 
 script:
-  - pytest --cov=monkq tests
-  - flake8 monkq tests
-  - isort --recursive --check-only monkq tests
+  - ./scripts/run_test.sh
 
 after_success:
   - codecov

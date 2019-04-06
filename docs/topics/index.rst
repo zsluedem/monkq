@@ -1,15 +1,11 @@
 ======================================
-Monkq documentation!
+Statement topics
 ======================================
 
 .. toctree::
    :maxdepth: 1
 
-   intro
-   install
-   tutorial
-   topics/index
-   refs/index
+   kline_time_explanation
 
 Indices and tables
 ==================

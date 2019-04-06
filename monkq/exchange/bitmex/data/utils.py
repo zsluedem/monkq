@@ -29,7 +29,7 @@ import numpy as np
 import pandas
 from dateutil.relativedelta import relativedelta
 from monkq.assets.const import SIDE
-from monkq.config.global_settings import KLINE_SIDE
+from monkq.config.global_settings import KLINE_SIDE_LABEL, KLINE_SIDE_CLOSED
 from monkq.const import TICK_DIRECTION
 
 dtypes_trades = {
@@ -130,7 +130,7 @@ def read_quote_tar(path: Union[str, IO], with_symbol: bool = True, index: Option
 
 
 def trades_to_1m_kline(frame: pandas.DataFrame) -> pandas.DataFrame:
-    re_df = frame.resample('1Min', label=KLINE_SIDE, closed=KLINE_SIDE)
+    re_df = frame.resample('1Min', label=KLINE_SIDE_LABEL, closed=KLINE_SIDE_CLOSED)
     kline = re_df['price'].ohlc()
     kline['volume'] = re_df['homeNotional'].sum()
     kline['turnover'] = re_df['foreignNotional'].sum()
@@ -172,7 +172,7 @@ def fullfill_1m_kline_with_start_end(frame: pandas.DataFrame, start: datetime.da
     ], columns=["high", "low", "open", "close", "volume", "turnover"], index=pandas.DatetimeIndex((start, end)))
 
     new_df = frame.append(new, sort=False)
-    resample = new_df.resample('1Min', label=KLINE_SIDE, closed=KLINE_SIDE, convention="end")
+    resample = new_df.resample('1Min', label=KLINE_SIDE_LABEL, closed=KLINE_SIDE_CLOSED, convention="end")
 
     outcome = resample['close'].last()
     outcome = pandas.DataFrame(index=outcome.index)

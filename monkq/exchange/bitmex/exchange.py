@@ -67,6 +67,9 @@ class BitmexSimulateExchange(BaseSimExchange):
         self._data = BitmexDataloader(self, context, data_dir)
         self._trade_counter: TradeCounter = context.trade_counter
 
+    def all_data(self, instrument: Instrument) -> pandas.DataFrame:
+        return self._data.all_data(instrument)
+
     async def setup(self) -> None:
         return
 

@@ -11,3 +11,4 @@ Reference Manual
    assets/index
    utils
    context
+   initer

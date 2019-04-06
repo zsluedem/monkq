@@ -15,7 +15,7 @@ class Initer:
     def __init__(self, context: Context):
         self.context: Context = context
         self._cache_kline: Dict[INSTRUMENT, Dict[str, pandas.DataFrame]] = {}
-        self._cache_indicator: Dict[INSTRUMENT, Dict[str, pandas.DataFrame]] = {}
+        self._cache_indicator: Dict[str, pandas.DataFrame] = {}
 
     def init_kline_freq(self, freq: str, instrument: INSTRUMENT) -> None:
         exchange = self.context.exchanges[instrument.exchange.name]
@@ -24,6 +24,7 @@ class Initer:
         self._cache_kline[instrument] = {freq: kline_1m_to_freq(data, freq)}
 
     def init_indicator(self, freq: str, instrument: INSTRUMENT, func: str,
+                       store_key: str,
                        columns: List[str], *args: Any, **kwargs: Any) -> None:
         if freq == '1min':
             exchange = self.context.exchanges[instrument.exchange.name]
@@ -32,12 +33,12 @@ class Initer:
         else:
             data = self._cache_kline[instrument][freq]
 
-        self._cache_indicator[instrument] = {freq: kline_indicator(data, func, columns, *args, **kwargs)}
+        self._cache_indicator[store_key] = kline_indicator(data, func, columns, *args, **kwargs)
 
     def history_kline(self, freq: str, instrument: INSTRUMENT, count: int) -> pandas.DataFrame:
         frame = self._cache_kline[instrument][freq]
         return kline_dataframe_window(frame, self.context.now, count)
 
-    def history_indicator(self, freq: str, instrument: INSTRUMENT, count: int) -> pandas.DataFrame:
-        frame = self._cache_indicator[instrument][freq]
+    def history_indicator(self, store_key: str, count: int) -> pandas.DataFrame:
+        frame = self._cache_indicator[store_key]
         return kline_dataframe_window(frame, self.context.now, count)

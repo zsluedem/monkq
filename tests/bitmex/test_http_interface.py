@@ -48,7 +48,7 @@ TIMEOUT = 3
 @pytest.fixture()  # type:ignore
 async def normal_bitmex_server(
         aiohttp_server: Callable[[web.Application], Coroutine[TestServer, None, None]]) -> TestServer:
-    def instrument_handler(request: web.Request) -> web.Response:
+    async def instrument_handler(request: web.Request) -> web.Response:
         if request.query.get('symbol') == 'XBTUSD':
             body = """[{"symbol": "XBTUSD","rootSymbol": "XBT","state": "Open","typ": "FFWCSX",
             "listing": "2016-05-04T12:00:00.000Z","front": "2016-05-04T12:00:00.000Z","expiry": null,"settle": null,
@@ -230,7 +230,7 @@ async def normal_bitmex_server(
         }
         return web.Response(body=body, headers=headers)
 
-    async def quote_handler(request: web.Response) -> web.Response:
+    async def quote_handler(request: web.Request) -> web.Response:
         body = """[{"symbol": "XBTUSD","id": 15599644500,"side": "Sell","size": 2543,"price": 3555},
         {"symbol": "XBTUSD","id": 15599644550,"side": "Buy","size": 3433,"price": 3554.5}]"""
         headers = {

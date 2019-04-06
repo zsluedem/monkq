@@ -2,6 +2,7 @@ environment:
   matrix:
     - PYTHON: C:\Python36-x64
     - PYTHON: C:\Python37-x64
+#  APPVEYOR_RDP_PASSWORD: DGC0xSBVsi5oH6XW
 #services:
 #  - mongodb
 
@@ -9,17 +10,19 @@ init:
   - SET PATH=%PYTHON%;%PATH%
 
 install:
-  - '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64'
-  - curl -fsS -o C:\ta-lib-0.4.0-msvc.zip http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-msvc.zip
-  - 7z e C:\ta-lib-0.4.0-msvc.zip -oC:\ta-lib
-  - nmake C:\ta-lib\c\make\cdr\win32\msvc
+  - cmd: '"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64'
+  - curl.exe -fsSL -o C:\ta-lib-0.4.0-msvc.zip http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-msvc.zip
+  - 7z x -y C:\ta-lib-0.4.0-msvc.zip -oC:\
+  - pushd C:\ta-lib\c\make\cdr\win32\msvc && nmake && popd
   - python -m pip install .
   - python -m pip install -r requirements_dev.txt
 
 build: false
-
 test_script:
   - python -m pytest tests
+
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 branches:
   only:

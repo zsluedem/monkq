@@ -1,7 +1,8 @@
+.. _time_frame_explanation:
+
 ===========================================
 Kline Like Dataframe time explanation
 ===========================================
-
 
 Kline Generating Rule
 ======================

@@ -68,15 +68,15 @@ def test_1m_dataframe_window() -> None:
 
     df_between = kline_dataframe_window(df, utc_datetime(2016, 1, 2), 100)
     assert len(df_between) == 100
-    assert df_between.index[-1] == utc_datetime(2016, 1, 1, 23, 59)
+    assert df_between.index[-1] == utc_datetime(2016, 1, 2)
 
     df_not_full_count_start = kline_dataframe_window(df, utc_datetime(2016, 1, 1, 1), 100)
-    assert len(df_not_full_count_start) == 59
-    assert df_not_full_count_start.index[-1] == utc_datetime(2016, 1, 1, 0, 59)
+    assert len(df_not_full_count_start) == 60
+    assert df_not_full_count_start.index[-1] == utc_datetime(2016, 1, 1, 1)
     assert df_not_full_count_start.index[0] == utc_datetime(2016, 1, 1, 0, 1)
 
     df_not_full_count_end = kline_dataframe_window(df, utc_datetime(2016, 1, 3, 0, 20), 100)
-    assert len(df_not_full_count_end) == 81
+    assert len(df_not_full_count_end) == 80
     assert df_not_full_count_end.index[-1] == utc_datetime(2016, 1, 3)
 
     df_way_out_of_start = kline_dataframe_window(df, utc_datetime(2015, 1, 1), 100)
@@ -87,7 +87,7 @@ def test_1m_dataframe_window() -> None:
 
     df_with_second_in_endtime = kline_dataframe_window(df, utc_datetime(2016, 1, 2, 12, 13, 3), 200)
     assert len(df_with_second_in_endtime) == 200
-    assert df_with_second_in_endtime.index[-1] == utc_datetime(2016, 1, 2, 12, 12)
+    assert df_with_second_in_endtime.index[-1] == utc_datetime(2016, 1, 2, 12, 13)
 
 
 def test_5m_dataframe_window() -> None:
@@ -95,34 +95,34 @@ def test_5m_dataframe_window() -> None:
                                                freq='5min')
     df_5min_between = kline_dataframe_window(df_5min, utc_datetime(2016, 1, 2), 30)
     assert len(df_5min_between) == 30
-    assert df_5min_between.index[-1] == utc_datetime(2016, 1, 1, 23, 55)
+    assert df_5min_between.index[-1] == utc_datetime(2016, 1, 2)
 
     df_5min_not_full_start = kline_dataframe_window(df_5min, utc_datetime(2016, 1, 1, 1), 30)
-    assert len(df_5min_not_full_start) == 12
-    assert df_5min_not_full_start.index[-1] == utc_datetime(2016, 1, 1, 0, 55)
+    assert len(df_5min_not_full_start) == 13
+    assert df_5min_not_full_start.index[-1] == utc_datetime(2016, 1, 1, 1)
     assert df_5min_not_full_start.index[0] == utc_datetime(2016, 1, 1)
 
     df_5min_not_full_count_end = kline_dataframe_window(df_5min, utc_datetime(2016, 1, 3, 0, 20), 10)
-    assert len(df_5min_not_full_count_end) == 6
+    assert len(df_5min_not_full_count_end) == 5
     assert df_5min_not_full_count_end.index[-1] == utc_datetime(2016, 1, 2, 23, 55)
 
     df_5min_with_remain_in_end_time = kline_dataframe_window(df_5min, utc_datetime(2016, 1, 2, 12, 13, 3), 30)
     assert len(df_5min_with_remain_in_end_time) == 30
-    assert df_5min_with_remain_in_end_time.index[-1] == utc_datetime(2016, 1, 2, 12, 5)
+    assert df_5min_with_remain_in_end_time.index[-1] == utc_datetime(2016, 1, 2, 12, 10)
 
 
 def test_other_dataframe_window() -> None:
     df_15min = random_kline_data_with_start_end(utc_datetime(2016, 1, 1, 0), utc_datetime(2016, 1, 3), freq='15min')
-    df_15min_between = kline_dataframe_window(df_15min, utc_datetime(2016, 1, 2), 10)
+    df_15min_between = kline_dataframe_window(df_15min, utc_datetime(2016, 1, 1, 23, 45), 10)
     assert len(df_15min_between) == 10
     assert df_15min_between.index[-1] == utc_datetime(2016, 1, 1, 23, 45)
 
     df_30min = random_kline_data_with_start_end(utc_datetime(2016, 1, 1, 0), utc_datetime(2016, 1, 3), freq='30min')
-    df_30min_between = kline_dataframe_window(df_30min, utc_datetime(2016, 1, 2), 10)
+    df_30min_between = kline_dataframe_window(df_30min, utc_datetime(2016, 1, 1, 23, 30), 10)
     assert len(df_30min_between) == 10
     assert df_30min_between.index[-1] == utc_datetime(2016, 1, 1, 23, 30)
 
     df_60min = random_kline_data_with_start_end(utc_datetime(2016, 1, 1, 0), utc_datetime(2016, 1, 3), freq='60min')
-    df_60min_between = kline_dataframe_window(df_60min, utc_datetime(2016, 1, 2), 10)
+    df_60min_between = kline_dataframe_window(df_60min, utc_datetime(2016, 1, 1, 23), 10)
     assert len(df_60min_between) == 10
     assert df_60min_between.index[-1] == utc_datetime(2016, 1, 1, 23)

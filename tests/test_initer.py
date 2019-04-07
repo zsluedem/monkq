@@ -25,6 +25,7 @@ def test_initer(context: MagicMock) -> None:
     instrument = MagicMock()
     initer.init_kline_freq('30min', instrument)
     initer.init_indicator('30min', instrument, 'MA', "MA_store", ['close'])
+    initer.init_indicator('1min', instrument, "MA", "ma1m", ['close'])
 
     history_kline_30min = initer.history_kline('30min', instrument, 100)
     assert len(history_kline_30min) == 100

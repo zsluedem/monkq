@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any, Dict, List, Union
 
 import pandas
@@ -14,14 +15,14 @@ INSTRUMENT = Union[Instrument, FutureInstrument]
 class Initer:
     def __init__(self, context: Context):
         self.context: Context = context
-        self._cache_kline: Dict[INSTRUMENT, Dict[str, pandas.DataFrame]] = {}
+        self._cache_kline: Dict[INSTRUMENT, Dict[str, pandas.DataFrame]] = defaultdict(dict)
         self._cache_indicator: Dict[str, pandas.DataFrame] = {}
 
     def init_kline_freq(self, freq: str, instrument: INSTRUMENT) -> None:
         exchange = self.context.exchanges[instrument.exchange.name]
         assert isinstance(exchange, BaseSimExchange)
         data = exchange.all_data(instrument)
-        self._cache_kline[instrument] = {freq: kline_1m_to_freq(data, freq)}
+        self._cache_kline[instrument].update({freq: kline_1m_to_freq(data, freq)})
 
     def init_indicator(self, freq: str, instrument: INSTRUMENT, func: str,
                        store_key: str,

@@ -17,6 +17,13 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install hdf5-tools libhdf5-dev
+
+      - run:
+          name: install talib
+          command: |
+            wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
+            tar -xvzf ta-lib-0.4.0-src.tar.gz
+            cd ta-lib/ && ./configure --prefix=/usr LDFLAGS="-lm" && make && sudo make install && cd .. && rm -r ta-lib
       - run:
           name: Activate venv and install requirements
           command: |
@@ -54,6 +61,12 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install hdf5-tools libhdf5-dev
+      - run:
+          name: install talib
+          command: |
+            wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
+            tar -xvzf ta-lib-0.4.0-src.tar.gz
+            cd ta-lib/ && ./configure --prefix=/usr LDFLAGS="-lm" && make && sudo make install && cd .. && rm -r ta-lib
       - run:
           name: Activate venv and install requirements
           command: |

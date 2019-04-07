@@ -88,7 +88,7 @@ class BitmexWebsocket():
                  http_proxy: Optional[str] = None):
         self._loop = loop
 
-        self._ws: ClientWebSocketResponse = None
+        self._ws: ClientWebSocketResponse
         self._ssl = ssl
         self._ws_url = ws_url
         self._api_key = api_key

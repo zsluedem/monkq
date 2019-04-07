@@ -50,7 +50,6 @@ from .log import logger_group
 if TYPE_CHECKING:
     from monkq.context import Context
 
-
 logger = Logger('exchange.bitmex.exchange')
 logger_group.add_logger(logger)
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
@@ -66,6 +65,9 @@ class BitmexSimulateExchange(BaseSimExchange):
         data_dir = context.settings.DATA_DIR  # type:ignore
         self._data = BitmexDataloader(self, context, data_dir)
         self._trade_counter: TradeCounter = context.trade_counter
+
+    def all_data(self, instrument: Instrument) -> pandas.DataFrame:
+        return self._data.all_data(instrument)
 
     async def setup(self) -> None:
         return
@@ -123,6 +125,9 @@ class BitmexSimulateExchange(BaseSimExchange):
     async def get_kline(self, instrument: FutureInstrument,
                         count: int = 100, including_now: bool = False) -> pandas.DataFrame:
         return self._data.get_kline(instrument, count)
+
+    async def get_instrument(self, symbol: str) -> Instrument:
+        return self._data.instruments[symbol]
 
     def match_open_orders(self) -> None:
         self._trade_counter.match()
@@ -267,6 +272,11 @@ class BitmexExchange(BaseExchange):
             instrument = FutureInstrument.create(self.INSTRUMENT_KEY_MAP, one, self)
             self._available_instrument_cache[instrument.symbol] = instrument
         return self._available_instrument_cache.values()
+
+    async def get_instrument(self, symbol: str) -> Instrument:
+        if not self._available_instrument_cache:
+            await self.available_instruments()  # pragma: no cover
+        return self._available_instrument_cache[symbol]
 
     async def get_kline(self, instrument: FutureInstrument, count: int = 100, including_now: bool = False,
                         timeout: int = sentinel, max_retry: int = 5) -> pandas.DataFrame:

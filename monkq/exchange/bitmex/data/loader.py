@@ -130,7 +130,7 @@ class BitmexDataloader(DataLoader):
         kline = self._kline_store.get(instrument.symbol)
         time_target = make_datetime_exactly(self.context.now, "T", forward=False)
         try:
-            bar = kline.loc[time_target - kline.index.freq.delta]
+            bar = kline.loc[time_target]
             return bar['close']
         except KeyError:
             logger.warning(_("Instrument {} on {} has no bar data., Use 0 as last price"
@@ -142,3 +142,6 @@ class BitmexDataloader(DataLoader):
         kline_frame = self._kline_store.get(instrument.symbol)
         target_klines = kline_dataframe_window(kline_frame, self.context.now, count)
         return target_klines
+
+    def all_data(self, instrument: "Instrument") -> pandas.DataFrame:
+        return self._kline_store.get(instrument.symbol)

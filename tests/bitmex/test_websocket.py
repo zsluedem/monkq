@@ -131,7 +131,7 @@ async def normal_bitmex_server(aiohttp_server: Callable[[web.Application], Corou
 async def ping_bitmex_server(aiohttp_server: Callable[[web.Application], Coroutine[TestServer, None, None]],
                              close_lock: Lock) -> None:
     app = web.Application()
-    app.router.add_get('/realtime', partial(ping_handler, close_lock=close_lock))
+    app.router.add_get('/realtime', partial(ping_handler, close_lock=close_lock))  # type:ignore
     server = await aiohttp_server(app)
     yield server
 

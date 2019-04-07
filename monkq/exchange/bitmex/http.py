@@ -221,7 +221,9 @@ class BitMexHTTPInterface():
             headers.update(gen_header_dict(api_key.api_secret, api_key.api_key, method, str(url_obj), data))
 
         if timeout is not sentinel:
-            timeout = ClientTimeout(total=timeout)
+            cli_timeout = ClientTimeout(total=timeout)
+        else:
+            cli_timeout = sentinel
 
         async def retry(retry_time: int) -> ClientResponse:
             logger.info("Retry on remain times {}".format(retry_time))
@@ -229,7 +231,7 @@ class BitMexHTTPInterface():
             if retry_time < 0:
                 logger.warning(_(
                     "Request with args {}, {}, {}, {}, {}, {} failed "
-                    "with retries").format(path, query, postdict, timeout, method, max_retry))
+                    "with retries").format(path, query, postdict, cli_timeout, method, max_retry))
                 raise MaxRetryError(url=path, method=method,
                                     body=json.dumps(postdict), headers=headers)
             else:
@@ -239,7 +241,7 @@ class BitMexHTTPInterface():
             resp = await self.session.request(method=method, url=str(url_obj),
                                               proxy=self._proxy, headers=headers,
                                               data=data,
-                                              ssl=self._ssl, timeout=timeout)
+                                              ssl=self._ssl, timeout=cli_timeout)
             if 200 <= resp.status < 300:
                 return resp
             elif 404 >= resp.status >= 400:

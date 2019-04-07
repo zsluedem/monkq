@@ -50,23 +50,23 @@ def test_context_load_default() -> None:
 
 
 class TestStrategy(BaseStrategy):
-    pass
+    __test__ = False
 
 
 class TestStatistic(Statistic):
-    pass
+    __test__ = False
 
 
 class TestTradeCounter(TradeCounter):
-    pass
+    __test__ = False
 
 
 class TestExchange(BitmexSimulateExchange):
-    pass
+    __test__ = False
 
 
 class TestAccount(FutureAccount):
-    pass
+    __test__ = False
 
 
 def test_context_custom_setting() -> None:

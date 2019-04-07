@@ -108,6 +108,9 @@ async def test_exchange(mock_httpinterface: MagicMock, loop: AbstractEventLoop) 
     # use cache below
     await exchange.available_instruments()
 
+    instru = await exchange.get_instrument('XRPH19')
+    assert instru.symbol == 'XRPH19'
+
     df = await exchange.get_kline(instrument)
     assert isinstance(df, pandas.DataFrame)
 
@@ -146,8 +149,13 @@ async def test_bitmex_exchange_simulate(tem_data_dir: str, instrument: FutureIns
 
     assert await sim_exchange.available_instruments()
 
+    ins = await sim_exchange.get_instrument('XBUZ15')
+    assert ins.symbol == 'XBUZ15'
+
     kline = await sim_exchange.get_kline(instrument)
 
     assert kline.index[-1] == utc_datetime(2016, 10, 3, 12, 30)
 
     sim_exchange.match_open_orders()
+
+    sim_exchange.all_data(instrument)

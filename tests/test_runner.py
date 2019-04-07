@@ -33,6 +33,8 @@ from .utils import over_written_settings
 
 
 class TestStrategy(BaseStrategy):
+    __test__ = False
+
     async def handle_bar(self) -> None:
         pass
 

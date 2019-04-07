@@ -1,9 +1,9 @@
 [run]
 branch = True
-source = MonkTrader
+source = monkq
 omit =
     tests/*
-    MonkTrader/config/project_template/*
+    monkq/config/project_template/*
     scripts/*
 
 [report]

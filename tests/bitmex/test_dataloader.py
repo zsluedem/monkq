@@ -167,3 +167,5 @@ def test_bitmex_dataloader_kline_data(exchange: MagicMock, tem_data_dir: str) ->
     context.now = utc_datetime(2016, 1, 1, 11, 12)
 
     assert dataloader.get_last_price(instrument) == 0
+
+    dataloader.all_data(instrument)

@@ -50,7 +50,6 @@ from .log import logger_group
 if TYPE_CHECKING:
     from monkq.context import Context
 
-
 logger = Logger('exchange.bitmex.exchange')
 logger_group.add_logger(logger)
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
@@ -276,7 +275,7 @@ class BitmexExchange(BaseExchange):
 
     async def get_instrument(self, symbol: str) -> Instrument:
         if not self._available_instrument_cache:
-            await self.available_instruments()
+            await self.available_instruments()  # pragma: no cover
         return self._available_instrument_cache[symbol]
 
     async def get_kline(self, instrument: FutureInstrument, count: int = 100, including_now: bool = False,

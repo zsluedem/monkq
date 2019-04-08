@@ -26,7 +26,6 @@ from asyncio import get_event_loop
 from logbook import Logger
 from monkq.config import Setting
 from monkq.context import Context
-from monkq.stat import Statistic
 from monkq.ticker import FrequencyTicker
 
 from .log import core_log_group

@@ -25,7 +25,7 @@ import datetime
 import pickle
 from typing import TYPE_CHECKING, Dict, List, Union
 
-from monkq.assets.order import BaseOrder, FutureLimitOrder, FutureMarketOrder
+from monkq.assets.order import ORDER_T, BaseOrder
 from monkq.assets.trade import Trade
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ class Statistic():
         accounts_capital.update({'timestamp': self.context.now})
         self.daily_capital.append(accounts_capital)
 
-    def collect_order(self, order: Union[FutureLimitOrder, FutureMarketOrder]) -> None:
+    def collect_order(self, order: ORDER_T) -> None:
         self.order_collections.append(order)
 
     def collect_trade(self, trade: Trade) -> None:

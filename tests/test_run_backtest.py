@@ -120,3 +120,10 @@ def test_run_1m_backtest(start_strategy_condition: str) -> None:
 
     assert pytest.approx(daily_capital[1]['bitmex_account'], 98721.99024999999)
     assert daily_capital[1]['timestamp'] == utc_datetime(2015, 6, 2)
+
+    assert len(obj['orders']) == 1
+    order = obj['orders'][0]
+    assert order.instrument.symbol == "XBTZ15"
+    assert len(obj['trades']) == 1
+    trade = obj['trades'][0]
+    assert trade.instrument.symbol == "XBTZ15"

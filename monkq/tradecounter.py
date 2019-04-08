@@ -54,6 +54,8 @@ class TradeCounter:
             else:
                 raise ImpossibleError("Unsupported order type {}".format(type(order)))
 
+            self.stat.collect_trade(trade)
+
             logger.debug("Trade counter match a trade {}".format(trade))
             order.deal(trade)
             if order.remain_quantity == 0:
@@ -63,6 +65,7 @@ class TradeCounter:
 
     def submit_order(self, order: ORDER_T) -> None:
         self._open_orders[order.order_id] = order
+        self.stat.collect_order(order)
 
     def cancel_order(self, order_id: str) -> None:
         self._open_orders.pop(order_id)

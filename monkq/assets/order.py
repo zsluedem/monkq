@@ -21,8 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import datetime
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from monkq.assets.const import DIRECTION, ORDER_STATUS, SIDE
 from monkq.assets.instrument import FutureInstrument, Instrument
@@ -42,6 +43,9 @@ class BaseOrder():
     quantity: float = 0
     traded_quantity: float = 0
     trades: List["Trade"] = field(default_factory=list)
+
+    submit_datetime: Optional[datetime.datetime] = None
+    cancel_datetime: Optional[datetime.datetime] = None
 
     @property
     def order_status(self) -> ORDER_STATUS:
@@ -80,7 +84,9 @@ class BaseOrder():
             "trades": self.trades,
             "side": self.side,
             "remain_quantity": self.remain_quantity,
-            "order_class": self.__class__.__name__
+            "order_class": self.__class__.__name__,
+            "submit_datetime": self.submit_datetime,
+            "cancel_datetime": self.cancel_datetime
         }
 
 

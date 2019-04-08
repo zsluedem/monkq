@@ -67,8 +67,8 @@ class TradeCounter:
         self._open_orders[order.order_id] = order
         self.stat.collect_order(order)
 
-    def cancel_order(self, order_id: str) -> None:
-        self._open_orders.pop(order_id)
+    def cancel_order(self, order_id: str) -> ORDER_T:
+        return self._open_orders.pop(order_id)
 
     # TODO
     def amend_order(self, order_id: str, quantity: Optional[float], price: Optional[float]) -> None:

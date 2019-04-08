@@ -34,20 +34,24 @@ from monkq.assets.order import (
     StopMarketOrder,
 )
 from monkq.assets.trade import Trade
+from monkq.utils.timefunc import utc_datetime
 
 from ..utils import random_string
 
 
 def test_buy_order_trade(instrument: Instrument) -> None:
     order_id = random_string(6)
-    order = BaseOrder(account=MagicMock(), order_id=order_id, instrument=instrument, quantity=100)
+    order = BaseOrder(account=MagicMock(), order_id=order_id, instrument=instrument,
+                      quantity=100, submit_datetime=utc_datetime(2018, 1, 1))
 
     assert order.order_id == order_id
     assert order.side == SIDE.BUY
     assert order.quantity == 100
     assert order.order_status == ORDER_STATUS.NOT_TRADED
+    assert order.submit_datetime == utc_datetime(2018, 1, 1)
 
-    trade1 = Trade(order=order, exec_price=10, exec_quantity=50, trade_id=random_string(6))
+    trade1 = Trade(order=order, exec_price=10, exec_quantity=50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
     order.deal(trade1)
     assert order.traded_quantity == 50
     assert order.order_status == ORDER_STATUS.PARTLY_TRADED
@@ -55,7 +59,8 @@ def test_buy_order_trade(instrument: Instrument) -> None:
     with pytest.raises(AssertionError):
         order.deal(trade1)
 
-    trade2 = Trade(order=order, exec_price=11, exec_quantity=50, trade_id=random_string(6))
+    trade2 = Trade(order=order, exec_price=11, exec_quantity=50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 2))
 
     order.deal(trade2)
 
@@ -80,14 +85,17 @@ def test_buy_order_trade(instrument: Instrument) -> None:
 
 def test_sell_order_trade(instrument: Instrument) -> None:
     order_id = random_string(6)
-    order = BaseOrder(account=MagicMock(), order_id=order_id, instrument=instrument, quantity=-100)
+    order = BaseOrder(account=MagicMock(), order_id=order_id, instrument=instrument,
+                      quantity=-100, submit_datetime=utc_datetime(2018, 1, 1))
 
     assert order.order_id == order_id
     assert order.side == SIDE.SELL
     assert order.quantity == -100
     assert order.order_status == ORDER_STATUS.NOT_TRADED
+    assert order.submit_datetime == utc_datetime(2018, 1, 1)
 
-    trade1 = Trade(order=order, exec_price=10, exec_quantity=-50, trade_id=random_string(6))
+    trade1 = Trade(order=order, exec_price=10, exec_quantity=-50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
     order.deal(trade1)
     assert order.traded_quantity == -50
     assert order.order_status == ORDER_STATUS.PARTLY_TRADED
@@ -95,7 +103,8 @@ def test_sell_order_trade(instrument: Instrument) -> None:
     with pytest.raises(AssertionError):
         order.deal(trade1)
 
-    trade2 = Trade(order=order, exec_price=11, exec_quantity=-50, trade_id=random_string(6))
+    trade2 = Trade(order=order, exec_price=11, exec_quantity=-50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 2))
 
     order.deal(trade2)
 
@@ -120,7 +129,7 @@ def test_sell_order_trade(instrument: Instrument) -> None:
 
 def test_future_limit_order(future_instrument: FutureInstrument, future_account: FutureAccount) -> None:
     order1 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=100, price=11)
+                              quantity=100, price=11, submit_datetime=utc_datetime(2018, 1, 1))
     assert order1.price == 11
     assert order1.quantity == 100
     assert order1.traded_quantity == 0
@@ -131,7 +140,8 @@ def test_future_limit_order(future_instrument: FutureInstrument, future_account:
     assert order1.remain_value == 1100
     assert order1.direction == DIRECTION.LONG
 
-    trade1 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6))
+    trade1 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
     order1.deal(trade1)
     assert order1.traded_quantity == 50
     assert order1.order_status == ORDER_STATUS.PARTLY_TRADED
@@ -142,7 +152,8 @@ def test_future_limit_order(future_instrument: FutureInstrument, future_account:
     with pytest.raises(AssertionError):
         order1.deal(trade1)
 
-    trade2 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6))
+    trade2 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
     order1.deal(trade2)
     assert order1.traded_quantity == 100
     assert order1.remain_quantity == 0
@@ -153,7 +164,7 @@ def test_future_limit_order(future_instrument: FutureInstrument, future_account:
     assert trade2 in order1.trades
 
     order2 = FutureLimitOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                              quantity=-100, price=13)
+                              quantity=-100, price=13, submit_datetime=utc_datetime(2018, 1, 1))
 
     assert order2.price == 13
     assert order2.quantity == -100
@@ -165,7 +176,8 @@ def test_future_limit_order(future_instrument: FutureInstrument, future_account:
     assert order2.remain_value == 1300
     assert order2.direction == DIRECTION.SHORT
 
-    trade3 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
+    trade3 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
     order2.deal(trade3)
     assert order2.traded_quantity == -50
     assert order2.order_status == ORDER_STATUS.PARTLY_TRADED
@@ -176,7 +188,8 @@ def test_future_limit_order(future_instrument: FutureInstrument, future_account:
     with pytest.raises(AssertionError):
         order2.deal(trade3)
 
-    trade4 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
+    trade4 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
     order2.deal(trade4)
     assert order2.traded_quantity == -100
     assert order2.order_status == ORDER_STATUS.FULL_TRADED
@@ -187,7 +200,7 @@ def test_future_limit_order(future_instrument: FutureInstrument, future_account:
 
 def test_future_market_order(future_instrument: FutureInstrument, future_account: FutureAccount) -> None:
     order1 = FutureMarketOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                               quantity=100)
+                               quantity=100, submit_datetime=utc_datetime(2018, 1, 1))
     assert order1.quantity == 100
     assert order1.traded_quantity == 0
     assert order1.side == SIDE.BUY
@@ -195,7 +208,8 @@ def test_future_market_order(future_instrument: FutureInstrument, future_account
     assert order1.remain_quantity == 100
     assert order1.direction == DIRECTION.LONG
 
-    trade1 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6))
+    trade1 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
     order1.deal(trade1)
     assert order1.traded_quantity == 50
     assert order1.order_status == ORDER_STATUS.PARTLY_TRADED
@@ -204,7 +218,8 @@ def test_future_market_order(future_instrument: FutureInstrument, future_account
     with pytest.raises(AssertionError):
         order1.deal(trade1)
 
-    trade2 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6))
+    trade2 = Trade(order=order1, exec_price=11, exec_quantity=50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
     order1.deal(trade2)
     assert order1.traded_quantity == 100
     assert order1.remain_quantity == 0
@@ -214,7 +229,7 @@ def test_future_market_order(future_instrument: FutureInstrument, future_account
     assert trade2 in order1.trades
 
     order2 = FutureMarketOrder(order_id=random_string(6), account=future_account, instrument=future_instrument,
-                               quantity=-100)
+                               quantity=-100, submit_datetime=utc_datetime(2018, 1, 1))
 
     assert order2.quantity == -100
     assert order2.traded_quantity == 0
@@ -223,7 +238,8 @@ def test_future_market_order(future_instrument: FutureInstrument, future_account
     assert order2.remain_quantity == -100
     assert order2.direction == DIRECTION.SHORT
 
-    trade3 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
+    trade3 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
     order2.deal(trade3)
     assert order2.traded_quantity == -50
     assert order2.order_status == ORDER_STATUS.PARTLY_TRADED
@@ -232,7 +248,8 @@ def test_future_market_order(future_instrument: FutureInstrument, future_account
     with pytest.raises(AssertionError):
         order2.deal(trade3)
 
-    trade4 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6))
+    trade4 = Trade(order=order2, exec_price=13, exec_quantity=-50, trade_id=random_string(6),
+                   trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
     order2.deal(trade4)
     assert order2.traded_quantity == -100
     assert order2.order_status == ORDER_STATUS.FULL_TRADED
@@ -244,7 +261,7 @@ def test_order_pickle(future_instrument: FutureInstrument) -> None:
     account.exchange.name = 'exchange_sample'
     order_id1 = random_string(6)
     order1 = FutureMarketOrder(order_id=order_id1, account=account, instrument=future_instrument,
-                               quantity=100)
+                               quantity=100, submit_datetime=utc_datetime(2018, 1, 1))
     p_order = pickle.dumps(order1)
 
     unp_order = pickle.loads(p_order)
@@ -258,10 +275,11 @@ def test_order_pickle(future_instrument: FutureInstrument) -> None:
     assert unp_order.remain_quantity == 100
     assert unp_order.order_class == "FutureMarketOrder"
     assert unp_order.direction == DIRECTION.LONG
+    assert unp_order.submit_datetime == utc_datetime(2018, 1, 1)
 
     order_id2 = random_string(6)
     order2 = FutureLimitOrder(order_id=order_id2, account=account, instrument=future_instrument,
-                              quantity=100, price=11)
+                              quantity=100, price=11, submit_datetime=utc_datetime(2018, 1, 1))
     p_order2 = pickle.dumps(order2)
     unp_order2 = pickle.loads(p_order2)
     assert unp_order2.quantity == 100
@@ -273,10 +291,11 @@ def test_order_pickle(future_instrument: FutureInstrument) -> None:
     assert unp_order2.remain_quantity == 100
     assert unp_order2.order_class == "FutureLimitOrder"
     assert unp_order2.direction == DIRECTION.LONG
+    assert unp_order2.submit_datetime == utc_datetime(2018, 1, 1)
 
     order_id3 = random_string(6)
     order3 = StopLimitOrder(order_id=order_id3, account=account, instrument=future_instrument,
-                            quantity=100, stop_price=11)
+                            quantity=100, stop_price=11, submit_datetime=utc_datetime(2018, 1, 1))
     p_order3 = pickle.dumps(order3)
     unp_order3 = pickle.loads(p_order3)
     assert unp_order3.quantity == 100
@@ -288,10 +307,11 @@ def test_order_pickle(future_instrument: FutureInstrument) -> None:
     assert unp_order3.remain_quantity == 100
     assert unp_order3.order_class == "StopLimitOrder"
     assert unp_order3.stop_price == 11
+    assert unp_order3.submit_datetime == utc_datetime(2018, 1, 1)
 
     order_id4 = random_string(6)
     order4 = StopMarketOrder(order_id=order_id4, account=account, instrument=future_instrument,
-                             quantity=100, stop_price=11)
+                             quantity=100, stop_price=11, submit_datetime=utc_datetime(2018, 1, 1))
     p_order4 = pickle.dumps(order4)
     unp_order4 = pickle.loads(p_order4)
     assert unp_order4.quantity == 100
@@ -303,6 +323,7 @@ def test_order_pickle(future_instrument: FutureInstrument) -> None:
     assert unp_order4.remain_quantity == 100
     assert unp_order4.order_class == "StopMarketOrder"
     assert unp_order4.stop_price == 11
+    assert unp_order4.submit_datetime == utc_datetime(2018, 1, 1)
 
 
 def test_trade_pickle(future_instrument: FutureInstrument) -> None:
@@ -310,9 +331,10 @@ def test_trade_pickle(future_instrument: FutureInstrument) -> None:
     account = MagicMock()
     account.exchange.name = 'exchange_sample'
     order = FutureMarketOrder(order_id=order_id1, account=account, instrument=future_instrument,
-                              quantity=100)
+                              quantity=100, submit_datetime=utc_datetime(2018, 1, 1))
     trade_id = random_string(6)
-    trade = Trade(order=order, exec_price=13, exec_quantity=50, trade_id=trade_id)
+    trade = Trade(order=order, exec_price=13, exec_quantity=50, trade_id=trade_id,
+                  trade_datetime=utc_datetime(2018, 1, 1, 0, 1))
 
     p_trade = pickle.dumps(trade)
     unp_trade = pickle.loads(p_trade)
@@ -323,3 +345,4 @@ def test_trade_pickle(future_instrument: FutureInstrument) -> None:
     assert unp_trade.side == SIDE.BUY
     assert unp_trade.value == 650
     assert unp_trade.commission == 1.625
+    assert unp_trade.trade_datetime == utc_datetime(2018, 1, 1, 0, 1)

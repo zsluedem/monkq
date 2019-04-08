@@ -61,6 +61,19 @@ BaseOrder
             * fully traded(:attr:`~BaseOrder.traded_quantity` == :attr:`~BaseOrder.quantity`)
             * partly traded(0 < :attr:`~BaseOrder.traded_quantity` < :attr:`~BaseOrder.quantity`)
 
+    .. py:attribute:: submit_datetime
+
+        The py:class:`~datetime.datetime` which the order submitted.
+
+    .. py:attribute:: cancel_datetime
+
+        If the order is canceled during the strategy running, it would return
+        the cancel datetime. Otherwise , it would be None.
+
+    .. py:attribute:: text
+
+        The text you mark on the order.
+
 
 MarketOrder
 =============

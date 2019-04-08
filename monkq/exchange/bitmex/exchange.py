@@ -82,20 +82,20 @@ class BitmexSimulateExchange(BaseSimExchange):
         return bitmex_info
 
     async def place_limit_order(self, account: FutureAccount, instrument: FutureInstrument,
-                                price: float, quantity: float) -> str:
+                                price: float, quantity: float, text: str = '') -> str:
         if isinstance(instrument, FutureInstrument):
             order = FutureLimitOrder(account=account, instrument=instrument, price=price, quantity=quantity,
-                                     order_id=gen_unique_id(), submit_datetime=self.context.now)
+                                     order_id=gen_unique_id(), submit_datetime=self.context.now, text=text)
         else:
             raise NotImplementedError()
         self._trade_counter.submit_order(order)
         return order.order_id
 
     async def place_market_order(self, account: FutureAccount, instrument: FutureInstrument,
-                                 quantity: float) -> str:
+                                 quantity: float, text: str = '') -> str:
         if isinstance(instrument, FutureInstrument):
             order = FutureMarketOrder(account=account, instrument=instrument, quantity=quantity,
-                                      order_id=gen_unique_id(), submit_datetime=self.context.now)
+                                      order_id=gen_unique_id(), submit_datetime=self.context.now, text=text)
         else:
             raise NotImplementedError()
         self._trade_counter.submit_order(order)
@@ -230,18 +230,19 @@ class BitmexExchange(BaseExchange):
         return bitmex_info
 
     async def place_limit_order(self, account: RealFutureAccount, instrument: FutureInstrument,
-                                price: float, quantity: float, timeout: int = sentinel,
+                                price: float, quantity: float, text: str = '', timeout: int = sentinel,
                                 max_retry: int = 0) -> str:
         target = instrument.symbol
-        return await self.http_interface.place_limit_order(account.api_key, target, price, quantity, timeout,
+        return await self.http_interface.place_limit_order(account.api_key, target, price, quantity, text, timeout,
                                                            max_retry)
 
     async def place_market_order(self, account: RealFutureAccount, instrument: FutureInstrument,
-                                 quantity: float, timeout: int = sentinel,
+                                 quantity: float, text: str = '', timeout: int = sentinel,
                                  max_retry: int = 0) -> str:
         target = instrument.symbol
 
-        return await self.http_interface.place_market_order(account.api_key, target, quantity, timeout, max_retry)
+        return await self.http_interface.place_market_order(account.api_key, target, quantity, text,
+                                                            timeout, max_retry)
 
     async def amend_order(self, account: RealFutureAccount, order_id: str, quantity: Optional[float] = None,
                           price: Optional[float] = None, timeout: int = sentinel,

@@ -337,13 +337,13 @@ async def test_bitmex_http_interface(normal_bitmex_server: TestServer, loop: asy
 
         await exchange.get_instrument_info(symbol)
 
-        order_id = await exchange.place_limit_order(api_key, 'XBTUSD', 3200, 100)
+        order_id = await exchange.place_limit_order(api_key, 'XBTUSD', 3200, 100, 'order_text')
 
         assert await exchange.amend_order(order_id=order_id, price=3300, api_key=api_key)
 
         assert await exchange.cancel_order(order_id=order_id, api_key=api_key)
 
-        await exchange.place_market_order(api_key, symbol, 100)
+        await exchange.place_market_order(api_key, symbol, 100, 'order_text2')
 
         await exchange.open_orders_http(api_key=api_key)
 

@@ -134,9 +134,9 @@ async def test_bitmex_exchange_simulate(tem_data_dir: str, instrument: FutureIns
 
     assert sim_exchange.exchange_info() == bitmex_info
 
-    order_id = await sim_exchange.place_limit_order(account, instrument, 10, 100)
+    order_id = await sim_exchange.place_limit_order(account, instrument, 10, 100, 'order_text')
 
-    market_order_id = await sim_exchange.place_market_order(account, instrument, 100)
+    market_order_id = await sim_exchange.place_market_order(account, instrument, 100, 'order_text2')
 
     await sim_exchange.cancel_order(account, order_id)
 

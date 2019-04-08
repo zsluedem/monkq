@@ -26,7 +26,6 @@ from asyncio import get_event_loop
 from logbook import Logger
 from monkq.config import Setting
 from monkq.context import Context
-from monkq.stat import Statistic
 from monkq.ticker import FrequencyTicker
 
 from .log import core_log_group
@@ -47,7 +46,7 @@ class Runner():
 
         self.ticker = FrequencyTicker(self.start_datetime, self.end_datetime, '1m')
 
-        self.stat = Statistic(self.context)
+        self.stat = self.context.stat
 
     async def _run(self) -> None:
         await self.context.strategy.setup()
@@ -66,6 +65,7 @@ class Runner():
             if current_time.hour == 0 and current_time.minute == 0 \
                     and current_time.second == 0 and current_time.microsecond == 0 \
                     and current_time != self.start_datetime and current_time != self.end_datetime:
+                logger.info("Finish handle bar to {}".format(current_time))
                 self.stat.collect_daily()
 
         self.stat.collect_daily()

@@ -70,6 +70,19 @@ class BaseOrder():
     def remain_quantity(self) -> float:
         return self.quantity - self.traded_quantity
 
+    def __getstate__(self) -> dict:
+        return {
+            "exchange": self.account.exchange.name,
+            "order_id": self.order_id,
+            "instrument": self.instrument,
+            "quantity": self.quantity,
+            "traded_quantity": self.traded_quantity,
+            "trades": self.trades,
+            "side": self.side,
+            "remain_quantity": self.remain_quantity,
+            "order_class": self.__class__.__name__
+        }
+
 
 @dataclass()
 class LimitOrder(BaseOrder):
@@ -83,6 +96,15 @@ class LimitOrder(BaseOrder):
     def remain_value(self) -> float:
         return self.price * abs(self.remain_quantity)
 
+    def __getstate__(self) -> dict:
+        state = super(LimitOrder, self).__getstate__()
+        state.update({
+            'price': self.price,
+            'order_value': self.order_value,
+            'remain_value': self.remain_value
+        })
+        return state
+
 
 @dataclass()
 class MarketOrder(BaseOrder):
@@ -93,10 +115,24 @@ class MarketOrder(BaseOrder):
 class StopMarketOrder(BaseOrder):
     stop_price: float = 0
 
+    def __getstate__(self) -> dict:
+        state = super(StopMarketOrder, self).__getstate__()
+        state.update({
+            'stop_price': self.stop_price,
+        })
+        return state
+
 
 @dataclass()
 class StopLimitOrder(BaseOrder):
     stop_price: float = 0
+
+    def __getstate__(self) -> dict:
+        state = super(StopLimitOrder, self).__getstate__()
+        state.update({
+            'stop_price': self.stop_price,
+        })
+        return state
 
 
 @dataclass()
@@ -108,6 +144,13 @@ class FutureLimitOrder(LimitOrder):
     def direction(self) -> DIRECTION:
         return DIRECTION.LONG if self.quantity > 0 else DIRECTION.SHORT
 
+    def __getstate__(self) -> dict:
+        state = super(FutureLimitOrder, self).__getstate__()
+        state.update({
+            'direction': self.direction
+        })
+        return state
+
 
 @dataclass()
 class FutureMarketOrder(MarketOrder):
@@ -117,6 +160,13 @@ class FutureMarketOrder(MarketOrder):
     @property
     def direction(self) -> DIRECTION:
         return DIRECTION.LONG if self.quantity > 0 else DIRECTION.SHORT
+
+    def __getstate__(self) -> dict:
+        state = super(FutureMarketOrder, self).__getstate__()
+        state.update({
+            'direction': self.direction
+        })
+        return state
 
 
 ORDER_T = Union[FutureLimitOrder, FutureLimitOrder, MarketOrder, LimitOrder, StopLimitOrder, StopMarketOrder]

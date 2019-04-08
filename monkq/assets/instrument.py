@@ -48,6 +48,20 @@ class Instrument():
     maker_fee: float = 0
     taker_fee: float = 0
 
+    def __getstate__(self) -> dict:
+        return {
+            'exchange': self.exchange.name,
+            'symbol': self.symbol,
+            'listing_date': self.listing_date,
+            'expiry_date': self.expiry_date,
+            'underlying': self.underlying,
+            'quote_currency': self.quote_currency,
+            'lot_size': self.lot_size,
+            'tick_size': self.tick_size,
+            'maker_fee': self.maker_fee,
+            'taker_fee': self.taker_fee
+        }
+
     @classmethod
     def create(cls: Type[T_INSTRUMENT], key_map: dict, values: dict, exchange: BaseExchange) -> T_INSTRUMENT:
         annotation_dict = {}
@@ -94,6 +108,21 @@ class FutureInstrument(Instrument):
     reference_symbol: Optional[str] = None
 
     deleverage: bool = True
+
+    def __getstate__(self) -> dict:
+        state = super(FutureInstrument, self).__getstate__()
+        state.update({
+            'root_symbol': self.root_symbol,
+            'init_margin_rate': self.init_margin_rate,
+            'maint_margin_rate': self.maint_margin_rate,
+            'settlement_fee': self.settlement_fee,
+            'settle_currency': self.settle_currency,
+            'settle_date': self.settle_date,
+            'front_date': self.front_date,
+            'reference_symbol': self.reference_symbol,
+            'deleverage': self.deleverage
+        })
+        return state
 
 
 @dataclasses.dataclass(frozen=True)

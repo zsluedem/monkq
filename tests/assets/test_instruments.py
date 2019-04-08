@@ -22,6 +22,7 @@
 # SOFTWARE.
 #
 import datetime
+import pickle
 from typing import TypeVar
 
 from dateutil.tz import tzutc
@@ -538,26 +539,31 @@ def test_future_instrument(exchange: T_EXCHANGE) -> None:
     assert instrument.deleverage
     assert instrument.exchange == exchange
 
-# test_upside_instrument_keymap = {
-#
-# }
-#
-# test_downside_instrument_keymap = {
-#
-# }
-#
-# test_perpetual_instrument_keymap = {
-#
-# }
 
+def test_instrument_pickle(exchange: T_EXCHANGE) -> None:
+    instrument = FutureInstrument.create(test_future_instrument_keymap, future_raw_date, exchange)
 
-# def test_downside_instrument():
-#     pass
-#
-#
-# def test_upside_instrument():
-#     pass
-#
-#
-# def test_perpetual_instrument():
-#     pass
+    p_instrument = pickle.dumps(instrument)
+
+    unp_instrument = pickle.loads(p_instrument)
+
+    assert unp_instrument.symbol == "TRXH19"
+    assert unp_instrument.listing_date == datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc())
+    assert unp_instrument.expiry_date == datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc())
+    assert unp_instrument.underlying == 'TRX'
+    assert unp_instrument.quote_currency == 'XBT'
+    assert unp_instrument.lot_size == 1
+    assert unp_instrument.tick_size == 1e-8
+    assert unp_instrument.maker_fee == -0.0005
+    assert unp_instrument.taker_fee == 0.0025
+
+    assert unp_instrument.root_symbol == 'TRX'
+    assert unp_instrument.init_margin_rate == 0.05
+    assert unp_instrument.maint_margin_rate == 0.025
+    assert unp_instrument.settlement_fee == 0
+    assert unp_instrument.settle_currency == 'XBt'
+    assert unp_instrument.settle_date == datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc())
+    assert unp_instrument.front_date == datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc())
+    assert unp_instrument.reference_symbol == '.TRXXBT30M'
+    assert unp_instrument.deleverage
+    assert unp_instrument.exchange == exchange.name

@@ -23,6 +23,7 @@
 #
 import datetime
 from typing import Generator, TypeVar
+from unittest.mock import MagicMock
 
 import pytest
 from dateutil.tz import tzutc
@@ -33,6 +34,13 @@ from monkq.exchange.base import BaseExchange, BaseSimExchange  # noqa: F401
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseSimExchange")
+
+
+@pytest.fixture()
+def exchange() -> Generator[T_EXCHANGE, None, None]:
+    exchange = MagicMock(BaseSimExchange)
+    exchange.name = 'exchange_test'
+    yield exchange
 
 
 @pytest.fixture()

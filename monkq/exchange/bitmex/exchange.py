@@ -85,7 +85,7 @@ class BitmexSimulateExchange(BaseSimExchange):
                                 price: float, quantity: float) -> str:
         if isinstance(instrument, FutureInstrument):
             order = FutureLimitOrder(account=account, instrument=instrument, price=price, quantity=quantity,
-                                     order_id=gen_unique_id())
+                                     order_id=gen_unique_id(), submit_datetime=self.context.now)
         else:
             raise NotImplementedError()
         self._trade_counter.submit_order(order)
@@ -95,7 +95,7 @@ class BitmexSimulateExchange(BaseSimExchange):
                                  quantity: float) -> str:
         if isinstance(instrument, FutureInstrument):
             order = FutureMarketOrder(account=account, instrument=instrument, quantity=quantity,
-                                      order_id=gen_unique_id())
+                                      order_id=gen_unique_id(), submit_datetime=self.context.now)
         else:
             raise NotImplementedError()
         self._trade_counter.submit_order(order)
@@ -107,7 +107,8 @@ class BitmexSimulateExchange(BaseSimExchange):
         raise NotImplementedError()
 
     async def cancel_order(self, account: FutureAccount, order_id: str) -> bool:
-        self._trade_counter.cancel_order(order_id)
+        order = self._trade_counter.cancel_order(order_id)
+        order.cancel_datetime = self.context.now
         return True
 
     async def open_orders(self, account: FutureAccount) -> List[dict]:

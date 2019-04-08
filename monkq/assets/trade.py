@@ -22,7 +22,8 @@
 # SOFTWARE.
 #
 import dataclasses
-from typing import TYPE_CHECKING
+import datetime
+from typing import TYPE_CHECKING, Optional
 
 from monkq.assets.const import SIDE
 from monkq.assets.order import BaseOrder
@@ -37,6 +38,8 @@ class Trade():
     exec_price: float
     exec_quantity: float
     trade_id: str
+
+    trade_datetime: Optional[datetime.datetime] = None
 
     @property
     def side(self) -> "SIDE":
@@ -66,7 +69,8 @@ class Trade():
             'trade_id': self.trade_id,
             'side': self.side,
             'value': self.value,
-            'commission': self.commission
+            'commission': self.commission,
+            'trade_datetime': self.trade_datetime
         }
 
     # stupid mistake

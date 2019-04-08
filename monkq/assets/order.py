@@ -47,6 +47,8 @@ class BaseOrder():
     submit_datetime: Optional[datetime.datetime] = None
     cancel_datetime: Optional[datetime.datetime] = None
 
+    text: str = ''
+
     @property
     def order_status(self) -> ORDER_STATUS:
         if self.traded_quantity == 0:
@@ -86,7 +88,8 @@ class BaseOrder():
             "remain_quantity": self.remain_quantity,
             "order_class": self.__class__.__name__,
             "submit_datetime": self.submit_datetime,
-            "cancel_datetime": self.cancel_datetime
+            "cancel_datetime": self.cancel_datetime,
+            "text": self.text
         }
 
 

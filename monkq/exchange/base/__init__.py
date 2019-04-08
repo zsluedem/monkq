@@ -60,7 +60,7 @@ class BaseExchange(Generic[ACCOUNT_T]):
         raise NotImplementedError()
 
     async def place_limit_order(self, account: ACCOUNT_T, instrument: Any,
-                                price: float, quantity: float) -> str:
+                                price: float, quantity: float, text: str) -> str:
         """
         create a new limit order in the exchange.
 
@@ -69,7 +69,7 @@ class BaseExchange(Generic[ACCOUNT_T]):
         raise NotImplementedError()
 
     async def place_market_order(self, account: ACCOUNT_T, instrument: Any,
-                                 quantity: float) -> str:
+                                 quantity: float, text: str) -> str:
         """
         create a new market order in the exchange.
 

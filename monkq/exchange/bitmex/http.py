@@ -93,12 +93,13 @@ class BitMexHTTPInterface():
         return content
 
     async def place_limit_order(self, api_key: APIKey, symbol: str,
-                                price: float, quantity: float, timeout: int = sentinel,
+                                price: float, quantity: float, text: str = '', timeout: int = sentinel,
                                 max_retry: int = 0) -> str:
         postdict = {
             "symbol": symbol,
             "price": price,
-            "orderQty": quantity
+            "orderQty": quantity,
+            "text": text
         }
         resp = await self._curl_bitmex(path="order", postdict=postdict, method="POST",
                                        timeout=timeout, max_retry=max_retry, api_key=api_key)
@@ -106,12 +107,13 @@ class BitMexHTTPInterface():
         return order_info['orderID']
 
     async def place_market_order(self, api_key: APIKey, symbol: str,
-                                 quantity: float, timeout: int = sentinel,
+                                 quantity: float, text: str = '', timeout: int = sentinel,
                                  max_retry: int = 0) -> str:
         postdict = {
             "symbol": symbol,
             "orderQty": quantity,
-            "ordType": "Market"
+            "ordType": "Market",
+            "text": text
         }
         resp = await self._curl_bitmex(path="order", postdict=postdict,
                                        method="POST", timeout=timeout,

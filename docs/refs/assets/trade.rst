@@ -48,3 +48,7 @@ Trade
     .. attribute:: commission
 
         The commission fee of the trade
+
+    .. attention:: trade_datetime
+
+        The datetime when the trade is happened.

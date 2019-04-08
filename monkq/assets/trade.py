@@ -65,7 +65,6 @@ class Trade():
             'exec_quantity': self.exec_quantity,
             'trade_id': self.trade_id,
             'side': self.side,
-            'order_id': self.order_id,
             'value': self.value,
             'commission': self.commission
         }

@@ -74,7 +74,7 @@ class BaseOrder():
         return {
             "exchange": self.account.exchange.name,
             "order_id": self.order_id,
-            "symbol": self.instrument.symbol,
+            "instrument": self.instrument,
             "quantity": self.quantity,
             "traded_quantity": self.traded_quantity,
             "trades": self.trades,

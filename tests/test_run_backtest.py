@@ -123,7 +123,7 @@ def test_run_1m_backtest(start_strategy_condition: str) -> None:
 
     assert len(obj['orders']) == 1
     order = obj['orders'][0]
-    assert order.instrument.symbol == "XBTZ15"
+    assert order.symbol == "XBTZ15"
     assert len(obj['trades']) == 1
     trade = obj['trades'][0]
-    assert trade.instrument.symbol == "XBTZ15"
+    assert trade.order.symbol == "XBTZ15"

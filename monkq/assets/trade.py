@@ -58,6 +58,18 @@ class Trade():
     def commission(self) -> float:
         return abs(self.value) * self.instrument.taker_fee
 
+    def __getstate__(self) -> dict:
+        return {
+            'order': self.order,
+            'exec_price': self.exec_price,
+            'exec_quantity': self.exec_quantity,
+            'trade_id': self.trade_id,
+            'side': self.side,
+            'order_id': self.order_id,
+            'value': self.value,
+            'commission': self.commission
+        }
+
     # stupid mistake
     # @property
     # def avg_price(self) -> float:

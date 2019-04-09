@@ -57,7 +57,9 @@ class Statistic():
         return {
             "daily_capital": self.daily_capital,
             "orders": self.order_collections,
-            "trades": self.trade_collections
+            "trades": self.trade_collections,
+            "start_datetime": self.context.settings.START_TIME,  # type: ignore
+            "end_datetime": self.context.settings.END_TIME,  # type:ignore
         }
 
     def report(self) -> None:

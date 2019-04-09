@@ -5,6 +5,7 @@ from typing import Generator
 from unittest.mock import MagicMock
 
 import pytest
+from monkq.config import Setting
 from monkq.stat import Statistic
 from monkq.utils.timefunc import utc_datetime
 
@@ -14,7 +15,7 @@ class PickleMock():
 
 
 @pytest.fixture()
-def statistic_context() -> Generator[PickleMock, None, None]:
+def statistic_context(settings: Setting) -> Generator[PickleMock, None, None]:
     account1 = PickleMock()
     account2 = PickleMock()
     account1.total_capital = 2000  # type:ignore
@@ -23,8 +24,9 @@ def statistic_context() -> Generator[PickleMock, None, None]:
     context = MagicMock()
     context.now = utc_datetime(2018, 1, 1)
     context.accounts = accounts
+    context.settings = settings
     with tempfile.TemporaryDirectory() as tmp:
-        context.settings.REPORT_FILE = os.path.join(tmp, 'result.pkl')
+        setattr(context.settings, 'REPORT_FILE', os.path.join(tmp, 'result.pkl'))
 
         yield context
 

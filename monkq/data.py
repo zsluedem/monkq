@@ -93,12 +93,3 @@ class DownloadProcess(ABC):
     @classmethod
     def get_start(cls, obj: str) -> datetime.datetime:
         ...  # pragma: no cover
-
-
-class DataLoader(ABC):
-    @abstractmethod
-    def load_instruments(self) -> None:
-        raise NotImplementedError()
-
-    def load(self) -> None:
-        self.load_instruments()  # pragma: no cover

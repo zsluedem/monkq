@@ -63,20 +63,21 @@ class BitmexSimulateExchange(BaseSimExchange):
     def __init__(self, context: "Context", name: str, exchange_setting: dict) -> None:
         super(BitmexSimulateExchange, self).__init__(context, name, exchange_setting)
         data_dir = context.settings.DATA_DIR  # type:ignore
-        self._data = BitmexDataloader(self, context, data_dir)
+        self._data = BitmexDataloader(data_dir)
+        self._data.load_instruments(self)
         self._trade_counter: TradeCounter = context.trade_counter
 
     def all_data(self, instrument: Instrument) -> pandas.DataFrame:
-        return self._data.all_data(instrument)
+        return self._data.all_data(instrument.symbol)
 
     async def setup(self) -> None:
         return
 
     async def get_last_price(self, instrument: FutureInstrument) -> float:
-        return self._data.get_last_price(instrument)
+        return self._data.get_last_price(instrument.symbol, self.context.now)
 
     def last_price(self, instrument: FutureInstrument) -> float:
-        return self._data.get_last_price(instrument)
+        return self._data.get_last_price(instrument.symbol, self.context.now)
 
     def exchange_info(self) -> ExchangeInfo:
         return bitmex_info
@@ -120,12 +121,12 @@ class BitmexSimulateExchange(BaseSimExchange):
         return outcome
 
     async def available_instruments(self) -> ValuesView["Instrument"]:
-        active_instruments = self._data.active_instruments()
+        active_instruments = self._data.active_instruments(self.context.now)
         return active_instruments.values()
 
     async def get_kline(self, instrument: FutureInstrument,
                         count: int = 100, including_now: bool = False) -> pandas.DataFrame:
-        return self._data.get_kline(instrument, count)
+        return self._data.get_kline(instrument.symbol, self.context.now, count)
 
     async def get_instrument(self, symbol: str) -> Instrument:
         return self._data.instruments[symbol]

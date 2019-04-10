@@ -22,9 +22,10 @@
 # SOFTWARE.
 #
 
+import datetime
 import json
 import os
-from typing import TYPE_CHECKING, Dict, Type
+from typing import TYPE_CHECKING, Dict, Optional, Type
 
 import pandas
 from logbook import Logger
@@ -32,18 +33,17 @@ from monkq.assets.instrument import (
     CallOptionInstrument, FutureInstrument, Instrument, PerpetualInstrument,
     PutOptionInstrument,
 )
-from monkq.data import DataLoader
 from monkq.exception import LoadDataError
 from monkq.exchange.bitmex.const import INSTRUMENT_FILENAME, KLINE_FILE_NAME
 from monkq.lazyhdf import LazyHDFTableStore
 from monkq.utils.dataframe import kline_dataframe_window, make_datetime_exactly
 from monkq.utils.i18n import _
+from monkq.utils.timefunc import is_aware_datetime
 
 from ..log import logger_group
 
 if TYPE_CHECKING:
-    from monkq.context import Context
-    from monkq.exchange.bitmex.exchange import BitmexSimulateExchange  # pragma: no cover
+    from monkq.exchange.bitmex.exchange import BitmexSimulateExchange  # pragma: no cover  # noqa: F401
 
 logger = Logger('exchange.bitmex.dataloader')
 logger_group.add_logger(logger)
@@ -73,7 +73,7 @@ instrument_map = {
 }
 
 
-class BitmexDataloader(DataLoader):
+class BitmexDataloader:
     instrument_cls: Dict[str, Type[Instrument]] = {
         'OPECCS': PutOptionInstrument,  # put options
         'OCECCS': CallOptionInstrument,  # call options
@@ -89,17 +89,13 @@ class BitmexDataloader(DataLoader):
     # below are all index like instrument
     _abandon_instrument_type = ('MRIXXX', 'MRRXXX', 'MRCXXX')
 
-    def __init__(self, exchange: 'BitmexSimulateExchange', context: "Context", data_dir: str) -> None:
+    def __init__(self, data_dir: str) -> None:
         self.data_dir = data_dir
         self.instruments: Dict[str, Instrument] = dict()
-        self.exchange = exchange
-        self.context = context
         self.trade_data: Dict = dict()
         self._kline_store = LazyHDFTableStore(os.path.join(data_dir, KLINE_FILE_NAME))
 
-        self.load_instruments()
-
-    def load_instruments(self) -> None:
+    def load_instruments(self, exchange: Optional['BitmexSimulateExchange']) -> None:
         logger.debug("Now loading the instruments data.")
         instruments_file = os.path.join(self.data_dir, INSTRUMENT_FILENAME)
         with open(instruments_file) as f:
@@ -110,11 +106,12 @@ class BitmexDataloader(DataLoader):
             instrument_cls = self.instrument_cls.get(instrument_raw['typ'])
             if instrument_cls is None:
                 raise LoadDataError(_("Unsupport instrument type {}").format(instrument_raw['typ']))
-            instrument = instrument_cls.create(instrument_map, instrument_raw, self.exchange)
+            instrument = instrument_cls.create(instrument_map, instrument_raw, exchange)
             self.instruments[instrument.symbol] = instrument
         logger.debug("Now loading the instruments data.")
 
-    def active_instruments(self) -> Dict[str, Instrument]:
+    def active_instruments(self, date_time: datetime.datetime) -> Dict[str, Instrument]:
+        assert is_aware_datetime(date_time)
         active = {}
         for instrument in self.instruments.values():
             if instrument.expiry_date is None:
@@ -122,26 +119,28 @@ class BitmexDataloader(DataLoader):
                 continue
             if instrument.listing_date is None:
                 continue
-            if instrument.listing_date < self.context.now and instrument.expiry_date > self.context.now:
+            if instrument.listing_date < date_time and instrument.expiry_date > date_time:
                 active[instrument.symbol] = instrument
         return active
 
-    def get_last_price(self, instrument: Instrument) -> float:
-        kline = self._kline_store.get(instrument.symbol)
-        time_target = make_datetime_exactly(self.context.now, "T", forward=False)
+    def get_last_price(self, symbol: str, date_time: datetime.datetime) -> float:
+        assert is_aware_datetime(date_time)
+        kline = self._kline_store.get(symbol)
+        time_target = make_datetime_exactly(date_time, "T", forward=False)
         try:
             bar = kline.loc[time_target]
             return bar['close']
         except KeyError:
             logger.warning(_("Instrument {} on {} has no bar data., Use 0 as last price"
-                             .format(instrument.symbol, self.context.now)))
+                             .format(symbol, date_time)))
             return 0.0
 
-    def get_kline(self, instrument: "Instrument",
+    def get_kline(self, symbol: str, date_time: datetime.datetime,
                   count: int) -> pandas.DataFrame:
-        kline_frame = self._kline_store.get(instrument.symbol)
-        target_klines = kline_dataframe_window(kline_frame, self.context.now, count)
+        assert is_aware_datetime(date_time)
+        kline_frame = self._kline_store.get(symbol)
+        target_klines = kline_dataframe_window(kline_frame, date_time, count)
         return target_klines
 
-    def all_data(self, instrument: "Instrument") -> pandas.DataFrame:
-        return self._kline_store.get(instrument.symbol)
+    def all_data(self, symbol: str) -> pandas.DataFrame:
+        return self._kline_store.get(symbol)

@@ -33,7 +33,7 @@ T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
 
 @dataclasses.dataclass(frozen=True)
 class Instrument():
-    exchange: BaseSimExchange
+    exchange: Optional[BaseSimExchange]
     symbol: str
 
     listing_date: Optional[datetime.datetime] = None
@@ -50,7 +50,7 @@ class Instrument():
 
     def __getstate__(self) -> dict:
         return {
-            'exchange': self.exchange.name,
+            'exchange': self.exchange.name if self.exchange else None,
             'symbol': self.symbol,
             'listing_date': self.listing_date,
             'expiry_date': self.expiry_date,
@@ -63,7 +63,7 @@ class Instrument():
         }
 
     @classmethod
-    def create(cls: Type[T_INSTRUMENT], key_map: dict, values: dict, exchange: BaseExchange) -> T_INSTRUMENT:
+    def create(cls: Type[T_INSTRUMENT], key_map: dict, values: dict, exchange: Optional[BaseExchange]) -> T_INSTRUMENT:
         annotation_dict = {}
         for mro in cls.__mro__[::-1]:
             if mro is object:
@@ -90,7 +90,7 @@ class Instrument():
 
     @property
     def last_price(self) -> float:
-        return self.exchange.last_price(self)
+        return self.exchange.last_price(self) if self.exchange else 0
 
 
 @dataclasses.dataclass(frozen=True)

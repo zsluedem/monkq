@@ -48,8 +48,8 @@ def instrument_dir() -> Generator[str, None, None]:
 
 def test_bitmex_dataloader_instruments(exchange: MagicMock, instrument_dir: str) -> None:
     context = MagicMock()
-    dataloader = BitmexDataloader(exchange, context, instrument_dir)
-    dataloader.load_instruments()
+    dataloader = BitmexDataloader(instrument_dir)
+    dataloader.load_instruments(exchange)
 
     XBT7D_D95 = dataloader.instruments.get('XBT7D_D95')
 
@@ -145,7 +145,7 @@ def test_bitmex_dataloader_instruments(exchange: MagicMock, instrument_dir: str)
 
     context.now = utc_datetime(2019, 3, 1)
 
-    instruments = dataloader.active_instruments()
+    instruments = dataloader.active_instruments(context.now)
 
     assert instruments.get("XBTUSD") is XBTUSD
     assert instruments.get('TRXH19') is TRXH19
@@ -153,19 +153,19 @@ def test_bitmex_dataloader_instruments(exchange: MagicMock, instrument_dir: str)
 
 def test_bitmex_dataloader_kline_data(exchange: MagicMock, tem_data_dir: str) -> None:
     context = MagicMock()
-    dataloader = BitmexDataloader(exchange, context, tem_data_dir)
+    dataloader = BitmexDataloader(tem_data_dir)
 
     instrument = MagicMock()
     instrument.symbol = "XBTZ15"
     context.now = utc_datetime(2015, 12, 25, 11, 49)
 
-    assert dataloader.get_last_price(instrument) == 453.5
-    kline_df = dataloader.get_kline(instrument, 50)
+    assert dataloader.get_last_price(instrument.symbol, context.now) == 453.5
+    kline_df = dataloader.get_kline(instrument.symbol, context.now, 50)
     assert len(kline_df) == 50
     assert kline_df.index[-1] == utc_datetime(2015, 12, 25, 11, 49)
 
     context.now = utc_datetime(2016, 1, 1, 11, 12)
 
-    assert dataloader.get_last_price(instrument) == 0
+    assert dataloader.get_last_price(instrument.symbol, context.now) == 0
 
-    dataloader.all_data(instrument)
+    dataloader.all_data(instrument.symbol)

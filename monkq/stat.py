@@ -57,7 +57,8 @@ class Statistic():
         return {
             "daily_capital": self.daily_capital,
             "orders": self.order_collections,
-            "trades": self.trade_collections
+            "trades": self.trade_collections,
+            "settings": self.context.settings
         }
 
     def report(self) -> None:

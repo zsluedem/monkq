@@ -58,6 +58,26 @@ class BaseAccount():
     def total_capital(self) -> float:
         return self.wallet_balance
 
+    def __getstate__(self) -> dict:
+        return {
+            "exchange": self.exchange,
+            "exchange_name": self.exchange.name,
+            "exchange_settings": self.exchange.exchange_setting,
+            "position_cls": self.position_cls,
+            "positions": list(self.positions.items()),
+            "wallet_balance": self.wallet_balance
+        }
+
+    def __setstate__(self, state: dict) -> None:
+        self.exchange = state['exchange']  # type:ignore
+        # self.exchange = ExchangePickle()  # type:ignore
+        self.exchange.name = state['exchange_name']
+        self.exchange.exchange_setting = state['exchange_settings']
+        self.wallet_balance = state['wallet_balance']
+        self.positions = {}  # type:ignore
+        for key, value in state['positions']:
+            self.positions[key] = value
+
 
 @dataclass()
 class RealFutureAccount(BaseAccount):

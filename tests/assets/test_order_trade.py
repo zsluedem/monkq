@@ -262,11 +262,9 @@ def test_future_market_order(future_instrument: FutureInstrument, future_account
     assert order2.remain_quantity == 0
 
 
-def test_order_pickle(future_instrument: FutureInstrument) -> None:
-    account = MagicMock()
-    account.exchange.name = 'exchange_sample'
+def test_order_pickle(future_instrument: FutureInstrument, future_account: FutureAccount) -> None:
     order_id1 = random_string(6)
-    order1 = FutureMarketOrder(order_id=order_id1, account=account, instrument=future_instrument,
+    order1 = FutureMarketOrder(order_id=order_id1, account=future_account, instrument=future_instrument,
                                quantity=100, submit_datetime=utc_datetime(2018, 1, 1), text='22')
     p_order = pickle.dumps(order1)
 
@@ -274,73 +272,71 @@ def test_order_pickle(future_instrument: FutureInstrument) -> None:
 
     assert unp_order.quantity == 100
     assert unp_order.traded_quantity == 0
-    assert unp_order.exchange == 'exchange_sample'
+    assert unp_order.account.exchange.name == 'exchange_test'
     assert unp_order.order_id == order_id1
     assert unp_order.instrument.symbol == future_instrument.symbol
     assert unp_order.side == SIDE.BUY
     assert unp_order.remain_quantity == 100
-    assert unp_order.order_class == "FutureMarketOrder"
+    assert isinstance(unp_order, FutureMarketOrder)
     assert unp_order.direction == DIRECTION.LONG
     assert unp_order.submit_datetime == utc_datetime(2018, 1, 1)
     assert unp_order.text == '22'
 
     order_id2 = random_string(6)
-    order2 = FutureLimitOrder(order_id=order_id2, account=account, instrument=future_instrument,
+    order2 = FutureLimitOrder(order_id=order_id2, account=future_account, instrument=future_instrument,
                               quantity=100, price=11, submit_datetime=utc_datetime(2018, 1, 1), text='random')
     p_order2 = pickle.dumps(order2)
     unp_order2 = pickle.loads(p_order2)
     assert unp_order2.quantity == 100
     assert unp_order2.traded_quantity == 0
-    assert unp_order2.exchange == 'exchange_sample'
+    assert unp_order2.account.exchange.name == 'exchange_test'
     assert unp_order2.order_id == order_id2
     assert unp_order2.instrument.symbol == future_instrument.symbol
     assert unp_order2.side == SIDE.BUY
     assert unp_order2.remain_quantity == 100
-    assert unp_order2.order_class == "FutureLimitOrder"
+    assert isinstance(unp_order2, FutureLimitOrder)
     assert unp_order2.direction == DIRECTION.LONG
     assert unp_order2.submit_datetime == utc_datetime(2018, 1, 1)
     assert unp_order2.text == 'random'
 
     order_id3 = random_string(6)
-    order3 = StopLimitOrder(order_id=order_id3, account=account, instrument=future_instrument,
+    order3 = StopLimitOrder(order_id=order_id3, account=future_account, instrument=future_instrument,
                             quantity=100, stop_price=11, submit_datetime=utc_datetime(2018, 1, 1), text='random2')
     p_order3 = pickle.dumps(order3)
     unp_order3 = pickle.loads(p_order3)
     assert unp_order3.quantity == 100
     assert unp_order3.traded_quantity == 0
-    assert unp_order3.exchange == 'exchange_sample'
+    assert unp_order3.account.exchange.name == 'exchange_test'
     assert unp_order3.order_id == order_id3
     assert unp_order3.instrument.symbol == future_instrument.symbol
     assert unp_order3.side == SIDE.BUY
     assert unp_order3.remain_quantity == 100
-    assert unp_order3.order_class == "StopLimitOrder"
+    assert isinstance(unp_order3, StopLimitOrder)
     assert unp_order3.stop_price == 11
     assert unp_order3.submit_datetime == utc_datetime(2018, 1, 1)
     assert unp_order3.text == 'random2'
 
     order_id4 = random_string(6)
-    order4 = StopMarketOrder(order_id=order_id4, account=account, instrument=future_instrument,
+    order4 = StopMarketOrder(order_id=order_id4, account=future_account, instrument=future_instrument,
                              quantity=100, stop_price=11, submit_datetime=utc_datetime(2018, 1, 1), text='random4')
     p_order4 = pickle.dumps(order4)
     unp_order4 = pickle.loads(p_order4)
     assert unp_order4.quantity == 100
     assert unp_order4.traded_quantity == 0
-    assert unp_order4.exchange == 'exchange_sample'
+    assert unp_order4.account.exchange.name == 'exchange_test'
     assert unp_order4.order_id == order_id4
     assert unp_order4.instrument.symbol == future_instrument.symbol
     assert unp_order4.side == SIDE.BUY
     assert unp_order4.remain_quantity == 100
-    assert unp_order4.order_class == "StopMarketOrder"
+    assert isinstance(unp_order4, StopMarketOrder)
     assert unp_order4.stop_price == 11
     assert unp_order4.submit_datetime == utc_datetime(2018, 1, 1)
     assert unp_order4.text == 'random4'
 
 
-def test_trade_pickle(future_instrument: FutureInstrument) -> None:
+def test_trade_pickle(future_instrument: FutureInstrument, future_account: FutureAccount) -> None:
     order_id1 = random_string(6)
-    account = MagicMock()
-    account.exchange.name = 'exchange_sample'
-    order = FutureMarketOrder(order_id=order_id1, account=account, instrument=future_instrument,
+    order = FutureMarketOrder(order_id=order_id1, account=future_account, instrument=future_instrument,
                               quantity=100, submit_datetime=utc_datetime(2018, 1, 1))
     trade_id = random_string(6)
     trade = Trade(order=order, exec_price=13, exec_quantity=50, trade_id=trade_id,

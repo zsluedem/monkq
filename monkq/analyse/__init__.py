@@ -22,9 +22,22 @@
 # SOFTWARE.
 #
 import pickle
+import datetime
+from typing import Optional
+from monkq.context import Context
+
 
 class Analyser():
     def __init__(self, result_file: str):
         with open(result_file, 'rb') as f:
             self.result_data = pickle.load(f)
+        self.settings = self.result_data['settings']
+        self.start_datetime = getattr(self.settings, 'START_TIME')
+        self.end_datetime = getattr(self.settings, 'END_TIME')
 
+    def plot_kline(self, exchange: str, freq: str,
+                   start:Optional[datetime.datetime]=None, end:Optional[datetime.datetime]=None):
+        if start is None:
+            start = self.start_datetime
+        if end is None:
+            end = self.end_datetime

@@ -24,7 +24,6 @@
 
 import pytest
 import os
-import shutil
 import pickle
 from typing import Generator, Any
 from tests.tools import get_resource_path

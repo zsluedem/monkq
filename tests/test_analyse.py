@@ -22,18 +22,21 @@
 # SOFTWARE.
 #
 
-import pytest
 import os
 import pickle
-from typing import Generator, Any
-from tests.tools import get_resource_path
+from typing import Any, Generator
 
+import pytest
+from matplotlib.figure import Figure
 from monkq.analyse import Analyser
 from monkq.config import Setting
+from monkq.utils.timefunc import utc_datetime
+from tests.tools import get_resource_path
 
 
 def _override_result_setting(setting: Setting, key: str, value: Any) -> None:
     setattr(setting, key, value)
+
 
 @pytest.fixture()
 def analyse_result(tem_data_dir: str) -> Generator[str, None, None]:
@@ -47,6 +50,36 @@ def analyse_result(tem_data_dir: str) -> Generator[str, None, None]:
     yield result_file
 
 
-def test_analyse(analyse_result: str):
+@pytest.mark.mpl_image_compare(baseline_dir='resource/images',
+                               filename='account.png')
+def test_analyse_plot_account(analyse_result: str) -> Figure:
     analyser = Analyser(analyse_result)
-    print(analyse_result)
+    fig, axe = analyser.plot_account()
+    return fig
+
+
+@pytest.mark.mpl_image_compare(baseline_dir='resource/images',
+                               filename='kline.png')
+def test_analyse_plot_kline(analyse_result: str) -> Figure:
+    analyser = Analyser(analyse_result)
+    fig, axe = analyser.plot_kline('bitmex', '60min', 'XBTZ15',
+                                   utc_datetime(2015, 7, 1), utc_datetime(2015, 8, 1))
+    return fig
+
+
+@pytest.mark.mpl_image_compare(baseline_dir='resource/images',
+                               filename='volume.png')
+def test_analyse_plot_volume(analyse_result: str) -> Figure:
+    analyser = Analyser(analyse_result)
+    fig, axe = analyser.plot_volume('bitmex', '60min', 'XBTZ15',
+                                    utc_datetime(2015, 7, 1), utc_datetime(2015, 8, 1))
+    return fig
+
+
+@pytest.mark.mpl_image_compare(baseline_dir='resource/images',
+                               filename='indicator.png')
+def test_analyse_plot_indicator(analyse_result: str) -> Figure:
+    analyser = Analyser(analyse_result)
+    fig, axe = analyser.plot_indicator('bitmex', '60min', 'XBTZ15', 'BBANDS',
+                                       ['close'], utc_datetime(2015, 7, 1), utc_datetime(2015, 8, 1))
+    return fig

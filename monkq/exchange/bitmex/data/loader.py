@@ -36,7 +36,7 @@ from monkq.assets.instrument import (
 from monkq.exception import LoadDataError
 from monkq.exchange.bitmex.const import INSTRUMENT_FILENAME, KLINE_FILE_NAME
 from monkq.lazyhdf import LazyHDFTableStore
-from monkq.utils.dataframe import kline_dataframe_window, make_datetime_exactly
+from monkq.utils.dataframe import kline_count_window, make_datetime_exactly
 from monkq.utils.i18n import _
 from monkq.utils.timefunc import is_aware_datetime
 
@@ -139,7 +139,7 @@ class BitmexDataloader:
                   count: int) -> pandas.DataFrame:
         assert is_aware_datetime(date_time)
         kline_frame = self._kline_store.get(symbol)
-        target_klines = kline_dataframe_window(kline_frame, date_time, count)
+        target_klines = kline_count_window(kline_frame, date_time, count)
         return target_klines
 
     def all_data(self, symbol: str) -> pandas.DataFrame:

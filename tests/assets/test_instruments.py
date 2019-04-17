@@ -566,4 +566,4 @@ def test_instrument_pickle(exchange: T_EXCHANGE) -> None:
     assert unp_instrument.front_date == datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc())
     assert unp_instrument.reference_symbol == '.TRXXBT30M'
     assert unp_instrument.deleverage
-    assert unp_instrument.exchange == exchange.name
+    assert unp_instrument.exchange.name == exchange.name

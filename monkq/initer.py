@@ -6,7 +6,7 @@ from monkq.assets.instrument import FutureInstrument, Instrument
 from monkq.context import Context
 from monkq.exchange.base import BaseSimExchange
 from monkq.utils.dataframe import (
-    kline_1m_to_freq, kline_dataframe_window, kline_indicator,
+    kline_1m_to_freq, kline_count_window, kline_indicator,
 )
 
 INSTRUMENT = Union[Instrument, FutureInstrument]
@@ -40,8 +40,8 @@ class Initer:
 
     def history_kline(self, freq: str, instrument: INSTRUMENT, count: int) -> pandas.DataFrame:
         frame = self._cache_kline[instrument][freq]
-        return kline_dataframe_window(frame, self.context.now, count)
+        return kline_count_window(frame, self.context.now, count)
 
     def history_indicator(self, store_key: str, count: int) -> pandas.DataFrame:
         frame = self._cache_indicator[store_key]
-        return kline_dataframe_window(frame, self.context.now, count)
+        return kline_count_window(frame, self.context.now, count)

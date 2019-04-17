@@ -25,6 +25,10 @@
 from logbook import Logger
 
 from ..log import logger_group
+from .loader import BitmexDataloader
 
 logger = Logger('exchange.bitmex.data')
 logger_group.add_logger(logger)
+
+
+DataLoader = BitmexDataloader

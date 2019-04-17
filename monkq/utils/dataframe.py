@@ -28,6 +28,11 @@ from typing import Any, List
 import pandas
 import talib
 from dateutil.relativedelta import relativedelta
+from matplotlib.axes import Axes
+from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+from matplotlib.patches import Rectangle
 from monkq.config.global_settings import KLINE_SIDE_CLOSED, KLINE_SIDE_LABEL
 from talib import abstract
 
@@ -88,7 +93,7 @@ def make_datetime_exactly(obj: datetime.datetime, freq: str, forward: bool) -> d
         return outcome
 
 
-def kline_dataframe_window(df: pandas.DataFrame, endtime: datetime.datetime, count: int) -> pandas.DataFrame:
+def kline_count_window(df: pandas.DataFrame, endtime: datetime.datetime, count: int) -> pandas.DataFrame:
     freq = df.index.freq.freqstr
 
     if is_datetime_not_remain(endtime, freq):
@@ -124,3 +129,95 @@ def kline_indicator(df: pandas.DataFrame,
     func = abstract.Function(func)
     result = func(df, *args, price=columns, **kwargs)  # type:ignore
     return result
+
+
+def kline_time_window(df: pandas.DataFrame, start_datetime: datetime.datetime,
+                      end_datetime: datetime.datetime) -> pandas.DataFrame:
+    return df.loc[start_datetime: end_datetime]  # type:ignore
+
+
+def _adjust_axe_timeaxis_view(ax: Axes) -> Axes:
+    locator = AutoDateLocator()
+    daysFmt = AutoDateFormatter(locator)
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(daysFmt)
+    ax.autoscale_view()
+    return ax
+
+
+def plot_kline_candlestick(ax: Axes, df: pandas.DataFrame, colordown: str = 'g', colorup: str = 'r',
+                           alpha: float = 1.0) -> Axes:
+    """
+    Plot the time, open, high, low, close as a vertical line ranging
+    from low to high.  Use a rectangular bar to represent the
+    open-close span.  If close >= open, use colorup to color the bar,
+    otherwise use colordown
+    """
+
+    figure: Figure = ax.figure
+    f_width = figure.get_figwidth()
+
+    bar_take_axes_size_percentage = 0.9
+
+    bar_width = f_width * bar_take_axes_size_percentage / len(df) / ax.numCols
+    offset = bar_width / 2.0
+
+    lines = []
+    patches = []
+    for row in df.iterrows():
+        t = date2num(row[0])
+        data = row[1]
+        close = data.close
+        open = data.open
+        high = data.high
+        low = data.low
+        if close >= open:
+            color = colorup
+            lower = open
+            height = close - open
+        else:
+            color = colordown
+            lower = close
+            height = open - close
+
+        vline = Line2D(
+            xdata=(t, t), ydata=(low, high),
+            color=color,
+            linewidth=0.5,
+            antialiased=True,
+        )
+
+        rect = Rectangle(
+            xy=(t - offset, lower),
+            width=bar_width,
+            height=height,
+            facecolor=color,
+            edgecolor=color,
+        )
+        rect.set_alpha(alpha)
+
+        lines.append(vline)
+        patches.append(rect)
+        ax.add_line(vline)
+        ax.add_patch(rect)
+
+    return _adjust_axe_timeaxis_view(ax)
+
+
+def plot_indicator(ax: Axes, df: pandas.DataFrame, alpha: float = 1) -> Axes:
+    # line = Line2D()
+    for column in df.iteritems():
+        name, dataframe = column
+        ax.plot(date2num(dataframe.index.to_pydatetime()), dataframe.values, label=name, alpha=alpha)
+    ax.legend()
+    return _adjust_axe_timeaxis_view(ax)
+
+
+def plot_volume(ax: Axes, kline: pandas.DataFrame, color: str = 'b', alpha: float = 1) -> Axes:
+    figure: Figure = ax.figure
+    f_width = figure.get_figwidth()
+    bar_take_axes_size_percentage = 0.9
+    bar_width = f_width * bar_take_axes_size_percentage / len(kline) / ax.numCols
+    ax.bar(date2num(kline.index.to_pydatetime()), kline['volume'].values,
+           color=color, alpha=alpha, width=bar_width)
+    return _adjust_axe_timeaxis_view(ax)

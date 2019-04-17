@@ -50,7 +50,7 @@ class Instrument():
 
     def __getstate__(self) -> dict:
         return {
-            'exchange': self.exchange.name if self.exchange else None,
+            'exchange': self.exchange if self.exchange else None,
             'symbol': self.symbol,
             'listing_date': self.listing_date,
             'expiry_date': self.expiry_date,

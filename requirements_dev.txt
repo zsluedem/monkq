@@ -17,3 +17,4 @@ babel
 asynctest
 sphinx-intl
 sphinxcontrib-asyncio
+pytest-mpl

@@ -157,7 +157,7 @@ def plot_kline_candlestick(ax: Axes, df: pandas.DataFrame, colordown: str = 'g',
     figure: Figure = ax.figure
     f_width = figure.get_figwidth()
 
-    bar_take_axes_size_percentage = 0.9
+    bar_take_axes_size_percentage = 0.04
 
     bar_width = f_width * bar_take_axes_size_percentage / len(df) / ax.numCols
     offset = bar_width / 2.0

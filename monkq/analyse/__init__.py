@@ -96,36 +96,43 @@ class Analyser():
 
     def plot_kline(self, exchange: str, freq: str, symbol: str,
                    start: Optional[datetime.datetime] = None,
-                   end: Optional[datetime.datetime] = None, alpha: float = 1) -> Tuple[Figure, Axes]:
+                   end: Optional[datetime.datetime] = None, alpha: float = 1,
+                   axes: Optional[Axes] = None) -> Tuple[Figure, Axes]:
 
         df = self._fetch_kline(exchange, freq, symbol, start, end)
-        fig, ax = plt.subplots()
+        if axes is None:
+            fig, axes = plt.subplots()
 
-        plot_kline_candlestick(ax, df, alpha=alpha)
+        plot_kline_candlestick(axes, df, alpha=alpha)
 
-        return (fig, ax)
+        return (axes.figure, axes)
 
     def plot_indicator(self, exchange: str, freq: str, symbol: str, func: str, columns: List[str],
                        start: Optional[datetime.datetime] = None,
-                       end: Optional[datetime.datetime] = None, *args: Any,
+                       end: Optional[datetime.datetime] = None,
+                       axes: Optional[Axes] = None, *args: Any,
                        **kwargs: Any) -> Tuple[Figure, Axes]:
         df = self._fetch_kline(exchange, freq, symbol, start, end)
         indicators = kline_indicator(df, func, columns, *args, **kwargs)
-        fig, ax = plt.subplots()
-        plot_indicator(ax, indicators)
-        return (fig, ax)
+        if axes is None:
+            fig, axes = plt.subplots()
+        plot_indicator(axes, indicators)
+        return (axes.figure, axes)
 
     def plot_volume(self, exchange: str, freq: str, symbol: str,
                     start: Optional[datetime.datetime] = None,
                     end: Optional[datetime.datetime] = None,
-                    color: str = 'b', alpha: float = 1) -> Tuple[Figure, Axes]:
+                    color: str = 'b', alpha: float = 1,
+                    axes: Optional[Axes] = None) -> Tuple[Figure, Axes]:
         df = self._fetch_kline(exchange, freq, symbol, start, end)
-        fig, ax = plt.subplots()
-        plot_volume(ax, df, color, alpha)
-        return (fig, ax)
+        if axes is None:
+            fig, axes = plt.subplots()
+        plot_volume(axes, df, color, alpha)
+        return (axes.figure, axes)
 
-    def plot_account(self) -> Tuple[Figure, Axes]:
-        fig, ax = plt.subplots()
+    def plot_account(self, axes: Optional[Axes] = None) -> Tuple[Figure, Axes]:
+        if axes is None:
+            fig, axes = plt.subplots()
         df = self.accounts_info
-        plot_indicator(ax, df)
-        return (fig, ax)
+        plot_indicator(axes, df)
+        return (axes.figure, axes)

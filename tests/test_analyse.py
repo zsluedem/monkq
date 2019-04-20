@@ -83,3 +83,10 @@ def test_analyse_plot_indicator(analyse_result: str) -> Figure:
     fig, axe = analyser.plot_indicator('bitmex', '60min', 'XBTZ15', 'BBANDS',
                                        ['close'], utc_datetime(2015, 7, 1), utc_datetime(2015, 8, 1))
     return fig
+
+
+def test_analyse_trades(analyse_result: str) -> None:
+    analyser = Analyser(analyse_result)
+    trades = analyser.trades
+    assert len(trades) == 1
+    assert trades.loc[0]['symbol'] == "XBTZ15"

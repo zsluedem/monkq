@@ -51,6 +51,8 @@ class Analyser():
         self.data_dir = getattr(self.settings, 'DATA_DIR')
         self.data_loaders: dict = {}
         self._account_df: Optional[pandas.DataFrame] = None
+        self._trade_df: Optional[pandas.DataFrame] = None
+        self._order_df: Optional[pandas.DataFrame] = None
 
         self.setup_data_loader()
 
@@ -59,6 +61,15 @@ class Analyser():
         if self._account_df is None:
             self._account_df = self._account_to_df()
         return self._account_df
+
+    @property
+    def trades(self) -> pandas.DataFrame:
+        if self._trade_df is None:
+            trades = []
+            for trade in self.result_data['trades']:
+                trades.append(trade.to_dict())
+            self._trade_df = pandas.DataFrame(trades)
+        return self._trade_df
 
     def _account_to_df(self) -> pandas.DataFrame:
         df = pandas.DataFrame(self.result_data['daily_capital'])

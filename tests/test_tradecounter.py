@@ -28,6 +28,7 @@ import pytest
 from monkq.assets.order import LimitOrder, MarketOrder
 from monkq.tradecounter import TradeCounter
 from monkq.utils.id import gen_unique_id
+from monkq.utils.timefunc import utc_datetime
 
 
 def test_trader_counter() -> None:
@@ -53,7 +54,7 @@ def test_trader_counter() -> None:
         trade_counter.amend_order(order2.order_id, 100, 20)
 
     assert len(trade_counter.open_orders()) == 2
-    trade_counter.match()
+    trade_counter.match(utc_datetime(2018, 1, 1))
 
     assert len(order2.trades) == 1
     assert len(order3.trades) == 1

@@ -132,7 +132,7 @@ class BitmexSimulateExchange(BaseSimExchange):
         return self._data.instruments[symbol]
 
     def match_open_orders(self) -> None:
-        self._trade_counter.match()
+        self._trade_counter.match(self.context.now)
 
     def get_open_orders(self, account: FutureAccount) -> List[ORDER_T]:
         return list(self._trade_counter.open_orders())

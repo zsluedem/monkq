@@ -22,6 +22,7 @@
 # SOFTWARE.
 #
 
+import datetime
 from typing import Dict, Optional, ValuesView
 
 from logbook import Logger
@@ -43,14 +44,14 @@ class TradeCounter:
         self.stat = stat
         self._traded_orders: Dict[str, ORDER_T] = {}
 
-    def match(self) -> None:
+    def match(self, match_time: datetime.datetime) -> None:
         close_order_ids = []
         for order in self._open_orders.values():
             if isinstance(order, MarketOrder):
                 trade = Trade(order, order.account.exchange.last_price(order.instrument),
-                              order.quantity, gen_unique_id())
+                              order.quantity, gen_unique_id(), match_time)
             elif isinstance(order, LimitOrder):
-                trade = Trade(order, order.price, order.quantity, gen_unique_id())
+                trade = Trade(order, order.price, order.quantity, gen_unique_id(), match_time)
             else:
                 raise ImpossibleError("Unsupported order type {}".format(type(order)))
 

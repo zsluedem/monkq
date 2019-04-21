@@ -71,6 +71,7 @@ class Analyser():
             for trade in self.result_data['trades']:
                 trades.append(trade.to_dict())
             self._trade_df = pandas.DataFrame(trades)
+            self._trade_df.set_index('trade_datetime', inplace=True)
         return self._trade_df
 
     def _account_to_df(self) -> pandas.DataFrame:
@@ -150,11 +151,18 @@ class Analyser():
         plot_indicator(axes, df)
         return (axes.figure, axes)
 
-    def mark_trades(self, axes: Optional[Axes] = None) -> Tuple[Figure, Axes]:
+    def mark_trades(self, axes: Optional[Axes] = None,
+                    start: Optional[datetime.datetime] = None,
+                    end: Optional[datetime.datetime] = None) -> Tuple[Figure, Axes]:
+        if start is None:
+            start = self.start_datetime
+        if end is None:
+            end = self.end_datetime
         if axes is None:
             fig, axes = plt.subplots()
-        trades_df = self.trades
+        # TODO not include start, end
+        trades_df = self.trades[start:end]  # type:ignore
         low, high = axes.get_ylim()
-        axes.scatter(date2num(trades_df['trade_datetime']), [high] * len(trades_df),
+        axes.scatter(date2num(trades_df.index), [high] * len(trades_df),
                      marker=matplotlib.markers.CARETDOWN)
         return (axes.figure, axes)

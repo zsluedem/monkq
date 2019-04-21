@@ -105,7 +105,7 @@ def test_analyse_mark_trades(analyse_result: str) -> Figure:
     analyser = Analyser(analyse_result)
     fig, axe = analyser.plot_kline('bitmex', '4H', 'XBTZ15',
                                    utc_datetime(2015, 5, 15), utc_datetime(2015, 6, 15))
-    analyser.mark_trades(axe)
+    analyser.mark_trades(axe, utc_datetime(2015, 5, 15), utc_datetime(2015, 6, 15))
     return fig
 
 
@@ -113,4 +113,4 @@ def test_analyse_trades(analyse_result: str) -> None:
     analyser = Analyser(analyse_result)
     trades = analyser.trades
     assert len(trades) == 1
-    assert trades.loc[0]['symbol'] == "XBTZ15"
+    assert trades.iloc[0]['symbol'] == "XBTZ15"

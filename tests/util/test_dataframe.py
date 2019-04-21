@@ -47,6 +47,9 @@ def test_is_datetime_not_remain() -> None:
     assert is_datetime_not_remain(utc_datetime(2018, 1, 1, 1), "60T")
     assert not is_datetime_not_remain(utc_datetime(2018, 1, 1, 1, 25), "60T")
 
+    assert is_datetime_not_remain(utc_datetime(2018, 1, 1), "2H")
+    assert not is_datetime_not_remain(utc_datetime(2018, 1, 1, 1), "2H")
+
 
 def test_make_datetime_exactly() -> None:
     assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "T", True) == utc_datetime(2018, 1, 1, 12, 12)
@@ -63,6 +66,9 @@ def test_make_datetime_exactly() -> None:
 
     assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "60T", True) == utc_datetime(2018, 1, 1, 13)
     assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "60T", False) == utc_datetime(2018, 1, 1, 12)
+
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "4H", False) == utc_datetime(2018, 1, 1, 12)
+    assert make_datetime_exactly(utc_datetime(2018, 1, 1, 12, 11, 23), "4H", True) == utc_datetime(2018, 1, 1, 16)
 
 
 def test_1m_dataframe_window() -> None:

@@ -82,6 +82,8 @@ TRADE_COUNTER = "monkq.tradecounter.TradeCounter"
 
 STATISTIC = "monkq.stat.Statistic"
 
+COLLECT_FREQ = "24H"
+
 REPORT_FILE = r"@tmp@/result.pkl"
 """
 

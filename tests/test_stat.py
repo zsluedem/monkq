@@ -34,7 +34,7 @@ def statistic_context(settings: Setting) -> Generator[PickleMock, None, None]:
 def test_statistic(statistic_context: MagicMock) -> None:
     stat = Statistic(statistic_context)
 
-    stat.collect_daily()
+    stat.freq_collect_account()
 
     assert stat.daily_capital == [{"timestamp": utc_datetime(2018, 1, 1), "account1": 2000, "account2": 5000}]
 

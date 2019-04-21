@@ -22,7 +22,6 @@
 # SOFTWARE.
 #
 import datetime
-from functools import partial
 from typing import Any, List
 
 import pandas
@@ -34,61 +33,28 @@ from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 from monkq.config.global_settings import KLINE_SIDE_CLOSED, KLINE_SIDE_LABEL
+from pandas.tseries.frequencies import to_offset
 from talib import abstract
 
 
-def _is_min_not_remain(obj: datetime.datetime) -> bool:
-    return obj.second == 0 and obj.microsecond == 0
-
-
-def _is_xmin_not_remain(obj: datetime.datetime, x: int) -> bool:
-    return _is_min_not_remain(obj) and obj.minute % x == 0
-
-
 def is_datetime_not_remain(obj: datetime.datetime, freq: str) -> bool:
-    if freq == 'T':
-        remain_method = _is_min_not_remain
-    elif freq == '5T':
-        remain_method = partial(_is_xmin_not_remain, x=5)
-    elif freq == '15T':
-        remain_method = partial(_is_xmin_not_remain, x=15)
-    elif freq == '30T':
-        remain_method = partial(_is_xmin_not_remain, x=30)
-    elif freq == '60T' or freq == 'H':
-        remain_method = partial(_is_xmin_not_remain, x=60)
-    else:
-        raise NotImplementedError()
-
-    return remain_method(obj)
-
-
-def _get_relativedelta(period: int, minutes: int, forward: bool) -> relativedelta:
-    remain = minutes % period
-    if forward:
-        return relativedelta(second=0, microsecond=0, minutes=period - remain)
-    else:
-        return relativedelta(second=0, microsecond=0, minutes=-remain)
+    offset = to_offset(freq)
+    return obj.timestamp() % offset.delta.total_seconds() == 0
 
 
 def make_datetime_exactly(obj: datetime.datetime, freq: str, forward: bool) -> datetime.datetime:
     if is_datetime_not_remain(obj, freq):
         return obj
     else:
-        if freq == 'T':
-            if forward:
-                relat = relativedelta(second=0, microsecond=0, minutes=+1)
-            else:
-                relat = relativedelta(second=0, microsecond=0)
-        elif freq == '5T':
-            relat = _get_relativedelta(5, obj.minute, forward)
-        elif freq == '15T':
-            relat = _get_relativedelta(15, obj.minute, forward)
-        elif freq == '30T':
-            relat = _get_relativedelta(30, obj.minute, forward)
-        elif freq == '60T':
-            relat = _get_relativedelta(60, obj.minute, forward)
+        offset = to_offset(freq)
+
+        remain = obj.timestamp() % offset.delta.total_seconds()
+
+        if forward:
+            relat = relativedelta(seconds=offset.delta.total_seconds() - remain)
         else:
-            raise NotImplementedError()
+            relat = relativedelta(seconds=-remain)
+
         outcome = obj + relat
         return outcome
 

@@ -99,6 +99,8 @@ TRADE_COUNTER = "monkq.tradecounter.TradeCounter"
 
 STATISTIC = "monkq.stat.Statistic"
 
+COLLECT_FREQ = "4H"
+
 REPORT_FILE = 'result.pkl'
 """
 

@@ -51,24 +51,21 @@ class Runner():
     async def _run(self) -> None:
         await self.context.strategy.setup()
 
-        self.stat.collect_daily()
+        self.stat.freq_collect_account()
 
         for current_time in self.ticker.timer():
             self.context.now = current_time
             logger.debug("Handler time {}".format(current_time))
 
             await self.context.strategy.handle_bar()
+            logger.debug("Finish handle bar to {}".format(current_time))
 
             for key, exchange in self.context.exchanges.items():
                 exchange.match_open_orders()  # type:ignore
 
-            if current_time.hour == 0 and current_time.minute == 0 \
-                    and current_time.second == 0 and current_time.microsecond == 0 \
-                    and current_time != self.start_datetime and current_time != self.end_datetime:
-                logger.info("Finish handle bar to {}".format(current_time))
-                self.stat.collect_daily()
+            self.stat.freq_collect_account()
 
-        self.stat.collect_daily()
+        self.stat.collect_account_info()
 
         self.lastly()
 

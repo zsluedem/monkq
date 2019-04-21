@@ -27,6 +27,8 @@ from typing import TYPE_CHECKING, Dict, List, Union
 
 from monkq.assets.order import ORDER_T, BaseOrder
 from monkq.assets.trade import Trade
+from monkq.utils.timefunc import utc_datetime
+from pandas.tseries.frequencies import DateOffset, to_offset
 
 if TYPE_CHECKING:
     from monkq.context import Context
@@ -38,14 +40,23 @@ class Statistic():
     def __init__(self, context: "Context"):
         self.context = context
         self.report_file: str = getattr(self.context.settings, 'REPORT_FILE', 'result.pkl')
+        self.collect_freq = getattr(self.context.settings, 'COLLECT_FREQ', '4H')
         self.daily_capital: List[DAILY_STAT_TYPE] = []
         self.order_collections: List[BaseOrder] = []
         self.trade_collections: List[Trade] = []
 
-    def collect_daily(self) -> None:
+        self.collect_offset: DateOffset = to_offset(self.collect_freq)
+        self.last_collect_time: datetime.datetime = utc_datetime(1970, 1, 1)
+
+    def collect_account_info(self) -> None:
         accounts_capital: DAILY_STAT_TYPE = {k: v.total_capital for k, v in self.context.accounts.items()}
         accounts_capital.update({'timestamp': self.context.now})
         self.daily_capital.append(accounts_capital)
+
+    def freq_collect_account(self) -> None:
+        if self.context.now - self.last_collect_time >= self.collect_offset.delta:
+            self.collect_account_info()
+            self.last_collect_time = self.context.now
 
     def collect_order(self, order: ORDER_T) -> None:
         self.order_collections.append(order)

@@ -22,13 +22,13 @@
 # SOFTWARE.
 #
 import datetime
-from typing import Any, List
+from typing import Any, List, Union
 
 import pandas
 import talib
 from dateutil.relativedelta import relativedelta
 from matplotlib.axes import Axes
-from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
+from matplotlib.dates import AutoDateLocator, DateFormatter, date2num
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
@@ -104,14 +104,14 @@ def kline_time_window(df: pandas.DataFrame, start_datetime: datetime.datetime,
 
 def _adjust_axe_timeaxis_view(ax: Axes) -> Axes:
     locator = AutoDateLocator()
-    daysFmt = AutoDateFormatter(locator)
+    daysFmt = DateFormatter("%y%m%d\n%H:%M")
     ax.xaxis.set_major_locator(locator)
     ax.xaxis.set_major_formatter(daysFmt)
     ax.autoscale_view()
     return ax
 
 
-def plot_kline_candlestick(ax: Axes, df: pandas.DataFrame, colordown: str = 'g', colorup: str = 'r',
+def plot_kline_candlestick(ax: Axes, df: pandas.DataFrame, colordown: str = 'r', colorup: str = 'g',
                            alpha: float = 1.0) -> Axes:
     """
     Plot the time, open, high, low, close as a vertical line ranging
@@ -170,11 +170,16 @@ def plot_kline_candlestick(ax: Axes, df: pandas.DataFrame, colordown: str = 'g',
     return _adjust_axe_timeaxis_view(ax)
 
 
-def plot_indicator(ax: Axes, df: pandas.DataFrame, alpha: float = 1) -> Axes:
+def plot_indicator(ax: Axes, df: Union[pandas.DataFrame, pandas.Series], alpha: float = 1) -> Axes:
     # line = Line2D()
-    for column in df.iteritems():
-        name, dataframe = column
-        ax.plot(date2num(dataframe.index.to_pydatetime()), dataframe.values, label=name, alpha=alpha)
+    if isinstance(df, pandas.DataFrame):
+        for column in df.iteritems():
+            name, dataframe = column
+            ax.plot(date2num(dataframe.index.to_pydatetime()), dataframe.values, label=name, alpha=alpha)
+    elif isinstance(df, pandas.Series):
+        ax.plot(date2num(df.index.to_pydatetime()), df.values, label='indicator', alpha=alpha)
+    else:
+        raise NotImplementedError()
     ax.legend()
     return _adjust_axe_timeaxis_view(ax)
 

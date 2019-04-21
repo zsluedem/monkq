@@ -26,9 +26,11 @@ import pickle
 from importlib import import_module
 from typing import Any, List, Optional, Tuple, Type
 
+import matplotlib
 import matplotlib.pyplot as plt
 import pandas
 from matplotlib.axes import Axes
+from matplotlib.dates import date2num
 from matplotlib.figure import Figure
 from monkq.utils.dataframe import (
     kline_1m_to_freq, kline_indicator, kline_time_window, plot_indicator,
@@ -91,9 +93,9 @@ class Analyser():
         cls = getattr(mod, DATA_LOADER_CLASS)
         return cls
 
-    def _fetch_kline(self, exchange: str, freq: str, symbol: str,
-                     start: Optional[datetime.datetime] = None,
-                     end: Optional[datetime.datetime] = None) -> pandas.DataFrame:
+    def fetch_kline(self, exchange: str, freq: str, symbol: str,
+                    start: Optional[datetime.datetime] = None,
+                    end: Optional[datetime.datetime] = None) -> pandas.DataFrame:
         if start is None:
             start = self.start_datetime
         if end is None:
@@ -110,7 +112,7 @@ class Analyser():
                    end: Optional[datetime.datetime] = None, alpha: float = 1,
                    axes: Optional[Axes] = None) -> Tuple[Figure, Axes]:
 
-        df = self._fetch_kline(exchange, freq, symbol, start, end)
+        df = self.fetch_kline(exchange, freq, symbol, start, end)
         if axes is None:
             fig, axes = plt.subplots()
 
@@ -123,7 +125,7 @@ class Analyser():
                        end: Optional[datetime.datetime] = None,
                        axes: Optional[Axes] = None, *args: Any,
                        **kwargs: Any) -> Tuple[Figure, Axes]:
-        df = self._fetch_kline(exchange, freq, symbol, start, end)
+        df = self.fetch_kline(exchange, freq, symbol, start, end)
         indicators = kline_indicator(df, func, columns, *args, **kwargs)
         if axes is None:
             fig, axes = plt.subplots()
@@ -135,7 +137,7 @@ class Analyser():
                     end: Optional[datetime.datetime] = None,
                     color: str = 'b', alpha: float = 1,
                     axes: Optional[Axes] = None) -> Tuple[Figure, Axes]:
-        df = self._fetch_kline(exchange, freq, symbol, start, end)
+        df = self.fetch_kline(exchange, freq, symbol, start, end)
         if axes is None:
             fig, axes = plt.subplots()
         plot_volume(axes, df, color, alpha)
@@ -146,4 +148,13 @@ class Analyser():
             fig, axes = plt.subplots()
         df = self.accounts_info
         plot_indicator(axes, df)
+        return (axes.figure, axes)
+
+    def mark_trades(self, axes: Optional[Axes] = None) -> Tuple[Figure, Axes]:
+        if axes is None:
+            fig, axes = plt.subplots()
+        trades_df = self.trades
+        low, high = axes.get_ylim()
+        axes.scatter(date2num(trades_df['trade_datetime']), [high] * len(trades_df),
+                     marker=matplotlib.markers.CARETDOWN)
         return (axes.figure, axes)

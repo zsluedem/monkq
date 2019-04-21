@@ -24,11 +24,13 @@
 
 import os
 import pickle
+import sys
 from typing import Any, Generator
 
 import pytest
 from matplotlib.figure import Figure
 from monkq.analyse import Analyser
+from monkq.base_strategy import BaseStrategy
 from monkq.config import Setting
 from monkq.utils.timefunc import utc_datetime
 from tests.tools import get_resource_path
@@ -39,7 +41,19 @@ def _override_result_setting(setting: Setting, key: str, value: Any) -> None:
 
 
 @pytest.fixture()
-def analyse_result(tem_data_dir: str) -> Generator[str, None, None]:
+def strategy_module() -> Generator[None, None, None]:
+    class M():
+        pass
+
+    module = M()
+    setattr(module, 'TestStrategy', BaseStrategy)
+    sys.modules['strategy'] = module  # type:ignore
+    yield None
+    sys.modules.pop('strategy')
+
+
+@pytest.fixture()
+def analyse_result(tem_data_dir: str, strategy_module: None) -> Generator[str, None, None]:
     with open(get_resource_path('result.pkl'), 'rb') as f:
         result = pickle.load(f)
     _override_result_setting(result['settings'], 'DATA_DIR', tem_data_dir)
@@ -82,6 +96,16 @@ def test_analyse_plot_indicator(analyse_result: str) -> Figure:
     analyser = Analyser(analyse_result)
     fig, axe = analyser.plot_indicator('bitmex', '60min', 'XBTZ15', 'BBANDS',
                                        ['close'], utc_datetime(2015, 7, 1), utc_datetime(2015, 8, 1))
+    return fig
+
+
+@pytest.mark.mpl_image_compare(baseline_dir='resource/images',
+                               filename='trade_mark.png')
+def test_analyse_mark_trades(analyse_result: str) -> Figure:
+    analyser = Analyser(analyse_result)
+    fig, axe = analyser.plot_kline('bitmex', '4H', 'XBTZ15',
+                                   utc_datetime(2015, 5, 15), utc_datetime(2015, 6, 15))
+    analyser.mark_trades(axe)
     return fig
 
 

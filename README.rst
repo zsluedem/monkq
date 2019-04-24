@@ -18,7 +18,7 @@ Feature
 * **Data Download**: Monkq help you to download the trading data of
   the exchanges.You can also process the data to develop your strategy.
 
-* **Use Async Grammar**: Monkq is highly depended on the :py:mod:`asyncio`
+* **Use Async Grammar**: Monkq is highly depended on the `asyncio <https://docs.python.org/3/library/asyncio.html>`_
   system in Python which would speed up if you connect many exchanges
   in the future.
 

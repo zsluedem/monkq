@@ -1,7 +1,15 @@
 environment:
+  MINICONDA: C:\\Miniconda3-x64
+  VENV_M: monkq_venv
   matrix:
-    - PYTHON: C:\Python36-x64
-    - PYTHON: C:\Python37-x64
+    - TARGET_ARCH: "x64"
+      CONDA_PY: "36"
+      PY_CONDITION: "python >=3.6,<3.7"
+      TA_LIB_PKG: "TA_Lib-0.4.17-cp36-cp36m-win_amd64.whl"
+    - TARGET_ARCH: "x64"
+      CONDA_PY: "37"
+      PY_CONDITION: "python >=3.7"
+      TA_LIB_PKG: "TA_Lib-0.4.17-cp37-cp37m-win_amd64.whl"
 #  APPVEYOR_RDP_PASSWORD: DGC0xSBVsi5oH6XW
 #services:
 #  - mongodb
@@ -9,17 +17,23 @@ environment:
 init:
   - SET PATH=%PYTHON%;%PATH%
 
+cache:
+  - C:\%VENV_M% -> requirements.txt, requirements_dev.txt
+
 install:
-  - cmd: '"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64'
-  - curl.exe -fsSL -o C:\ta-lib-0.4.0-msvc.zip http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-msvc.zip
-  - 7z x -y C:\ta-lib-0.4.0-msvc.zip -oC:\
-  - pushd C:\ta-lib\c\make\cdr\win32\msvc && nmake && popd
-  - python -m pip install .
-  - python -m pip install -r requirements_dev.txt
+  - mkdir C:\Users\appveyor\.conda
+  - call %MINICONDA%\Scripts\activate.bat
+  - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no --set safety_checks disabled
+  - conda create --prefix C:\%VENV_M% "%PY_CONDITION%"
+  - conda activate C:\%VENV_M%
+  - curl.exe -fsSL -o C:\%VENV_M%\%TA_LIB_PKG% https://download.lfd.uci.edu/pythonlibs/q5gtlas7/%TA_LIB_PKG%
+  - pip install C:\%VENV_M%\%TA_LIB_PKG%
+  - pip install .
+  - pip install -r requirements_dev.txt
 
 build: false
 test_script:
-  - python -m pytest tests
+  - python -m pytest tests --mpl
 
 #on_finish:
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

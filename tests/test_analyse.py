@@ -64,6 +64,7 @@ def analyse_result(tem_data_dir: str, strategy_module: None) -> Generator[str, N
     yield result_file
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.mpl_image_compare(baseline_dir='resource/images',
                                filename='account.png')
 def test_analyse_plot_account(analyse_result: str) -> Figure:
@@ -72,6 +73,7 @@ def test_analyse_plot_account(analyse_result: str) -> Figure:
     return fig
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.mpl_image_compare(baseline_dir='resource/images',
                                filename='kline.png')
 def test_analyse_plot_kline(analyse_result: str) -> Figure:
@@ -81,6 +83,7 @@ def test_analyse_plot_kline(analyse_result: str) -> Figure:
     return fig
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.mpl_image_compare(baseline_dir='resource/images',
                                filename='volume.png')
 def test_analyse_plot_volume(analyse_result: str) -> Figure:
@@ -90,6 +93,7 @@ def test_analyse_plot_volume(analyse_result: str) -> Figure:
     return fig
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.mpl_image_compare(baseline_dir='resource/images',
                                filename='indicator.png')
 def test_analyse_plot_indicator(analyse_result: str) -> Figure:
@@ -99,6 +103,7 @@ def test_analyse_plot_indicator(analyse_result: str) -> Figure:
     return fig
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.mpl_image_compare(baseline_dir='resource/images',
                                filename='trade_mark.png')
 def test_analyse_mark_trades(analyse_result: str) -> Figure:

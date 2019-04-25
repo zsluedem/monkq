@@ -25,20 +25,20 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from MonkTrader.__main__ import cmd_main
+from monkq.__main__ import cmd_main
 
 
-def test_download():
-    with patch("MonkTrader.__main__.BitMexDownloader") as downloader:
+def test_download() -> None:
+    with patch("monkq.__main__.BitMexDownloader") as downloader:
         with tempfile.TemporaryDirectory() as tem_dir:
             cmd_main.main(['download', '--kind', 'trade', '--dst_dir', tem_dir], standalone_mode=False)
 
-            downloader.assert_called_with('trade', 'csv', os.path.join(tem_dir, 'csv#trade'))
-            obj = downloader('trade', 'csv', os.path.join(tem_dir, 'csv#trade'))
+            downloader.assert_called_with('trade', 'hdf', tem_dir)
+            obj = downloader('trade', 'hdf', os.path.join(tem_dir, 'csv#trade'))
             obj.do_all.assert_called()
 
 
-def test_startstrategy():
+def test_startstrategy() -> None:
     with tempfile.TemporaryDirectory() as tem_dir:
         cmd_main.main(['startstrategy', '-n', 'strategy1', '-d', tem_dir], standalone_mode=False)
 
@@ -46,19 +46,19 @@ def test_startstrategy():
             assert f.read() == ''
 
         with open(os.path.join(tem_dir, 'strategy1', 'manage.py')) as f:
-            assert f.read() == """from MonkTrader.__main__ import cmd_main
+            assert f.read() == """from monkq.strategy_cmd import cmd_main
+import os
 
+os.environ.setdefault("MONKQ_SETTING_MODULE", 'strategy1_settings')
 if __name__ == '__main__':
     cmd_main()
 """
 
-        with open(os.path.join(tem_dir, 'strategy1', 'settings.py')) as f:
+        with open(os.path.join(tem_dir, 'strategy1', 'strategy1_settings.py')) as f:
             assert f.read() == """import os
 
-from MonkTrader.const import RUN_TYPE
-
-# Mongodb uri which is used to load data or download data in.
-DATABASE_URI = "mongodb://127.0.0.1:27017"
+from monkq.const import RUN_TYPE
+from monkq.utils.timefunc import utc_datetime
 
 # HTTP Proxy
 HTTP_PROXY = ""
@@ -66,53 +66,52 @@ HTTP_PROXY = ""
 # used only for testing
 SSL_PATH = ''
 
-FREQUENCY = 'tick'  # tick, 1m
+FREQUENCY = '1m'  # tick, 1m ,5m ,1h
 
 LOG_LEVEL = 'INFO'  # DEBUG, INFO, NOTICE, WARNING, ERROR
 
-START_TIME = '2018-01-01T00:00:00Z'
-END_TIME = '2018-06-01T00:00:00Z'
+START_TIME = utc_datetime(2018, 1, 1)
+END_TIME = utc_datetime(2018, 6, 1)
 
-RUN_TYPE = RUN_TYPE.BACKTEST
-
-TICK_TYPE = 'tick'  # tick , bar
+RUN_TYPE = RUN_TYPE.BACKTEST  # type: ignore
 
 STRATEGY = "strategy.MyStrategy"
 
 DATA_DIR = os.path.expanduser("~/.monk/data")
 
-EXCHANGES = {
+EXCHANGES = {  # type: ignore
     'bitmex': {
-        'engine': 'MonkTrader.exchange.bitmex',
+        'ENGINE': 'monkq.exchange.bitmex.default_sim_exchange',
         "IS_TEST": True,
-        "API_KEY": '',
-        "API_SECRET": ''
     }
 }
 
-BUILTIN_PLUGINS = {
+ACCOUNTS = [
+    {
+        'NAME': 'bitmex_account',
+        'EXCHANGE': 'bitmex',
+        "START_WALLET_BALANCE": 100000,
+        'ACCOUNT_MODEL': 'monkq.assets.account.FutureAccount'
+    }
+]
 
-}
+TRADE_COUNTER = "monkq.tradecounter.TradeCounter"
 
-INSTALLED_PLUGINS = {
+STATISTIC = "monkq.stat.Statistic"
 
-}
+COLLECT_FREQ = "4H"
+
+REPORT_FILE = 'result.pkl'
 """
 
         with open(os.path.join(tem_dir, 'strategy1', 'strategy.py')) as f:
-            assert f.read() == """from MonkTrader.base_strategy import BaseStrategy
+            assert f.read() == """from monkq.base_strategy import BaseStrategy
 
 
 class MyStrategy(BaseStrategy):
-    def setup(self):
+    async def setup(self):  # type:ignore
         pass
 
-    def on_trade(self, message):
-        pass
-
-    def tick(self, message):
-        pass
-
-    def handle_bar(self):
+    async def handle_bar(self):  # type:ignore
         pass
 """

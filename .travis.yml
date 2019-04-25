@@ -1,24 +1,39 @@
 language: python
 os: linux
 sudo: required
-services: mongodb
+#services: mongodb
 dist: xenial
 python:
   - "3.7"
   - "3.6"
-
+addons:
+  apt:
+    packages:
+    - hdf5-tools
+    - libhdf5-dev
 branches:
   only:
   - master
+  - dev
+env:
+  global:
+    - DEPS_DIR=$HOME/dependencies
+    - TA_INCLUDE_PATH=$DEPS_DIR/include
+    - LD_LIBRARY_PATH=$DEPS_DIR/lib
+    - TA_LIBRARY_PATH=$DEPS_DIR/lib
+cache:
+  directories:
+    - $DEPS_DIR
+
+before_install:
+  - ./scripts/build_talib_from_source.sh $DEPS_DIR
 
 install:
   - pip install .
   - pip install -r requirements_dev.txt
 
 script:
-  - pytest --cov=MonkTrader tests
-  - flake8 MonkTrader tests
-  - isort --recursive --check-only MonkTrader tests
+  - ./scripts/run_test.sh
 
 after_success:
   - codecov

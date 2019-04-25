@@ -23,10 +23,9 @@
 #
 # coding=utf8
 
-
 from setuptools import find_packages, setup
 
-KEYWORDS = ["MonkTrader", "quant", "finance", "trading"]
+KEYWORDS = ["monkq", "quant", "finance", "trading"]
 AUTHOR = "WILLQ"
 
 with open('VERSION') as f:
@@ -47,7 +46,7 @@ with open('description') as f:
     description = f.read()
 
 setup(
-    name='MonkTrader',
+    name='monkq',
     version=VERSION,
     description=description,
     packages=find_packages(exclude=[]),
@@ -58,7 +57,7 @@ setup(
     ext_modules=[],
     entry_points={
         "console_scripts": [
-            "monktrader = MonkTrader.__main__:cmd_main"
+            "monkq = monkq.__main__:cmd_main"
         ]
     },
     classifiers=[

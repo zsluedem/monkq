@@ -26,13 +26,22 @@ from typing import Generator, TypeVar
 
 import pytest
 from dateutil.tz import tzutc
-from MonkTrader.assets.account import BaseAccount, FutureAccount
-from MonkTrader.assets.instrument import FutureInstrument, Instrument
-from MonkTrader.assets.positions import BasePosition, FuturePosition
-from MonkTrader.exchange.base import BaseExchange  # noqa: F401
+from monkq.assets.account import BaseAccount, FutureAccount
+from monkq.assets.instrument import FutureInstrument, Instrument
+from monkq.assets.positions import BasePosition, FuturePosition
+from monkq.config import Setting
+from monkq.context import Context
+from monkq.exchange.base import BaseExchange, BaseSimExchange  # noqa: F401
 
 T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
-T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseExchange")
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseSimExchange")
+
+
+@pytest.fixture()
+def exchange(settings: Setting) -> Generator[BaseSimExchange, None, None]:
+    context = Context(settings)
+    exchange = BaseSimExchange(context, 'exchange_test', {})
+    yield exchange
 
 
 @pytest.fixture()

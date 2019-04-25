@@ -26,14 +26,14 @@ import datetime
 import pytest
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzutc
-from MonkTrader.exception import SettingError
-from MonkTrader.ticker import FrequencyTicker
+from monkq.exception import SettingError
+from monkq.ticker import FrequencyTicker
 
 start_time = datetime.datetime(2018, 1, 1, tzinfo=tzutc())
 end_time = datetime.datetime(2018, 1, 3, tzinfo=tzutc())
 
 
-def test_1m_timer():
+def test_1m_timer() -> None:
     freq = FrequencyTicker(start_time=start_time, end_time=end_time, frequency='1m')
     point = start_time
     for tick in freq.timer():
@@ -42,7 +42,7 @@ def test_1m_timer():
     assert point == end_time + relativedelta(minutes=+1)
 
 
-def test_1d_timer():
+def test_1d_timer() -> None:
     freq = FrequencyTicker(start_time=start_time, end_time=end_time, frequency='1d')
     point = start_time
     for tick in freq.timer():
@@ -51,12 +51,12 @@ def test_1d_timer():
     assert point == end_time + relativedelta(days=+1)
 
 
-def test_timer_aware_timezone():
+def test_timer_aware_timezone() -> None:
     with pytest.raises(AssertionError):
         FrequencyTicker(start_time=datetime.datetime(2018, 1, 1), end_time=datetime.datetime(2018, 1, 3),
                         frequency='1m')
 
 
-def test_timer_timeexception():
+def test_timer_timeexception() -> None:
     with pytest.raises(SettingError):
         FrequencyTicker(start_time=end_time, end_time=start_time, frequency='1m')

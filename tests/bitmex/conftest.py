@@ -21,14 +21,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import datetime
+from typing import Generator, TypeVar
 
-import pymongo
 import pytest
+from dateutil.tz import tzutc
+from monkq.assets.instrument import FutureInstrument, Instrument  # noqa
+from monkq.exchange.base import BaseExchange, BaseSimExchange  # noqa
+
+T_INSTRUMENT = TypeVar('T_INSTRUMENT', bound="Instrument")
+T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseSimExchange")
 
 
-@pytest.yield_fixture(scope="function")
-def mongo_cli() -> pymongo.MongoClient:
-    cli = pymongo.MongoClient()
-    yield cli
+@pytest.fixture()
+def instrument(exchange: T_EXCHANGE) -> Generator[FutureInstrument, None, None]:
+    yield FutureInstrument(
+        symbol="XBJZ16",
+        root_symbol="XBJ",
 
-    cli.drop_database('bitmex')
+        listing_date=datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc()),
+        expiry_date=datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc()),
+        underlying="XBT",
+        quote_currency="XBJ",
+        lot_size=1,
+        tick_size=1e-8,
+        maker_fee=-0.0005,
+        taker_fee=0.0025,
+        exchange=exchange,
+
+        init_margin_rate=0.05,
+        maint_margin_rate=0.025,
+        settlement_fee=0,
+        settle_currency="XBt",
+        front_date=datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc()),
+        settle_date=datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc()),
+        reference_symbol=".XBJZ16",
+        deleverage=True,
+    )

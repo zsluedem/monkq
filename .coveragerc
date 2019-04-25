@@ -1,0 +1,16 @@
+[run]
+branch = True
+source = monkq
+omit =
+    tests/*
+    monkq/config/project_template/*
+    scripts/*
+
+[report]
+exclude_lines =
+    if self.debug:
+    pragma: no cover
+    raise NotImplementedError
+    raise ImpossibleError
+    if __name__ == .__main__.:
+    pass

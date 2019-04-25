@@ -6,7 +6,6 @@ matplotlib
 jupyter
 mpl_finance
 pytest
-pytest-mypy
 typeshed
 pytest-aiohttp
 mypy==0.650
@@ -14,3 +13,8 @@ pytest-cov
 codecov
 isort
 flake8==3.6
+babel
+asynctest
+sphinx-intl
+sphinxcontrib-asyncio
+pytest-mpl

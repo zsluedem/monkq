@@ -22,27 +22,41 @@
 # SOFTWARE.
 #
 
-import datetime
+import os
+import shutil
+import tempfile
+from typing import Generator
+from unittest.mock import MagicMock
 
-from dateutil.tz import tzutc
-from MonkTrader.assets.instrument import (
-    DownsideInstrument, FutureInstrument, PerpetualInstrument,
-    UpsideInstrument,
+import pytest
+from monkq.assets.instrument import (
+    CallOptionInstrument, FutureInstrument, PerpetualInstrument,
+    PutOptionInstrument,
 )
-from MonkTrader.exchange.bitmex.data.loader import BitmexDataloader
-from MonkTrader.utils import get_resource_path
+from monkq.exchange.bitmex.const import INSTRUMENT_FILENAME
+from monkq.exchange.bitmex.data.loader import BitmexDataloader
+from monkq.utils.timefunc import utc_datetime
+from tests.tools import get_resource_path
 
 
-def test_bitmex_dataloader(exchange):
-    dataloader = BitmexDataloader(exchange, get_resource_path())
-    dataloader.load_instruments()
+@pytest.fixture()
+def instrument_dir() -> Generator[str, None, None]:
+    with tempfile.TemporaryDirectory() as tmp:
+        shutil.copy(get_resource_path('bitmex/instruments.json'), os.path.join(tmp, INSTRUMENT_FILENAME))
+        yield tmp
+
+
+def test_bitmex_dataloader_instruments(exchange: MagicMock, instrument_dir: str) -> None:
+    context = MagicMock()
+    dataloader = BitmexDataloader(instrument_dir)
+    dataloader.load_instruments(exchange)
 
     XBT7D_D95 = dataloader.instruments.get('XBT7D_D95')
 
     # detailed values see file instruments.json in resource
-    assert isinstance(XBT7D_D95, DownsideInstrument)
-    assert XBT7D_D95.listing_date == datetime.datetime(2018, 12, 28, 12, tzinfo=tzutc())
-    assert XBT7D_D95.expiry_date == datetime.datetime(2019, 1, 4, 12, tzinfo=tzutc())
+    assert isinstance(XBT7D_D95, PutOptionInstrument)
+    assert XBT7D_D95.listing_date == utc_datetime(2018, 12, 28, 12)
+    assert XBT7D_D95.expiry_date == utc_datetime(2019, 1, 4, 12)
     assert XBT7D_D95.underlying == "XBT"
     assert XBT7D_D95.quote_currency == "XBT"
     assert XBT7D_D95.lot_size == 1
@@ -55,17 +69,17 @@ def test_bitmex_dataloader(exchange):
     assert XBT7D_D95.maint_margin_rate == 0
     assert XBT7D_D95.settlement_fee == 0
     assert XBT7D_D95.settle_currency == "XBt"
-    assert XBT7D_D95.settle_date == datetime.datetime(2019, 1, 4, 12, tzinfo=tzutc())
-    assert XBT7D_D95.front_date == datetime.datetime(2018, 12, 28, 12, tzinfo=tzutc())
+    assert XBT7D_D95.settle_date == utc_datetime(2019, 1, 4, 12)
+    assert XBT7D_D95.front_date == utc_datetime(2018, 12, 28, 12)
     assert XBT7D_D95.reference_symbol == ".BXBT30M"
     assert XBT7D_D95.deleverage
 
     XBT7D_U105 = dataloader.instruments.get('XBT7D_U105')
 
     # detailed values see file instruments.json in resource
-    assert isinstance(XBT7D_U105, UpsideInstrument)
-    assert XBT7D_U105.listing_date == datetime.datetime(2018, 12, 28, 12, tzinfo=tzutc())
-    assert XBT7D_U105.expiry_date == datetime.datetime(2019, 1, 4, 12, tzinfo=tzutc())
+    assert isinstance(XBT7D_U105, CallOptionInstrument)
+    assert XBT7D_U105.listing_date == utc_datetime(2018, 12, 28, 12)
+    assert XBT7D_U105.expiry_date == utc_datetime(2019, 1, 4, 12)
     assert XBT7D_U105.underlying == "XBT"
     assert XBT7D_U105.quote_currency == "XBT"
     assert XBT7D_U105.lot_size == 1
@@ -78,8 +92,8 @@ def test_bitmex_dataloader(exchange):
     assert XBT7D_U105.maint_margin_rate == 0
     assert XBT7D_U105.settlement_fee == 0
     assert XBT7D_U105.settle_currency == "XBt"
-    assert XBT7D_U105.settle_date == datetime.datetime(2019, 1, 4, 12, tzinfo=tzutc())
-    assert XBT7D_U105.front_date == datetime.datetime(2018, 12, 28, 12, tzinfo=tzutc())
+    assert XBT7D_U105.settle_date == utc_datetime(2019, 1, 4, 12)
+    assert XBT7D_U105.front_date == utc_datetime(2018, 12, 28, 12)
     assert XBT7D_U105.reference_symbol == ".BXBT30M"
     assert XBT7D_U105.deleverage
 
@@ -87,7 +101,7 @@ def test_bitmex_dataloader(exchange):
 
     # detailed values see file instruments.json in resource
     assert isinstance(XBTUSD, PerpetualInstrument)
-    assert XBTUSD.listing_date == datetime.datetime(2016, 5, 4, 12, tzinfo=tzutc())
+    assert XBTUSD.listing_date == utc_datetime(2016, 5, 4, 12)
     assert XBTUSD.expiry_date is None
     assert XBTUSD.underlying == "XBT"
     assert XBTUSD.quote_currency == "USD"
@@ -102,7 +116,7 @@ def test_bitmex_dataloader(exchange):
     assert XBTUSD.settlement_fee == 0
     assert XBTUSD.settle_currency == "XBt"
     assert XBTUSD.settle_date is None
-    assert XBTUSD.front_date == datetime.datetime(2016, 5, 4, 12, tzinfo=tzutc())
+    assert XBTUSD.front_date == utc_datetime(2016, 5, 4, 12)
     assert XBTUSD.reference_symbol == ".BXBT"
     assert XBTUSD.deleverage
 
@@ -110,8 +124,8 @@ def test_bitmex_dataloader(exchange):
 
     # detailed values see file instruments.json in resource
     assert isinstance(TRXH19, FutureInstrument)
-    assert TRXH19.listing_date == datetime.datetime(2018, 12, 12, 6, tzinfo=tzutc())
-    assert TRXH19.expiry_date == datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc())
+    assert TRXH19.listing_date == utc_datetime(2018, 12, 12, 6)
+    assert TRXH19.expiry_date == utc_datetime(2019, 3, 29, 12)
     assert TRXH19.underlying == "TRX"
     assert TRXH19.quote_currency == "XBT"
     assert TRXH19.lot_size == 1
@@ -124,7 +138,34 @@ def test_bitmex_dataloader(exchange):
     assert TRXH19.maint_margin_rate == 0.025
     assert TRXH19.settlement_fee == 0
     assert TRXH19.settle_currency == "XBt"
-    assert TRXH19.settle_date == datetime.datetime(2019, 3, 29, 12, tzinfo=tzutc())
-    assert TRXH19.front_date == datetime.datetime(2019, 2, 22, 12, tzinfo=tzutc())
+    assert TRXH19.settle_date == utc_datetime(2019, 3, 29, 12)
+    assert TRXH19.front_date == utc_datetime(2019, 2, 22, 12)
     assert TRXH19.reference_symbol == ".TRXXBT30M"
     assert TRXH19.deleverage
+
+    context.now = utc_datetime(2019, 3, 1)
+
+    instruments = dataloader.active_instruments(context.now)
+
+    assert instruments.get("XBTUSD") is XBTUSD
+    assert instruments.get('TRXH19') is TRXH19
+
+
+def test_bitmex_dataloader_kline_data(exchange: MagicMock, tem_data_dir: str) -> None:
+    context = MagicMock()
+    dataloader = BitmexDataloader(tem_data_dir)
+
+    instrument = MagicMock()
+    instrument.symbol = "XBTZ15"
+    context.now = utc_datetime(2015, 12, 25, 11, 49)
+
+    assert dataloader.get_last_price(instrument.symbol, context.now) == 453.5
+    kline_df = dataloader.get_kline(instrument.symbol, context.now, 50)
+    assert len(kline_df) == 50
+    assert kline_df.index[-1] == utc_datetime(2015, 12, 25, 11, 49)
+
+    context.now = utc_datetime(2016, 1, 1, 11, 12)
+
+    assert dataloader.get_last_price(instrument.symbol, context.now) == 0
+
+    dataloader.all_data(instrument.symbol)

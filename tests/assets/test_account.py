@@ -25,12 +25,12 @@ from typing import List, TypeVar
 from unittest.mock import MagicMock
 
 import pytest
-from MonkTrader.assets.account import FutureAccount
-from MonkTrader.assets.instrument import FutureInstrument, Instrument  # noqa
-from MonkTrader.assets.order import FutureLimitOrder
-from MonkTrader.assets.positions import FuturePosition
-from MonkTrader.assets.trade import Trade
-from MonkTrader.exchange.base import BaseExchange  # noqa: F401
+from monkq.assets.account import FutureAccount
+from monkq.assets.instrument import FutureInstrument, Instrument  # noqa
+from monkq.assets.order import FutureLimitOrder
+from monkq.assets.positions import FuturePosition
+from monkq.assets.trade import Trade
+from monkq.exchange.base import BaseExchange  # noqa: F401
 
 from ..utils import random_string
 
@@ -40,8 +40,8 @@ T_EXCHANGE = TypeVar('T_EXCHANGE', bound="BaseExchange")
 
 def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
-    exchange.get_last_price.return_value = 10
+    exchange.get_open_orders = MagicMock(return_value=open_orders)
+    exchange.last_price = MagicMock(return_value=10)
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
     assert account.position_margin == 0
@@ -50,6 +50,7 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
     assert account.wallet_balance == 10000
     assert account.margin_balance == 10000
     assert account.available_balance == 10000
+    assert account.total_capital == 10000
 
     # open a position
     order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -66,6 +67,7 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
     assert account.unrealised_pnl == -102.5
     assert account.margin_balance == 9894.75
     assert account.available_balance == 9842.25
+    assert account.total_capital == 9894.75
 
     # more on a position
     order2 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -82,6 +84,7 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
     assert account.unrealised_pnl == -207.5
     assert account.margin_balance == 9784.5
     assert account.available_balance == 9627.0
+    assert account.total_capital == 9784.5
 
     # close part
     order3 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -98,6 +101,7 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
     assert account.unrealised_pnl == pytest.approx(-138.3333, 0.0001)
     assert account.margin_balance == pytest.approx(9784.5000, 0.0001)
     assert account.available_balance == pytest.approx(9679.5000, 0.0001)
+    assert account.total_capital == pytest.approx(9784.5000, 0.0001)
 
     # close and open
     order4 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -114,6 +118,7 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
     assert account.unrealised_pnl == pytest.approx(97.5, 0.0001)
     assert account.margin_balance == pytest.approx(10078.7513, 0.0001)
     assert account.available_balance == pytest.approx(10026.2513, 0.0001)
+    assert account.total_capital == pytest.approx(10078.7513, 0.0001)
 
     # get more
     order5 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -130,6 +135,7 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
     assert account.unrealised_pnl == pytest.approx(145.0, 0.0001)
     assert account.margin_balance == pytest.approx(10123.6263, 0.0001)
     assert account.available_balance == pytest.approx(10018.6263, 0.0001)
+    assert account.total_capital == pytest.approx(10123.6263, 0.0001)
 
     # close and open
     order6 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -146,6 +152,7 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
     assert account.unrealised_pnl == pytest.approx(-52.5, 0.0001)
     assert account.margin_balance == pytest.approx(9968.2513, 0.0001)
     assert account.available_balance == pytest.approx(9915.7513, 0.0001)
+    assert account.total_capital == pytest.approx(9968.2513, 0.0001)
 
     # close
     order7 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -162,6 +169,7 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
     assert account.unrealised_pnl == 0
     assert account.margin_balance == pytest.approx(9868.5013, 0.0001)
     assert account.available_balance == pytest.approx(9868.5013, 0.0001)
+    assert account.total_capital == pytest.approx(9868.5013, 0.0001)
 
     # close
     order8 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -178,6 +186,7 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
     assert account.unrealised_pnl == pytest.approx(146.25, 0.0001)
     assert account.margin_balance == pytest.approx(10010.6263, 0.0001)
     assert account.available_balance == pytest.approx(9931.8763, 0.0001)
+    assert account.total_capital == pytest.approx(10010.6263, 0.0001)
 
     order9 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
                               quantity=150, price=11)
@@ -193,12 +202,13 @@ def test_future_account_deal(exchange: MagicMock, future_instrument: FutureInstr
     assert account.unrealised_pnl == 0
     assert account.margin_balance == pytest.approx(9860.2513, 0.0001)
     assert account.available_balance == pytest.approx(9860.2513, 0.0001)
+    assert account.total_capital == pytest.approx(9860.2513, 0.0001)
 
 
 def test_future_account_order_margin_two_direction(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
-    exchange.get_last_price.return_value = 10
+    exchange.get_open_orders = MagicMock(return_value=open_orders)
+    exchange.last_price = MagicMock(return_value=10)
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
     untraded_order1 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -221,8 +231,8 @@ def test_future_account_order_margin_two_direction(exchange: MagicMock, future_i
 
 def test_future_account_order_margin_long_position(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
-    exchange.get_last_price.return_value = 10
+    exchange.get_open_orders = MagicMock(return_value=open_orders)
+    exchange.last_price = MagicMock(return_value=10)
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
 
@@ -256,7 +266,6 @@ def test_future_account_order_margin_long_position(exchange: MagicMock, future_i
 
     trade2 = Trade(untraded_order2, exec_price=11, exec_quantity=-30, trade_id=random_string(6))
     untraded_order2.deal(trade2)
-    account.deal(trade2)
     assert account.order_margin == 111.65
 
     untraded_order6 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -267,8 +276,8 @@ def test_future_account_order_margin_long_position(exchange: MagicMock, future_i
 
 def test_future_account_order_margin_short_position(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
-    exchange.get_last_price.return_value = 10
+    exchange.get_open_orders = MagicMock(return_value=open_orders)
+    exchange.last_price = MagicMock(return_value=10)
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
 
@@ -302,7 +311,6 @@ def test_future_account_order_margin_short_position(exchange: MagicMock, future_
 
     trade2 = Trade(untraded_order2, exec_price=11, exec_quantity=-30, trade_id=random_string(6))
     untraded_order2.deal(trade2)
-    account.deal(trade2)
     assert account.order_margin == 98.45
 
     untraded_order6 = FutureLimitOrder(order_id=random_string(6), account=account, instrument=future_instrument,
@@ -314,8 +322,8 @@ def test_future_account_order_margin_short_position(exchange: MagicMock, future_
 def test_future_account_order_margin_multiple_instruments(exchange: MagicMock, future_instrument: FutureInstrument,
                                                           future_instrument2: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
-    exchange.get_last_price.return_value = 10
+    exchange.get_open_orders = MagicMock(return_value=open_orders)
+    exchange.last_price = MagicMock(return_value=10)
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
 
@@ -331,8 +339,8 @@ def test_future_account_order_margin_multiple_instruments(exchange: MagicMock, f
 
 def test_future_accoutn_order_margin_leverage(exchange: MagicMock, future_instrument: FutureInstrument) -> None:
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
-    exchange.get_last_price.return_value = 10
+    exchange.get_open_orders = MagicMock(return_value=open_orders)
+    exchange.last_price = MagicMock(return_value=10)
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
 
@@ -360,8 +368,8 @@ def test_future_account_position_margin(exchange: MagicMock, future_instrument: 
                                         future_instrument2: FutureInstrument) -> None:
     # test the position margin of the account when the account have two different positions
     open_orders: List[FutureLimitOrder] = []
-    exchange.open_orders.return_value = open_orders
-    exchange.get_last_price.return_value = 10
+    exchange.get_open_orders = MagicMock(return_value=open_orders)
+    exchange.last_price = MagicMock(return_value=10)
 
     account = FutureAccount(exchange=exchange, position_cls=FuturePosition, wallet_balance=10000)
 

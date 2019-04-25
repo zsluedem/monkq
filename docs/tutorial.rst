@@ -274,13 +274,61 @@ If you unpickle the file , you would get a dict like below
                 'timestamp': datetime.datetime,
                 'bitmex_account':100000
             }, ...]
-        "orders": [order1, order2]
-        "trades": [trade1, trade2]
+        "orders": [order1, order2],
+        "trades": [trade1, trade2],
+        "settings": strategy_settings
     }
 
 
 1. daily_capital -> the daily account balance change during the backtest
 2. orders -> all the orders you submit
 3. trades -> all the trades generated in the strategy during the backtest
+4. settings -> strategy :class:`~Setting`
 
 That's the result you want to analyse.
+
+Analyse Your Strategy Result
+------------------------------
+
+Monkq provides a tool to help you analyse your strategy profit
+performance -- :class:`~Analyser`.The :class:`~Analyser` has 4 mainly function:
+
+1. plot the account capital change along with the backtest time
+2. plot the kline lines or other indicator you want to know
+3. mark the trades you make in the plot
+4. get the history data which monkq uses.
+
+We recommend you use `jupyter notebook <https://jupyter.org/>`_ to analyse your
+result.
+
+The :class:`~Analyser` only take one argument to initialize -- the path
+to the :file:`result.pkl`.
+
+.. code-block:: python
+
+    analyser = Analyser('/path/to/result.pkl')
+
+It looks very simple actually.
+
+Here we show the example to plot. For more information please check :class:`~Analyser`.
+
+
+.. code-block:: python
+
+    from monkq.analyse import Analyser
+    from monkq.utils.timefunc import utc_datetime
+    a = Analyser('result.pkl')
+    fig, axes = plt.subplots(2)
+    start= utc_datetime(2018,1,1)
+    end = utc_datetime(2018,1,10)
+    a.plot_kline('bitmex', '4H', 'XBTUSD', start, end, axes=axes[0])
+    a.mark_trades(axes[0], start, end)
+    a.plot_account(axes[1])
+
+    # if you are using ipython, you should take the next step
+    # if you are using jupyter notebook, you can just ignore line below
+    fig.show()
+
+After you run the codes above, you would see image below.
+
+.. image:: images/analyser_plot.png

@@ -160,7 +160,7 @@ class Analyser():
             end = self.end_datetime
         if axes is None:
             fig, axes = plt.subplots()
-        # TODO not include start, end
+        # TODO it does not include start, end now. It should include both start and end.
         trades_df = self.trades[start:end]  # type:ignore
         low, high = axes.get_ylim()
         axes.scatter(date2num(trades_df.index), [high] * len(trades_df),

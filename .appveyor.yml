@@ -24,7 +24,7 @@ install:
   - mkdir C:\Users\appveyor\.conda
   - call %MINICONDA%\Scripts\activate.bat
   - conda config --set always_yes yes --set changeps1 no --set auto_update_conda no --set safety_checks disabled
-  - conda create --prefix C:\%VENV_M% "%PY_CONDITION%"
+  - if not exist C:\%VENV_M% conda create --prefix C:\%VENV_M% "%PY_CONDITION%"
   - conda activate C:\%VENV_M%
   - curl.exe -fsSL -o C:\%VENV_M%\%TA_LIB_PKG% https://download.lfd.uci.edu/pythonlibs/q5gtlas7/%TA_LIB_PKG%
   - pip install C:\%VENV_M%\%TA_LIB_PKG%

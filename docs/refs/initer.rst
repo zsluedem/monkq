@@ -64,7 +64,7 @@ problems during the backtest.
 
         :param str freq: The frequency of indicator data you want to pregenerate
         :param instrument: An instance of :class:`~Instrument`, the instrument
-        :param str func:  indicator function you want to use, see available_func_
+        :param str func:  indicator function you want to use, see :ref:`available_func`.
         :param str store_key: The store key you want to put in cache. The
                               pre-generated data would store in a dict. The key
                               of the data would be `store_key`.

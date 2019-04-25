@@ -12,3 +12,4 @@ Reference Manual
    utils
    context
    initer
+   analyser

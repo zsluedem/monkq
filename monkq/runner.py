@@ -48,9 +48,7 @@ class Runner():
 
         self.stat = self.context.stat
 
-    async def _run(self) -> None:
-        await self.context.strategy.setup()
-
+    async def _freq_handle_bars(self) -> None:
         self.stat.freq_collect_account()
 
         for current_time in self.ticker.timer():
@@ -67,6 +65,9 @@ class Runner():
 
         self.stat.collect_account_info()
 
+    async def _run(self) -> None:
+        await self.context.strategy.setup()
+        await self._freq_handle_bars()
         self.lastly()
 
     def lastly(self) -> None:

@@ -49,7 +49,8 @@ class Statistic():
         self.last_collect_time: datetime.datetime = utc_datetime(1970, 1, 1)
 
     def collect_account_info(self) -> None:
-        accounts_capital: DAILY_STAT_TYPE = {k: v.total_capital for k, v in self.context.accounts.items()}
+        accounts_capital: DAILY_STAT_TYPE = {account_name: account.total_capital
+                                             for account_name, account in self.context.accounts.items()}
         accounts_capital.update({'timestamp': self.context.now})
         self.daily_capital.append(accounts_capital)
 
@@ -75,3 +76,10 @@ class Statistic():
     def report(self) -> None:
         with open(self.report_file, 'wb') as f:
             pickle.dump(self._pickle_obj(), f)
+
+    @property
+    def total_capital(self) -> float:
+        last_day_capital = self.daily_capital[-1].copy()
+        last_day_capital.pop('timestamp')
+        return sum([capital for capital in last_day_capital.values()])
+

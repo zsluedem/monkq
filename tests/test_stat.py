@@ -53,3 +53,5 @@ def test_statistic(statistic_context: MagicMock) -> None:
     with open(stat.report_file, 'rb') as f:
         obj = pickle.load(f)
     assert obj['daily_capital'] == [{"timestamp": utc_datetime(2018, 1, 1), "account1": 2000, "account2": 5000}]
+
+    assert stat.total_capital == 7000

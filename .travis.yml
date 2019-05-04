@@ -1,7 +1,6 @@
 language: python
 os: linux
 sudo: required
-#services: mongodb
 dist: xenial
 python:
   - "3.7"
@@ -18,6 +17,7 @@ branches:
 env:
   global:
     - DEPS_DIR=$HOME/dependencies
+    - PY_VENV=$DEPS_DIR/venv
     - TA_INCLUDE_PATH=$DEPS_DIR/include
     - LD_LIBRARY_PATH=$DEPS_DIR/lib
     - TA_LIBRARY_PATH=$DEPS_DIR/lib
@@ -29,7 +29,9 @@ before_install:
   - ./scripts/build_talib_from_source.sh $DEPS_DIR
 
 install:
-  - pip install .
+  - if [ ! -d "$PY_VENV" ];then pip install virtualenv && virtualenv -p python3 $PY_VENV; fi
+  - source $PY_VENV/bin/activate
+  - pip install numpy && pip install .
   - pip install -r requirements_dev.txt
 
 script:

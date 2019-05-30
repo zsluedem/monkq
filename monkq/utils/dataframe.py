@@ -84,6 +84,9 @@ def kline_1m_to_freq(df: pandas.DataFrame, freq: str) -> pandas.DataFrame:
     result = df.resample(freq, closed=KLINE_SIDE_CLOSED, label=KLINE_SIDE_LABEL).apply(CONVERSION)
     return result
 
+def kline_freq_to_1m(df: pandas.DataFrame) -> pandas.DataFrame:
+    result = df.resample('1min', closed=KLINE_SIDE_CLOSED, label=KLINE_SIDE_LABEL).apply('last')
+    return result.fillna(method='ffill')
 
 TA_FUNCTION = talib.get_functions()
 

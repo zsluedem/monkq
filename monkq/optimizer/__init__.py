@@ -21,8 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from asyncio import get_event_loop
-
 from monkq.runner import Runner
 from monkq.config import Setting
 

@@ -25,7 +25,7 @@ import asyncio
 import json
 import ssl
 import time
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
@@ -34,6 +34,7 @@ from aiohttp import (  # type: ignore
     ClientSession, ClientWebSocketResponse, WSMsgType,
 )
 from logbook import Logger
+from monkq.assets.orderbook import DictStructOrderBook
 from monkq.base_strategy import BaseStrategy
 from monkq.exception import ImpossibleError
 from monkq.exchange.bitmex.auth import gen_header_dict
@@ -41,7 +42,6 @@ from monkq.utils.i18n import _
 
 from .log import logger_group
 
-OrderBook = namedtuple('OrderBook', ['Buy', 'Sell'])
 CURRENCY = 'XBt'
 INTERVAL_FACTOR = 3
 
@@ -106,8 +106,6 @@ class BitmexWebsocket():
         self._keys: Dict = dict()
 
         self.quote_data: Dict[str, Dict] = defaultdict(dict)
-        self.order_book: Dict[str, OrderBook[Dict, Dict]] = defaultdict(  # type:ignore
-            lambda: OrderBook(Buy=dict(), Sell=dict()))
         self.positions: Dict[str, Dict] = defaultdict(dict)
         self.margin: Dict = dict()
 
@@ -194,7 +192,7 @@ class BitmexWebsocket():
     def get_quote(self, symbol: str) -> dict:
         return self.quote_data[symbol]
 
-    def get_order_book(self, symbol: str) -> OrderBook:
+    def get_order_book(self, symbol: str) -> DictStructOrderBook:
         return self.order_book[symbol]
 
     def error(self, error: str) -> None:

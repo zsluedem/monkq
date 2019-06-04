@@ -76,10 +76,9 @@ def test_dictorderbook() -> None:
                  {'symbol': 'XBTUSD', 'id': 15599142800, 'side': 'Buy', 'size': 500, 'price': 8572},
                  {'symbol': 'XBTUSD', 'id': 15599142900, 'side': 'Buy', 'size': 154, 'price': 8571}]
 
-    order_book = DictStructOrderBook("XBTUSD")
+    order_book = DictStructOrderBook()
     for data in init_data:
         order_book.insert(data)
-    assert order_book.symbol == "XBTUSD"
     assert order_book.best_buy().price == 8599
     assert order_book.best_buy().size == 194033
     assert order_book.best_sell().price == 8600

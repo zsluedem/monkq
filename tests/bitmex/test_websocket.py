@@ -28,10 +28,10 @@ from typing import Any, Callable, Coroutine, Generator
 from unittest.mock import MagicMock
 
 import pytest
-from aiohttp import ClientSession, ClientTimeout, WSMsgType, web  # type:ignore
+from aiohttp import ClientSession, ClientTimeout, web  # type:ignore
 from aiohttp.test_utils import TestServer
 from monkq.base_strategy import BaseStrategy
-from monkq.exchange.bitmex.websocket import INTERVAL_FACTOR, BitmexWebsocket
+from monkq.exchange.bitmex.websocket import BitmexWebsocket
 from tests.tools import get_resource_path
 
 pytestmark = pytest.mark.asyncio
@@ -89,25 +89,6 @@ async def realtime_handler(request: web.Request, async_lock: Lock, close_lock: L
     return ws
 
 
-async def ping_handler(request: web.Request, close_lock: Lock) -> None:
-    ws_data = ret_data()
-    ws = web.WebSocketResponse(autoping=False)
-    await close_lock.acquire()
-    await ws.prepare(request)
-    await ws.send_str(next(ws_data))
-
-    await sleep(INTERVAL_FACTOR + 3)
-
-    mes = await ws.receive()
-    assert mes.type == WSMsgType.PING
-    await ws.pong()
-    await ws.send_str(next(ws_data))
-    close_lock.release()
-
-    while not ws.closed:
-        await sleep(0.2)
-
-
 @pytest.fixture()  # type:ignore
 async def async_lock(loop: AbstractEventLoop) -> Lock:
     yield Lock(loop=loop)
@@ -123,15 +104,6 @@ async def normal_bitmex_server(aiohttp_server: Callable[[web.Application], Corou
                                async_lock: Lock, close_lock: Lock) -> None:
     app = web.Application()
     app.router.add_get('/realtime', partial(realtime_handler, async_lock=async_lock, close_lock=close_lock))
-    server = await aiohttp_server(app)
-    yield server
-
-
-@pytest.fixture()  # type:ignore
-async def ping_bitmex_server(aiohttp_server: Callable[[web.Application], Coroutine[TestServer, None, None]],
-                             close_lock: Lock) -> None:
-    app = web.Application()
-    app.router.add_get('/realtime', partial(ping_handler, close_lock=close_lock))  # type:ignore
     server = await aiohttp_server(app)
     yield server
 
@@ -161,7 +133,7 @@ async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: Abstract
                          API_SECRET)
 
     await ws.setup()
-    await ws.subscribe('quote', 'XBTUSD')
+    await ws.subscribe('quote:XBTUSD')
     await sleep(1)
     await ws.subscribe_multiple(
         ['trade:XBTUSD', "orderBookL2_25:XBTUSD", "position", "margin", "order", "execution", "connected"])
@@ -169,6 +141,7 @@ async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: Abstract
     await async_lock.acquire()
     await ws.unsubscribe("orderBookL2_25", "XBTUSD")
 
+    await sleep(0.2)
     await close_lock.acquire()
 
     xbtusd_quote = ws.get_quote('XBTUSD')
@@ -177,7 +150,7 @@ async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: Abstract
     assert xbtusd_quote['askPrice'] == 3621
     assert xbtusd_quote['askSize'] == 62873
 
-    trades = ws.recent_trades()
+    trades = ws.recent_trades("XBTUSD")
 
     trade1 = trades[-8]
     assert trade1['side'] == "Buy"
@@ -194,42 +167,20 @@ async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: Abstract
     assert position['markPrice'] == 3617.52
     assert position['liquidationPrice'] == 3304.5
 
-    order_book = ws.get_order_book("XBTUSD")
-    assert order_book.Buy[15599637950]['side'] == "Buy"
-    assert order_book.Buy[15599637950]['size'] == 1342
-    assert order_book.Buy[15599637950]['price'] == 3620.5
+    # order_book = ws.get_order_book("XBTUSD")
+    # assert order_book.Buy[15599637950]['side'] == "Buy"
+    # assert order_book.Buy[15599637950]['size'] == 1342
+    # assert order_book.Buy[15599637950]['price'] == 3620.5
 
-    orders = ws.orders()
-    assert orders[-1]['orderID'] == "aeeff587-89b2-36a8-a482-d7aa49dc1261"
-    assert orders[-1]['account'] == 142643
-    assert orders[-1]['symbol'] == "EOSH19"
-    assert orders[-1]['side'] == "Sell"
-    assert orders[-1]['orderQty'] == 20
-    assert orders[-1]['price'] == 0.0006991
-    assert orders[-1]['leavesQty'] == 20
-    assert orders[-1]['cumQty'] == 0
-
-    await ws.stop()
-    await session.close()
-
-
-async def test_bitmex_websocket_ping(ping_bitmex_server: TestServer, loop: AbstractEventLoop,
-                                     close_lock: Lock) -> None:
-    session = ClientSession()
-    ws = BitmexWebsocket(C(MagicMock()),
-                         loop,
-                         session,
-                         "ws://127.0.0.1:{}/realtime".format(ping_bitmex_server.port),
-                         API_KEY,
-                         API_SECRET)
-
-    await ws.setup()
-    await close_lock.acquire()
+    # orders = ws.orders()
+    # assert orders[-1]['orderID'] == "aeeff587-89b2-36a8-a482-d7aa49dc1261"
+    # assert orders[-1]['account'] == 142643
+    # assert orders[-1]['symbol'] == "EOSH19"
+    # assert orders[-1]['side'] == "Sell"
+    # assert orders[-1]['orderQty'] == 20
+    # assert orders[-1]['price'] == 0.0006991
+    # assert orders[-1]['leavesQty'] == 20
+    # assert orders[-1]['cumQty'] == 0
 
     await ws.stop()
     await session.close()
-
-
-@pytest.mark.xfail
-def test_bitmex_websocket_lost_connections() -> None:
-    assert False

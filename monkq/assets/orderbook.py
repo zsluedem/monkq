@@ -58,8 +58,7 @@ class AbcOrderBookStruct:
 
 
 class DictStructOrderBook(AbcOrderBookStruct):
-    def __init__(self, symbol: str):
-        self.symbol = symbol
+    def __init__(self) -> None:
         self._sell_book: Dict[int, BookItem] = {}
         self._buy_book: Dict[int, BookItem] = {}
 

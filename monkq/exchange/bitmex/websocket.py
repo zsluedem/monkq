@@ -25,29 +25,20 @@ import asyncio
 import json
 import ssl
 import time
-from collections import defaultdict
-from dataclasses import dataclass, field
+from collections import defaultdict, deque
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 
-from aiohttp import (  # type: ignore
-    ClientSession, ClientWebSocketResponse, WSMsgType,
-)
+from aiohttp import ClientSession, ClientWebSocketResponse  # type: ignore
 from logbook import Logger
 from monkq.assets.orderbook import DictStructOrderBook
 from monkq.base_strategy import BaseStrategy
-from monkq.exception import ImpossibleError
+from monkq.config.global_settings import PING_INTERVAL_FACTOR
+from monkq.exchange.base.websocket import AbsExchangeWebsocket, BackgroundTask
 from monkq.exchange.bitmex.auth import gen_header_dict
 from monkq.utils.i18n import _
 
-from .log import logger_group
-
 CURRENCY = 'XBt'
-INTERVAL_FACTOR = 3
-
-logger = Logger("exchange.bitmex.websocket")
-logger_group.add_logger(logger)
-
 FuncType = Callable[..., Any]
 F = TypeVar('F', bound=FuncType)
 MESSAGE = Dict[str, Union[List, str, Dict]]
@@ -74,132 +65,154 @@ def timestamp_update(func: F) -> F:
     return cast(F, wrapped)
 
 
-@dataclass()
-class BackgroundTask:
-    ping: asyncio.Task = field(init=False)
-    handler: asyncio.Task = field(init=False)
-
-
-class BitmexWebsocket():
+class BitmexWebsocket(AbsExchangeWebsocket):
     MAX_TABLE_LEN = 200
 
     def __init__(self, strategy: BaseStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession, ws_url: str,
                  api_key: str, api_secret: str, ssl: Optional[ssl.SSLContext] = None,
                  http_proxy: Optional[str] = None):
-        self._loop = loop
+        self.loop = loop
 
-        self._ws: ClientWebSocketResponse
         self._ssl = ssl
-        self._ws_url = ws_url
+        self.ws_url = ws_url
         self._api_key = api_key
         self._api_secret = api_secret
         self._http_proxy = http_proxy
         self.background_task = BackgroundTask()
         self.strategy = strategy
         self.session: ClientSession = session
-        self._last_comm_time = 0.  # this is used for a mark point for ping
-
-        # below is used for data store, it depends on what kind of data it subscribe
+        self.ping_interval = PING_INTERVAL_FACTOR
+        self.exchange_name = "Bitmex"
+        self.logger = Logger("exchange.bitmex.websocket")
+        self.last_comm_time = 0.  # this is used for a mark point for ping
 
         # normal data
         self._data: Dict = dict()
         self._keys: Dict = dict()
 
+        self._order_book: Dict[str, DictStructOrderBook] = defaultdict(lambda: DictStructOrderBook())
         self.quote_data: Dict[str, Dict] = defaultdict(dict)
         self.positions: Dict[str, Dict] = defaultdict(dict)
+
+        def _factory(length: int) -> Callable:
+            return lambda: deque(maxlen=length)
+
+        self.recent_trades_dict: Dict[str, deque] = defaultdict(_factory(self.MAX_TABLE_LEN))
+        self.recent_orders_dict: Dict[str, deque] = defaultdict(_factory(self.MAX_TABLE_LEN))
         self.margin: Dict = dict()
 
-    async def setup(self) -> None:
+    async def connect(self) -> ClientWebSocketResponse:
         headers = gen_header_dict(self._api_key, self._api_secret, 'GET', "/realtime", '')
-
-        self._ws = await self.session.ws_connect(self._ws_url, headers=headers, proxy=self._http_proxy, ssl=self._ssl)
-        self._last_comm_time = time.time()
-        self.background_task.handler = self._loop.create_task(self._run())
-        self.background_task.ping = self._loop.create_task(self._ping())
-
-    async def stop(self) -> None:
-        if not self._ws.closed:
-            await self._ws.close()
-        await self.background_task.handler
-        await self.background_task.ping
-
-    async def _ping(self) -> None:
-        try:
-            while not self._ws.closed:
-                if time.time() - self._last_comm_time > INTERVAL_FACTOR:
-                    logger.debug(
-                        _('No communication during {} seconds. Send ping signal to keep connection open').format(
-                            INTERVAL_FACTOR))
-                    await self._ws.ping()
-                    self._last_comm_time = time.time()
-                await asyncio.sleep(INTERVAL_FACTOR)
-        except asyncio.CancelledError:
-            logger.warning(_('Your bitmex ping task has been stopped'))
-
-    async def _run(self) -> None:
-        try:
-            while not self._ws.closed:
-                message = await self._ws.receive()
-                logger.debug(_("Receive message from bitmex:{}").format(message.data))
-                if message.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
-                    continue
-                elif message.type == WSMsgType.CLOSED:
-                    break
-                decode_message = json.loads(message.data)
-                self._on_message(decode_message)
-
-                # call strategy method
-                # websocket first package is not a normal package , so we use 'limit' to skip it
-                # TODO trigger on trade and tick
-                # if decode_message.get('action'):
-                #     if decode_message.get('table') == 'execution':
-                #         start = time.time()
-                #         ret = self.strategy.on_trade(message=decode_message)
-                #         if asyncio.iscoroutine(ret):
-                #             await ret
-                #         logger.debug(_('User on_trade process time: {}').format(round(time.time() - start, 7)))
-                #     else:
-                #         start = time.time()
-                #         ret = self.strategy.tick(message=decode_message)
-                #         if asyncio.iscoroutine(ret):
-                #             await ret
-                #         logger.debug(_('User tick process time: {}').format(round(time.time() - start, 7)))
-        except asyncio.CancelledError:
-            logger.warning(_('Your bitmex handler has been stopped'))
+        return await self.session.ws_connect(self.ws_url, headers=headers, proxy=self._http_proxy, ssl=self._ssl)
 
     @timestamp_update
-    async def subscribe(self, topic: str, symbol: str = '') -> None:
-        await self._ws.send_json({'op': 'subscribe', "args": [':'.join((topic, symbol))]})
+    async def subscribe(self, topic: str) -> None:
+        await self.ws_conn.send_json({'op': 'subscribe', "args": [topic]})
 
     @timestamp_update
     async def subscribe_multiple(self, topics: List[str]) -> None:
-        await self._ws.send_json({'op': 'subscribe', "args": topics})
+        await self.ws_conn.send_json({'op': 'subscribe', "args": topics})
 
     @timestamp_update
     async def unsubscribe(self, topic: str, symbol: str = '') -> None:
         args = ":".join((topic, symbol))
-        await self._ws.send_json({'op': 'unsubscribe', "args": [args]})
+        await self.ws_conn.send_json({'op': 'unsubscribe', "args": [args]})
+
+    def decode_raw_data(self, data: str) -> Dict:
+        return json.loads(data)
 
     def orders(self) -> List[dict]:
         return self._data['order']
 
-    def recent_trades(self) -> List[dict]:
-        return self._data['trade']
+    def recent_trades(self, symbol: str) -> deque:
+        return self.recent_trades_dict[symbol]
 
     def get_position(self, symbol: str) -> dict:
         return self.positions[symbol]
 
+    def error(self, message: str) -> None:
+
+        self.logger.warning(message)
+
     def get_quote(self, symbol: str) -> dict:
         return self.quote_data[symbol]
 
-    def get_order_book(self, symbol: str) -> DictStructOrderBook:
-        return self.order_book[symbol]
+    def process_orderbook_data(self, action: str, data: List) -> None:
+        if action == 'partial':
+            for item in data:
+                pass
+        elif action == 'insert':
+            pass
+        elif action == 'update':
+            pass
+        elif action == 'delete':
+            pass
+        else:
+            raise NotImplementedError()
 
-    def error(self, error: str) -> None:
-        pass
+    def process_margin_data(self, action: str, data: List) -> None:
+        if action == 'partial':
+            for item in data:
+                assert item['currency'] == CURRENCY
+                self.margin = item
+        elif action == 'update':
+            for item in data:
+                assert item['currency'] == CURRENCY
+                self.margin.update(item)
+        else:
+            raise NotImplementedError()
+
+    def process_quote_data(self, action: str, data: List) -> None:
+
+        if action == 'partial':
+            for item in data:
+                self.quote_data[item['symbol']] = item
+        elif action == 'insert':
+            for item in data:
+                self.quote_data[item['symbol']] = item
+        else:
+            raise NotImplementedError()
+
+    def process_position_data(self, action: str, data: List) -> None:
+        if action == 'partial':
+            for item in data:
+                assert item['currency'] == CURRENCY
+                self.positions[item['symbol']] = item
+        elif action == 'insert':
+            for item in data:
+                assert item['currency'] == CURRENCY
+                self.positions[item['symbol']] = item
+        elif action == 'update':
+            for item in data:
+                assert item['currency'] == CURRENCY
+                self.positions[item['symbol']].update(item)
+        else:
+            raise NotImplementedError()
+
+    def process_trade_data(self, action: str, data: List) -> None:
+        if action == 'partial':
+            for item in data:
+                self.recent_trades_dict[item['symbol']].append(item)
+        elif action == 'insert':
+            for item in data:
+                self.recent_trades_dict[item['symbol']].append(item)
+        else:
+            raise NotImplementedError()
+
+    def process_order_data(self, action: str, data: List) -> None:
+        if action == 'partial':
+            for item in data:
+                self.recent_orders_dict[item['symbol']].append(item)
+        elif action == 'insert':
+            for item in data:
+                self.recent_orders_dict[item['symbol']].append(item)
+        elif action == "update":
+            pass
+        else:
+            raise NotImplementedError()
 
     @timestamp_update
-    def _on_message(self, message: dict) -> None:
+    def on_message(self, message: Dict) -> None:
         '''Handler for parsing WS messages.'''
         start = time.time()
 
@@ -207,13 +220,13 @@ class BitmexWebsocket():
         action = message['action'] if 'action' in message else None
         if 'subscribe' in message:
             if message['success']:
-                logger.debug(_("Subscribed to {}").format(message['subscribe']))
+                self.logger.debug(_("Subscribed to {}").format(message['subscribe']))
             else:
                 self.error(_("Unable to subscribe to {}. Error: \"{}\" Please check and restart.").format(
                     message['request']['args'][0], message['error']))
         elif 'unsubscribe' in message:
             if message['success']:
-                logger.debug(_("Unsubscribed to {}.").format(message['unsubscribe']))
+                self.logger.debug(_("Unsubscribed to {}.").format(message['unsubscribe']))
             else:
                 self.error(_("Unable to subscribe to {}. Error: \"{}\" Please check and restart.").format(
                     message['request']['args'][0], message['error']))
@@ -223,113 +236,30 @@ class BitmexWebsocket():
             if message['status'] == 401:
                 self.error(_("API Key incorrect, please check and restart."))
         elif action:
-
             if table not in self._data:
                 self._data[table] = []
 
             if table not in self._keys:
                 self._keys[table] = []
 
-            # There are four possible actions from the WS:
-            # 'partial' - full table image
-            # 'insert'  - new row
-            # 'update'  - update row
-            # 'delete'  - delete row
-            if action == 'partial':
-                logger.debug("{}: partial".format(table))
-                if message['table'] == "quote":
-                    for data in message['data']:
-                        self.quote_data[data['symbol']] = data
-                elif message['table'] == 'orderBookL2_25':
-                    for data in message['data']:
-                        side_book = getattr(self.order_book[data['symbol']], data['side'])
-                        side_book[data['id']] = data
-                elif message['table'] == 'position':
-                    for data in message['data']:
-                        assert data['currency'] == CURRENCY
-                        self.positions[data['symbol']] = data
-                elif message['table'] == 'margin':
-                    for data in message['data']:
-                        assert data['currency'] == CURRENCY
-                        self.margin = data
-                else:
-                    self._data[table] += message['data']
-                    # Keys are communicated on partials to let you know how to uniquely identify
-                    # an item. We use it for updates.
-                    self._keys[table] = message.get('keys')
-            elif action == 'insert':
-                logger.debug('{}: inserting {}'.format(table, message['data']))
-                if message['table'] == 'quote':
-                    for data in message['data']:
-                        self.quote_data[data['symbol']] = data
-                elif message['table'] == 'orderBookL2_25':
-                    for data in message['data']:
-                        side_book = getattr(self.order_book[data['symbol']], data['side'])
-                        side_book[data['id']] = data
-                elif message['table'] == 'position':
-                    for data in message['data']:
-                        assert data['currency'] == CURRENCY
-                        self.positions[data['symbol']] = data
-                elif message['table'] == 'margin':
-                    raise NotImplementedError
-                else:
-                    self._data[table] += message['data']
-                    # Limit the max length of the table to avoid excessive memory usage.
-                    # Don't trim orders because we'll lose valuable state if we do.
-                    if table not in ['order', 'orderBookL2'] and len(
-                            self._data[table]) > BitmexWebsocket.MAX_TABLE_LEN:
-                        self._data[table] = self._data[table][(BitmexWebsocket.MAX_TABLE_LEN // 2):]
-
-            elif action == 'update':
-                logger.debug(_('{}: updating {}').format(table, message['data']))
-                # Locate the item in the collection and update it.
-                if message['table'] == "orderBookL2_25":
-                    for data in message['data']:
-                        side_book = getattr(self.order_book[data['symbol']], data['side'])
-                        bar = side_book[data['id']]
-                        bar.update(data)
-                elif message['table'] == 'position':
-                    for data in message['data']:
-                        assert data['currency'] == CURRENCY
-                        self.positions[data['symbol']].update(data)
-                elif message['table'] == 'margin':
-                    for data in message['data']:
-                        assert data['currency'] == CURRENCY
-                        self.margin.update(data)
-                else:
-                    for updateData in message['data']:
-                        item = findItemByKeys(self._keys[table], self._data[table], updateData)
-                        if not item:
-                            continue  # No item found to update. Could happen before push
-
-                        # Log executions
-                        if table == 'order':
-                            is_canceled = 'ordStatus' in updateData and updateData['ordStatus'] == 'Canceled'
-                            if 'cumQty' in updateData and not is_canceled:
-                                contExecuted = updateData['cumQty'] - item['cumQty']
-                                if contExecuted > 0:
-                                    logger.info("Execution: {} {} Contracts of at {}".format(
-                                        item['side'], contExecuted, item['symbol'], item['price']))
-
-                        # Update this item.
-                        item.update(updateData)
-
-                        # Remove canceled / filled orders
-                        if table == 'order' and item['leavesQty'] <= 0:
-                            self._data[table].remove(item)
-
-            elif action == 'delete':
-                logger.debug(_('{}: deleting {}').format(table, message['data']))
-                # Locate the item in the collection and remove it.
-
-                if message['table'] == "orderBookL2_25":
-                    for data in message['data']:
-                        side_book = getattr(self.order_book[data['symbol']], data['side'])
-                        side_book.pop(data['id'])
-                else:
-                    for deleteData in message['data']:
-                        item = findItemByKeys(self._keys[table], self._data[table], deleteData)
-                        self._data[table].remove(item)
+            if table == "orderBookL2_25":
+                self.process_orderbook_data(action, message['data'])
+            elif table == "quote":
+                self.process_quote_data(action, message['data'])
+            elif table == "margin":
+                self.process_margin_data(action, message['data'])
+            elif table == "position":
+                self.process_position_data(action, message['data'])
+            elif table == "connected":
+                pass
+            elif table == "trade":
+                self.process_trade_data(action, message['data'])
+            elif table == "order":
+                # self.process_order_data(action, message['data'])
+                pass
+            elif table == "execution":
+                pass
             else:
-                raise ImpossibleError(_("Unknown action: {}").format(action))
-        logger.debug(_("Tick data process time: {}").format(round(time.time() - start, 7)))
+                raise NotImplementedError()
+
+        self.logger.debug(_("Tick data process time: {}").format(round(time.time() - start, 7)))

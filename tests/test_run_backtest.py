@@ -1,6 +1,7 @@
 import os
 import pickle
 import tempfile
+from asyncio import AbstractEventLoop
 from typing import Generator
 
 import pytest
@@ -107,7 +108,7 @@ def start_strategy_condition(tem_data_dir: str) -> Generator[str, None, None]:
     os.environ.pop(SETTING_MODULE)
 
 
-def test_run_1m_backtest(start_strategy_condition: str) -> None:
+def test_run_1m_backtest(start_strategy_condition: str, loop: AbstractEventLoop) -> None:
     from manage import cmd_main as strategy_cmd
 
     strategy_cmd.main(['runstrategy'], standalone_mode=False)

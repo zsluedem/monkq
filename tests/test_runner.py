@@ -22,6 +22,7 @@
 # SOFTWARE.
 #
 import os
+from asyncio import AbstractEventLoop
 
 from monkq.base_strategy import BaseStrategy
 from monkq.config import Setting
@@ -39,7 +40,7 @@ class TestStrategy(BaseStrategy):
         pass
 
 
-def test_runner(tem_data_dir: str) -> None:
+def test_runner(tem_data_dir: str, loop: AbstractEventLoop) -> None:
     settings = Setting()
     custom_settings = {
         "STRATEGY": TestStrategy,

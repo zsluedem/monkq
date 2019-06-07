@@ -37,6 +37,7 @@ from monkq.exception import (
     NotFoundError, RateLimitError,
 )
 from monkq.exchange.bitmex.http import BitMexHTTPInterface
+from monkq.exchange.bitmex.auth import BitmexAuth
 from tests.tools import get_resource_path
 
 TEST_API_KEY = "ae86vJ85yU8Mh5r6iSv68asb"
@@ -330,28 +331,28 @@ async def test_bitmex_http_interface(normal_bitmex_server: TestServer, loop: asy
         connector = TCPConnector(keepalive_timeout=90)  # type:ignore
         session = ClientSession(loop=loop, connector=connector)
 
-        api_key = APIKey(api_key=TEST_API_KEY, api_secret=TEST_API_SECRET)
+        auth_instance = BitmexAuth(TEST_API_KEY, TEST_API_SECRET)
 
-        exchange = BitMexHTTPInterface({"IS_TEST": True}, connector, session, ssl_context, None, loop)
+        exchange = BitMexHTTPInterface({"IS_TEST": True, "API_KEY":TEST_API_KEY, "API_SECRET":TEST_API_SECRET}, connector, session, ssl_context, None, loop)
         symbol = "XBTUSD"
 
         await exchange.get_instrument_info(symbol)
 
-        order_id = await exchange.place_limit_order(api_key, 'XBTUSD', 3200, 100, 'order_text')
+        order_id = await exchange.place_limit_order(auth_instance, 'XBTUSD', 3200, 100, 'order_text')
 
-        assert await exchange.amend_order(order_id=order_id, price=3300, api_key=api_key)
+        assert await exchange.amend_order(order_id=order_id, price=3300, auth_instance=auth_instance)
 
-        assert await exchange.cancel_order(order_id=order_id, api_key=api_key)
+        assert await exchange.cancel_order(order_id=order_id, auth_instance=auth_instance)
 
-        await exchange.place_market_order(api_key, symbol, 100, 'order_text2')
+        await exchange.place_market_order(auth_instance, symbol, 100, 'order_text2')
 
-        await exchange.open_orders_http(api_key=api_key)
+        await exchange.open_orders_http(auth_instance=auth_instance)
 
-        await exchange.active_instruments(api_key=api_key)
+        await exchange.active_instruments(auth_instance=auth_instance)
 
-        await exchange.get_recent_trades(symbol, 3, api_key=api_key)
+        await exchange.get_recent_trades(symbol, 3, auth_instance=auth_instance)
 
-        await exchange.get_kline(symbol, "1m", 3, api_key=api_key)
+        await exchange.get_kline(symbol, "1m", 3, auth_instance=auth_instance)
 
         await exchange.session.close()
 
@@ -363,24 +364,24 @@ async def test_bitmex_http_interface_error(abnormal_bitmex_server: TestServer,
         ssl_context = ssl.create_default_context()
         connector = TCPConnector(keepalive_timeout=90)  # type:ignore
         session = ClientSession(loop=loop, connector=connector)
-        api_key = APIKey(api_key=TEST_API_KEY, api_secret=TEST_API_SECRET)
 
         http_interface = BitMexHTTPInterface(
             {'API_KEY': TEST_API_KEY, "API_SECRET": TEST_API_SECRET, "IS_TEST": False},
             connector, session, ssl_context, None, loop)
 
         symbol = "XBTUSD"
+        auth_instance = BitmexAuth(TEST_API_KEY, TEST_API_SECRET)
         with pytest.raises(MarginNotEnoughError):
-            await http_interface.place_limit_order(api_key, symbol, 10, 100)
+            await http_interface.place_limit_order(auth_instance, symbol, 10, 100)
 
         with pytest.raises(HttpAuthError):
-            await http_interface.amend_order(api_key, "random", 10, 100)
+            await http_interface.amend_order(auth_instance, "random", 10, 100)
 
         with pytest.raises(HttpError):
-            await http_interface.open_orders_http(api_key)
+            await http_interface.open_orders_http(auth_instance)
 
         with pytest.raises(MaxRetryError):
-            await http_interface.active_instruments(TIMEOUT, api_key)
+            await http_interface.active_instruments(TIMEOUT, auth_instance)
 
         with pytest.raises(MaxRetryError):
             await http_interface.get_recent_trades(symbol)
@@ -392,6 +393,6 @@ async def test_bitmex_http_interface_error(abnormal_bitmex_server: TestServer,
             await http_interface.get_instrument_info(symbol)
 
         with pytest.raises(NotFoundError):
-            await http_interface.cancel_order(api_key, "random")
+            await http_interface.cancel_order(auth_instance, "random")
 
         await http_interface.session.close()

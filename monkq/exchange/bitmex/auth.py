@@ -24,6 +24,8 @@
 import hashlib
 import hmac
 import time
+from typing import Optional
+from monkq.exchange.base.auth import AuthProtocol
 from urllib.parse import urlparse
 
 from monkq.utils.timefunc import local_offset_seconds
@@ -33,7 +35,9 @@ _safe_nonce = 300
 expire_ts = int(local_offset_seconds + _safe_nonce)
 
 
-def generate_expires(timestamp: float = time.time(), expire: int = expire_ts) -> int:
+def generate_expires(timestamp: Optional[float] = None, expire: int = expire_ts) -> int:
+    if timestamp is None:
+        timestamp = time.time()
     return int(timestamp + expire)
 
 
@@ -55,8 +59,10 @@ def generate_signature(secret: str, verb: str, url: str, nonce: float, data: str
     return signature
 
 
-def gen_header_dict(api_key: str, api_secret: str, verb: str, url: str, data: str, now: float = time.time(),
+def gen_header_dict(api_key: str, api_secret: str, verb: str, url: str, data: str, now: Optional[float] = None,
                     nonce: int = expire_ts) -> dict:
+    if now is None:
+        now = time.time()
     expire = generate_expires(now, nonce)
 
     sign = generate_signature(api_secret, verb, url, expire, data)
@@ -66,3 +72,19 @@ def gen_header_dict(api_key: str, api_secret: str, verb: str, url: str, data: st
         "api-signature": sign,
         "api-key": api_key
     }
+
+
+class BitmexAuth(AuthProtocol):
+    def __init__(self, api_key: str, api_secret: str):
+        self.api_key = api_key
+        self.api_secret = api_secret
+
+    def get_timestamp(self) -> float:
+        stamp = time.time()
+        return generate_expires(stamp, expire_ts)
+
+    def gen_http_headers(self, method: str, request_path: str, data: str) -> dict:
+        return gen_header_dict(self.api_key,self.api_secret, method, request_path, data)
+
+    def signature(self, method: str, request_path: str, body: str) -> str:
+        return generate_signature(self.api_secret, method, request_path, self.get_timestamp(), body)

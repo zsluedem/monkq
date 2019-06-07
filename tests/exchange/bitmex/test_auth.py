@@ -25,7 +25,7 @@
 import time
 
 from monkq.exchange.bitmex.auth import (
-    expire_ts, gen_header_dict, generate_expires, generate_signature,
+    expire_ts, gen_header_dict, generate_expires, generate_signature, BitmexAuth
 )
 
 secret = "chNOOS4KvNXR_Xq4k4c9qsfoKWvnDecLATCRlcBwyKDYnWgO"
@@ -44,19 +44,19 @@ def test_generate_signature() -> None:
         secret,
         'GET',
         'http://testnet.bitmex.com/api/v1/instrument', 1518064236, '') == \
-        'c7682d435d0cfe87c16098df34ef2eb5a549d4c5a3c2b1f0f77b8af73423bf00'
+           'c7682d435d0cfe87c16098df34ef2eb5a549d4c5a3c2b1f0f77b8af73423bf00'
 
     assert generate_signature(
         secret,
         'GET', '/api/v1/instrument?filter=%7B%22symbol%22%3A+%22XBTM15%22%7D', 1518064237, '') == \
-        'e2f422547eecb5b3cb29ade2127e21b858b235b386bfa45e1c1756eb3383919f'
+           'e2f422547eecb5b3cb29ade2127e21b858b235b386bfa45e1c1756eb3383919f'
 
     assert generate_signature(
         secret,
         'POST',
         'http://testnet.bitmex.com/api/v1/order', 1518064238,
         '{"symbol":"XBTM15","price":219.0,"clOrdID":"mm_bitmex_1a/oemUeQ4CAJZgP3fjHsA","orderQty":98}') == \
-        '1749cd2ccae4aa49048ae09f0b95110cee706e0944e6a14ad0b3a8cb45bd336b'
+           '1749cd2ccae4aa49048ae09f0b95110cee706e0944e6a14ad0b3a8cb45bd336b'
 
 
 def test_gen_header_dict() -> None:
@@ -65,8 +65,8 @@ def test_gen_header_dict() -> None:
         secret,
         'GET',
         'http://testnet.bitmex.com/api/v1/instrument', '', 1518064236, 0) == \
-        {
-        "api-expires": '1518064236',
-        "api-signature": 'c7682d435d0cfe87c16098df34ef2eb5a549d4c5a3c2b1f0f77b8af73423bf00',
-        "api-key": api_id
-        }  # noqa
+           {
+               "api-expires": '1518064236',
+               "api-signature": 'c7682d435d0cfe87c16098df34ef2eb5a549d4c5a3c2b1f0f77b8af73423bf00',
+               "api-key": api_id
+           }  # noqa

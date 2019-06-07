@@ -34,7 +34,7 @@ from logbook import Logger
 from monkq.assets.orderbook import DictStructOrderBook
 from monkq.base_strategy import BaseStrategy
 from monkq.config.global_settings import PING_INTERVAL_FACTOR
-from monkq.exchange.base.websocket import AbsExchangeWebsocket, BackgroundTask
+from monkq.exchange.base.websocket import ExchangeWebsocketBase
 from monkq.exchange.bitmex.auth import gen_header_dict
 from monkq.utils.i18n import _
 
@@ -57,7 +57,7 @@ def findItemByKeys(keys: list, table: list, matchData: dict) -> Optional[Dict]:
 
 def timestamp_update(func: F) -> F:
     @wraps(func)
-    def wrapped(self: "BitmexWebsocket", *args: Any, **kwargs: Any) -> F:
+    def wrapped(self: "BitmexWebsocketBase", *args: Any, **kwargs: Any) -> F:
         self._last_comm_time = time.time()
         ret = func(self, *args, **kwargs)
         return ret
@@ -65,7 +65,7 @@ def timestamp_update(func: F) -> F:
     return cast(F, wrapped)
 
 
-class BitmexWebsocket(AbsExchangeWebsocket):
+class BitmexWebsocketBase(ExchangeWebsocketBase):
     MAX_TABLE_LEN = 200
 
     def __init__(self, strategy: BaseStrategy, loop: asyncio.AbstractEventLoop, session: ClientSession, ws_url: str,
@@ -78,7 +78,6 @@ class BitmexWebsocket(AbsExchangeWebsocket):
         self._api_key = api_key
         self._api_secret = api_secret
         self._http_proxy = http_proxy
-        self.background_task = BackgroundTask()
         self.strategy = strategy
         self.session: ClientSession = session
         self.ping_interval = PING_INTERVAL_FACTOR

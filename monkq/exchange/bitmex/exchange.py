@@ -40,7 +40,7 @@ from monkq.exchange.bitmex.const import (
 from monkq.exchange.bitmex.data.loader import BitmexDataloader
 from monkq.exchange.bitmex.data.utils import kline_from_list_of_dict
 from monkq.exchange.bitmex.http import BitMexHTTPInterface
-from monkq.exchange.bitmex.websocket import BitmexWebsocket
+from monkq.exchange.bitmex.websocket import BitmexWebsocketBase
 from monkq.tradecounter import TradeCounter
 from monkq.utils.as_dict import base_order_to_dict
 from monkq.utils.id import gen_unique_id
@@ -202,10 +202,10 @@ class BitmexExchange(BaseExchange):
                                      loop=self._loop,
                                      connector=self._connector)
 
-        self.ws = BitmexWebsocket(strategy=context.strategy, loop=self._loop,
-                                  session=self.session, ws_url=ws_url,
-                                  api_key=self.api_key, api_secret=self.api_secret,
-                                  ssl=self._ssl, http_proxy=None)
+        self.ws = BitmexWebsocketBase(strategy=context.strategy, loop=self._loop,
+                                      session=self.session, ws_url=ws_url,
+                                      api_key=self.api_key, api_secret=self.api_secret,
+                                      ssl=self._ssl, http_proxy=None)
         proxy = self.context.settings.HTTP_PROXY or None  # type:ignore
 
         self.http_interface = BitMexHTTPInterface(exchange_setting, self._connector,

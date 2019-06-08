@@ -59,17 +59,17 @@ class AbcOrderBookStruct:
 
 class DictStructOrderBook(AbcOrderBookStruct):
     def __init__(self) -> None:
-        self._sell_book: Dict[int, BookItem] = {}
-        self._buy_book: Dict[int, BookItem] = {}
+        self._ask_book: Dict[int, BookItem] = {}
+        self._bid_book: Dict[int, BookItem] = {}
 
         self._partial = False
 
     def delete(self, data: Dict) -> None:
         side = data.get('side')
         if side == 'Buy':
-            self._buy_book.pop(data['id'])
+            self._bid_book.pop(data['id'])
         elif side == "Sell":
-            self._sell_book.pop(data['id'])
+            self._ask_book.pop(data['id'])
         else:
             raise NotImplementedError()
 
@@ -77,34 +77,34 @@ class DictStructOrderBook(AbcOrderBookStruct):
         side = data.get('side')
         if side == 'Buy':
             book_item = BookItem(side=SIDE.BUY, size=data['size'], price=data['price'])
-            self._buy_book[data['id']] = book_item
+            self._bid_book[data['id']] = book_item
         elif side == "Sell":
             book_item = BookItem(side=SIDE.SELL, size=data['size'], price=data['price'])
-            self._sell_book[data['id']] = book_item
+            self._ask_book[data['id']] = book_item
         else:
             raise NotImplementedError()
 
     def update(self, data: Dict) -> None:
         side = data.get('side')
         if side == 'Buy':
-            book_item = self._buy_book.get(data['id'])
+            book_item = self._bid_book.get(data['id'])
             assert book_item is not None
             book_item.size = data['size']
         elif side == "Sell":
-            book_item = self._sell_book.get(data['id'])
+            book_item = self._ask_book.get(data['id'])
             assert book_item is not None
             book_item.size = data['size']
         else:
             raise NotImplementedError()
 
     def best_buy(self) -> BookItem:
-        return max(self._buy_book.values(), key=lambda x: x.price)
+        return max(self._bid_book.values(), key=lambda x: x.price)
 
     def best_sell(self) -> BookItem:
-        return min(self._sell_book.values(), key=lambda x: x.price)
+        return min(self._ask_book.values(), key=lambda x: x.price)
 
     def best_buy_n(self, n: int) -> List[BookItem]:
-        return sorted(self._buy_book.values(), key=lambda x: x.price, reverse=True)[:n]
+        return sorted(self._bid_book.values(), key=lambda x: x.price, reverse=True)[:n]
 
     def best_sell_n(self, n: int) -> List[BookItem]:
-        return sorted(self._sell_book.values(), key=lambda x: x.price)[:n]
+        return sorted(self._ask_book.values(), key=lambda x: x.price)[:n]

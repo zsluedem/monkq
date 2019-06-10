@@ -1,9 +1,9 @@
 .idea
+.vscode
 local/*
 local_data/*
 local_quote/*
 analysis/*
-
 log
 
 # Byte-compiled / optimized / DLL files

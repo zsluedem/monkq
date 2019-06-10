@@ -19,7 +19,7 @@ class Initer:
         self._cache_indicator: Dict[str, pandas.DataFrame] = {}
 
     def init_kline_freq(self, freq: str, instrument: INSTRUMENT) -> None:
-        assert instrument.exchange is not None
+        assert instrument.exchange
         exchange = self.context.exchanges[instrument.exchange.name]
         assert isinstance(exchange, BaseSimExchange)
         data = exchange.all_data(instrument)
@@ -29,7 +29,7 @@ class Initer:
                        store_key: str,
                        columns: List[str], *args: Any, **kwargs: Any) -> None:
         if freq == '1min':
-            assert instrument.exchange is not None
+            assert instrument.exchange
             exchange = self.context.exchanges[instrument.exchange.name]
             assert isinstance(exchange, BaseSimExchange)
             data = exchange.all_data(instrument)

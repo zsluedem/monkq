@@ -21,7 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 from asyncio import AbstractEventLoop, Lock, sleep
 from functools import partial
 from typing import Any, Callable, Coroutine, Generator
@@ -31,7 +30,7 @@ import pytest
 from aiohttp import ClientSession, ClientTimeout, web  # type:ignore
 from aiohttp.test_utils import TestServer
 from monkq.base_strategy import BaseStrategy
-from monkq.exchange.bitmex.websocket import BitmexWebsocket
+from monkq.exchange.bitmex.websocket import BitmexWebsocketBase
 from tests.tools import get_resource_path
 
 pytestmark = pytest.mark.asyncio
@@ -125,12 +124,12 @@ class C(BaseStrategy):
 async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: AbstractEventLoop, async_lock: Lock,
                                 close_lock: Lock) -> None:
     session = ClientSession(timeout=ClientTimeout(total=60))
-    ws = BitmexWebsocket(C(MagicMock()),
-                         loop,
-                         session,
-                         "ws://127.0.0.1:{}/realtime".format(normal_bitmex_server.port),
-                         API_KEY,
-                         API_SECRET)
+    ws = BitmexWebsocketBase(C(MagicMock()),
+                             loop,
+                             session,
+                             "ws://127.0.0.1:{}/realtime".format(normal_bitmex_server.port),
+                             API_KEY,
+                             API_SECRET)
 
     await ws.setup()
     await ws.subscribe('quote:XBTUSD')

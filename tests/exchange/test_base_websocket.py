@@ -34,14 +34,14 @@ from aiohttp import (  # type:ignore
 from aiohttp.test_utils import TestServer
 from logbook import Logger
 from monkq.config.global_settings import PING_INTERVAL_FACTOR
-from monkq.exchange.base.websocket import AbsExchangeWebsocket, BackgroundTask
+from monkq.exchange.base.websocket import BackgroundTask, ExchangeWebsocketBase
 
 pytestmark = pytest.mark.asyncio
 
 INFO = "Message"
 
 
-class ExchangeWebsocketBase(AbsExchangeWebsocket):
+class ExchangeWebsocketBaseBase(ExchangeWebsocketBase):
     ping_interval = PING_INTERVAL_FACTOR
     logger = Logger('TestWebsocketBase')
 
@@ -96,8 +96,9 @@ async def ping_bitmex_server(aiohttp_server: Callable[[web.Application], Corouti
 async def test_base_websocket(ping_bitmex_server: TestServer, loop: AbstractEventLoop, close_lock: Lock) -> None:
     session = ClientSession()
 
-    ws = ExchangeWebsocketBase("ws://127.0.0.1:{}/realtime".format(ping_bitmex_server.port), "test_exchange", session,
-                               loop)
+    ws = ExchangeWebsocketBaseBase("ws://127.0.0.1:{}/realtime".format(ping_bitmex_server.port), "test_exchange",
+                                   session,
+                                   loop)
     decode_mock = MagicMock()
     on_message_mock = MagicMock()
     ws.decode_raw_data = decode_mock  # type:ignore

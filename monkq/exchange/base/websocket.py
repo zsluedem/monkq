@@ -39,7 +39,7 @@ class BackgroundTask:
     handler: asyncio.Task = field(init=False)
 
 
-class AbsExchangeWebsocket(Generic[T]):
+class ExchangeWebsocketBase(Generic[T]):
     ws_conn: ClientWebSocketResponse
     ping_interval: int
     last_comm_time: float
@@ -50,6 +50,7 @@ class AbsExchangeWebsocket(Generic[T]):
     exchange_name: str
 
     async def setup(self) -> None:
+        self.background_task = BackgroundTask()
         self.ws_conn = await self.connect()
         self.last_comm_time = time.time()
         self.background_task.handler = self.loop.create_task(self.run())

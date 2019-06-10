@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 
-from typing import Optional
+from typing import Mapping, Optional
 
 
 class MonkError(BaseException):
@@ -50,7 +50,7 @@ class RequestError(MonkError):
 
 
 class HttpError(RequestError):
-    def __init__(self, url: str, method: Optional[str], body: Optional[str], headers: Optional[dict],
+    def __init__(self, url: str, method: Optional[str], body: Optional[str], headers: Optional[Mapping],
                  message: str = ''):
         self.url = url
         self.method = method
@@ -68,7 +68,7 @@ class NotFoundError(HttpError):
 
 
 class RateLimitError(HttpError):
-    def __init__(self, url: str, method: str, body: str, headers: dict, message: str = '',
+    def __init__(self, url: str, method: str, body: str, headers: Mapping, message: str = '',
                  ratelimit_reset: int = 0) -> None:
         super(RateLimitError, self).__init__(url, method, body, headers, message)
         self.ratelimit_reset = ratelimit_reset

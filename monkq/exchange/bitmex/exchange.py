@@ -40,7 +40,7 @@ from monkq.exchange.bitmex.const import (
 from monkq.exchange.bitmex.data.loader import BitmexDataloader
 from monkq.exchange.bitmex.data.utils import kline_from_list_of_dict
 from monkq.exchange.bitmex.http import BitMexHTTPInterface
-from monkq.exchange.bitmex.websocket import BitmexWebsocket
+from monkq.exchange.bitmex.websocket import BitmexWebsocketBase
 from monkq.tradecounter import TradeCounter
 from monkq.utils.as_dict import base_order_to_dict
 from monkq.utils.id import gen_unique_id
@@ -202,10 +202,10 @@ class BitmexExchange(BaseExchange):
                                      loop=self._loop,
                                      connector=self._connector)
 
-        self.ws = BitmexWebsocket(strategy=context.strategy, loop=self._loop,
-                                  session=self.session, ws_url=ws_url,
-                                  api_key=self.api_key, api_secret=self.api_secret,
-                                  ssl=self._ssl, http_proxy=None)
+        self.ws = BitmexWebsocketBase(strategy=context.strategy, loop=self._loop,
+                                      session=self.session, ws_url=ws_url,
+                                      api_key=self.api_key, api_secret=self.api_secret,
+                                      ssl=self._ssl, http_proxy=None)
         proxy = self.context.settings.HTTP_PROXY or None  # type:ignore
 
         self.http_interface = BitMexHTTPInterface(exchange_setting, self._connector,
@@ -234,22 +234,23 @@ class BitmexExchange(BaseExchange):
                                 price: float, quantity: float, text: str = '', timeout: int = sentinel,
                                 max_retry: int = 0) -> str:
         target = instrument.symbol
-        return await self.http_interface.place_limit_order(account.api_key, target, price, quantity, text, timeout,
+        assert account.auth
+        return await self.http_interface.place_limit_order(account.auth, target, price, quantity, text, timeout,
                                                            max_retry)
 
     async def place_market_order(self, account: RealFutureAccount, instrument: FutureInstrument,
                                  quantity: float, text: str = '', timeout: int = sentinel,
                                  max_retry: int = 0) -> str:
         target = instrument.symbol
-
-        return await self.http_interface.place_market_order(account.api_key, target, quantity, text,
+        assert account.auth
+        return await self.http_interface.place_market_order(account.auth, target, quantity, text,
                                                             timeout, max_retry)
 
     async def amend_order(self, account: RealFutureAccount, order_id: str, quantity: Optional[float] = None,
                           price: Optional[float] = None, timeout: int = sentinel,
                           max_retry: int = 0) -> bool:
-
-        resp = await self.http_interface.amend_order(account.api_key, order_id, quantity, price, timeout, max_retry)
+        assert account.auth
+        resp = await self.http_interface.amend_order(account.auth, order_id, quantity, price, timeout, max_retry)
         if 300 > resp.status >= 200:
             return True
         else:
@@ -257,15 +258,16 @@ class BitmexExchange(BaseExchange):
 
     async def cancel_order(self, account: RealFutureAccount, order_id: str, timeout: int = sentinel,
                            max_retry: int = 0) -> bool:
-
-        resp = await self.http_interface.cancel_order(account.api_key, order_id, timeout, max_retry)
+        assert account.auth
+        resp = await self.http_interface.cancel_order(account.auth, order_id, timeout, max_retry)
         if 300 > resp.status >= 200:
             return True
         else:
             return False
 
     async def open_orders(self, account: RealFutureAccount) -> List[dict]:
-        return await self.http_interface.open_orders_http(account.api_key)
+        assert account.auth
+        return await self.http_interface.open_orders_http(account.auth)
 
     async def available_instruments(self, timeout: int = sentinel) -> ValuesView[Instrument]:
         if self._available_instrument_cache:

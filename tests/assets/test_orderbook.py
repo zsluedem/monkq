@@ -79,43 +79,43 @@ def test_dictorderbook() -> None:
     order_book = DictStructOrderBook()
     for data in init_data:
         order_book.insert(data)
-    assert order_book.best_buy().price == 8599
-    assert order_book.best_buy().size == 194033
-    assert order_book.best_sell().price == 8600
-    assert order_book.best_sell().size == 31352
+    assert order_book.best_bid().price == 8599
+    assert order_book.best_bid().size == 194033
+    assert order_book.best_ask().price == 8600
+    assert order_book.best_ask().size == 31352
 
-    assert len(order_book.best_buy_n(3)) == 3
-    assert len(order_book.best_sell_n(4)) == 4
+    assert len(order_book.best_bid_n(3)) == 3
+    assert len(order_book.best_ask_n(4)) == 4
 
-    assert order_book.best_buy_n(3)[2].price == 8597.5
-    assert order_book.best_buy_n(3)[2].size == 3088
+    assert order_book.best_bid_n(3)[2].price == 8597.5
+    assert order_book.best_bid_n(3)[2].size == 3088
 
-    assert order_book.best_sell_n(3)[2].price == 8601
-    assert order_book.best_sell_n(3)[2].size == 17788
+    assert order_book.best_ask_n(3)[2].price == 8601
+    assert order_book.best_ask_n(3)[2].size == 17788
 
     order_book.delete({'symbol': 'XBTUSD', 'id': 15599140800, 'side': 'Buy'})
     order_book.delete({'symbol': 'XBTUSD', 'id': 15599141000, 'side': 'Buy'})
 
-    assert order_book.best_buy_n(11)[10].price == 8585
-    assert order_book.best_buy_n(11)[10].size == 134
+    assert order_book.best_bid_n(11)[10].price == 8585
+    assert order_book.best_bid_n(11)[10].size == 134
     order_book.insert({'symbol': 'XBTUSD', 'id': 15599140700, 'side': 'Buy', 'size': 500, 'price': 8593})
     order_book.insert({'symbol': 'XBTUSD', 'id': 15599140900, 'side': 'Buy', 'size': 500, 'price': 8591})
 
-    assert order_book.best_buy_n(11)[10].price == 8593
-    assert order_book.best_buy_n(11)[10].size == 500
+    assert order_book.best_bid_n(11)[10].price == 8593
+    assert order_book.best_bid_n(11)[10].size == 500
     order_book.update({"symbol": "XBTUSD", "id": 15599140400, "side": "Buy", "size": 195})
-    assert order_book.best_buy_n(6)[5].price == 8596
-    assert order_book.best_buy_n(6)[5].size == 195
+    assert order_book.best_bid_n(6)[5].price == 8596
+    assert order_book.best_bid_n(6)[5].size == 195
 
     order_book.delete({'symbol': 'XBTUSD', 'id': 15599140000, 'side': 'Sell'})
 
-    assert order_book.best_sell().price == 8600.5
-    assert order_book.best_sell().size == 2227383
+    assert order_book.best_ask().price == 8600.5
+    assert order_book.best_ask().size == 2227383
     order_book.insert({'symbol': 'XBTUSD', 'id': 15599141800, 'side': 'Sell', 'size': 500, 'price': 8599.5})
 
-    assert order_book.best_sell().price == 8599.5
-    assert order_book.best_sell().size == 500
+    assert order_book.best_ask().price == 8599.5
+    assert order_book.best_ask().size == 500
 
     order_book.update({"symbol": "XBTUSD", "id": 15599141800, "side": "Sell", "size": 195})
-    assert order_book.best_sell().price == 8599.5
-    assert order_book.best_sell().size == 195
+    assert order_book.best_ask().price == 8599.5
+    assert order_book.best_ask().size == 195

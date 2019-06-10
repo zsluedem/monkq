@@ -23,23 +23,20 @@
 #
 import asyncio
 import datetime
-import json
 import ssl
 import time
-from typing import Dict, List, Optional, Union, Callable
+from typing import Callable, Dict, List, Optional, Union
 
-from aiohttp import (  # type:ignore
-    ClientResponse, ClientSession, TCPConnector,
-)
+from aiohttp import ClientResponse, ClientSession, TCPConnector  # type:ignore
 from aiohttp.helpers import sentinel
 from logbook import Logger
 from monkq.exception import (
-    HttpAuthError, HttpError, MarginNotEnoughError,
-    NotFoundError, RateLimitError,
+    HttpAuthError, HttpError, MarginNotEnoughError, NotFoundError,
+    RateLimitError,
 )
 from monkq.exchange.base.http import HTTPInterfaceBase
+from monkq.exchange.bitmex.auth import AuthProtocol
 from monkq.exchange.bitmex.const import BITMEX_API_URL, BITMEX_TESTNET_API_URL
-from monkq.exchange.bitmex.auth import BitmexAuth, AuthProtocol
 from monkq.utils.i18n import _
 
 from .log import logger_group
@@ -71,7 +68,6 @@ class BitMexHTTPInterface(HTTPInterfaceBase):
         else:
             base_url = BITMEX_API_URL
         self.base_url = base_url
-
 
     async def get_instrument_info(self, symbol: str,
                                   timeout: int = sentinel, max_retry: int = 0,
@@ -137,7 +133,8 @@ class BitMexHTTPInterface(HTTPInterfaceBase):
                                method="DELETE", timeout=timeout,
                                max_retry=max_retry, auth_instance=auth_instance)
 
-    async def open_orders_http(self, auth_instance: AuthProtocol, timeout: int = sentinel, max_retry: int = 0) -> List[dict]:
+    async def open_orders_http(self, auth_instance: AuthProtocol,
+                               timeout: int = sentinel, max_retry: int = 0) -> List[dict]:
         query = {"filter": '{"open": true}', "count": 500}
         resp = await self.curl(path='order', query=query,
                                method="GET", timeout=timeout,
@@ -185,7 +182,7 @@ class BitMexHTTPInterface(HTTPInterfaceBase):
             content = await resp.json()
             error = content['error']
             message = error['message'].lower() if error else ''
-            name = error['name'].lower() if error else ''
+            # name = error['name'].lower() if error else ''
             if resp.status == 400:
                 if 'insufficient available balance' in message:
                     logger.warning(_('Account out of funds. The message: {}').format(error["message"]))

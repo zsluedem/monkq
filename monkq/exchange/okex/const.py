@@ -7,7 +7,7 @@ OK_ACCESS_KEY = 'OK-ACCESS-KEY'
 OK_ACCESS_SIGN = 'OK-ACCESS-SIGN'
 OK_ACCESS_TIMESTAMP = 'OK-ACCESS-TIMESTAMP'
 OK_ACCESS_PASSPHRASE = 'OK-ACCESS-PASSPHRASE'
-
+WEBSOCKET_URL = 'wss://real.okex.com:10442/ws/v3'
 
 ACEEPT = 'Accept'
 COOKIE = 'Cookie'
@@ -105,7 +105,7 @@ FUTURE_LIMIT = '/api/futures/v3/instruments/'
 FUTURE_LIQUIDATION = '/api/futures/v3/instruments/'
 FUTURE_MARK = '/api/futures/v3/instruments/'
 HOLD_AMOUNT = '/api/futures/v3/accounts/'
-#CURRENCY_LIST = '/api/futures/v3/instruments/currencies/'
+# CURRENCY_LIST = '/api/futures/v3/instruments/currencies/'
 
 # ETT
 ETT_ACCOUNTS = '/api/ett/v3/accounts'

@@ -37,7 +37,6 @@ from monkq.exchange.bitmex.exchange import (
 from monkq.tradecounter import TradeCounter
 from monkq.utils.id import gen_unique_id
 from monkq.utils.timefunc import utc_datetime
-
 from tests.tools import get_resource_path
 
 

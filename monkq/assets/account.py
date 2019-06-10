@@ -23,7 +23,7 @@
 #
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Dict, List, Type
+from typing import Dict, List, Optional, Type
 
 from monkq.assets.const import DIRECTION, POSITION_EFFECT, SIDE
 from monkq.assets.instrument import FutureInstrument
@@ -33,6 +33,7 @@ from monkq.assets.positions import (
 )
 from monkq.assets.trade import Trade
 from monkq.exchange.base import BaseSimExchange
+from monkq.exchange.base.auth import AuthProtocol
 
 
 @dataclass()
@@ -81,7 +82,7 @@ class BaseAccount():
 
 @dataclass()
 class RealFutureAccount(BaseAccount):
-    api_key: APIKey = APIKey('', '')
+    auth: Optional[AuthProtocol] = None
 
 
 @dataclass()

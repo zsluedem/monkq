@@ -127,7 +127,7 @@ async def test_bitmex_websocket(normal_bitmex_server: TestServer, loop: Abstract
     ws = BitmexWebsocketBase(C(MagicMock()),
                              loop,
                              session,
-                         "ws://127.0.0.1:{}/realtime".format(normal_bitmex_server.port),
+                             "ws://127.0.0.1:{}/realtime".format(normal_bitmex_server.port),
                              API_KEY,
                              API_SECRET)
 

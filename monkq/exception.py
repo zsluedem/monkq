@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 
-from typing import Optional, Mapping
+from typing import Mapping, Optional
 
 
 class MonkError(BaseException):

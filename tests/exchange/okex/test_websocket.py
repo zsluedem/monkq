@@ -1,22 +1,22 @@
-from typing import Generator, Callable, Coroutine
-from asyncio import AbstractEventLoop, Lock, sleep
-import pytest
-from functools import partial
-from aiohttp.test_utils import TestServer
-
-from aiohttp import ClientSession, web
-from unittest.mock import MagicMock
-from monkq.exchange.okex.websocket import OKexWebsocket
-from monkq.exchange.okex.auth import OKexAuth
-from tests.tools import get_resource_path
 import zlib
-import logging
+from asyncio import AbstractEventLoop, Lock, sleep
+from functools import partial
+from typing import Callable, Coroutine, Generator
+from unittest.mock import MagicMock
+
+import pytest
+from aiohttp import ClientSession, web
+from aiohttp.test_utils import TestServer
+from monkq.exchange.okex.auth import OKexAuth
+from monkq.exchange.okex.websocket import OKexWebsocket
+from tests.tools import get_resource_path
 
 ws_data_path = get_resource_path("okex/okex_websocket_data.txt")
 
 passphrase = '123456789'
 api_key = 'ab58ebe8-3557-4521-9c2f-asf9341239f9'
 api_secret = '5B07K919C77118F8E234K28344F82Q9D5'
+
 
 def ret_data() -> Generator[str, None, None]:
     with open(ws_data_path) as f:
@@ -46,6 +46,8 @@ async def realtime_handler(request: web.Request, close_lock: Lock) -> web.WebSoc
         except StopIteration:
             break
     close_lock.release()
+    await ws.close()
+
     return ws
 
 
@@ -63,10 +65,11 @@ async def okex_websocket_server(aiohttp_server: Callable[[web.Application], Coro
     yield server
 
 
-async def test_okex_websocket(loop: AbstractEventLoop, okex_websocket_server: TestServer, close_lock: Lock):
+async def test_okex_websocket(loop: AbstractEventLoop, okex_websocket_server: TestServer, close_lock: Lock) -> None:
     session = ClientSession()
     auth_ins = OKexAuth(api_key, api_secret, passphrase)
-    ws = OKexWebsocket(MagicMock(), loop, session, "ws://localhost:{}/tess_websocket".format(okex_websocket_server.port),
+    ws = OKexWebsocket(MagicMock(), loop, session,
+                       "ws://localhost:{}/tess_websocket".format(okex_websocket_server.port),
                        api_key=api_key, api_secret=api_secret,
                        pass_phrase=passphrase, auth_instance=auth_ins)
     await ws.setup()
@@ -77,7 +80,7 @@ async def test_okex_websocket(loop: AbstractEventLoop, okex_websocket_server: Te
     await session.close()
 
 
-async def test_okex_websocket_checksum(loop: AbstractEventLoop):
+async def test_okex_websocket_checksum(loop: AbstractEventLoop) -> None:
     depth_partial_data = {
         "table": "spot/depth",
         "action": "partial",
@@ -111,3 +114,4 @@ async def test_okex_websocket_checksum(loop: AbstractEventLoop):
     ws.on_message(depth_partial_data)
 
     assert ws.is_checksum_correct('ETH-USDT', 468410539)
+    await session.close()

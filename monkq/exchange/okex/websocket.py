@@ -27,17 +27,16 @@ import json
 import ssl
 import zlib
 from collections import defaultdict
-from typing import Optional, Any, TypeVar, Dict
+from typing import Any, Dict, Optional, TypeVar
 
-from aiohttp import (  # type: ignore
-    ClientSession, ClientWebSocketResponse, )
+from aiohttp import ClientSession, ClientWebSocketResponse  # type: ignore
 from logbook import Logger
-from yarl import URL
-
 from monkq.assets.orderbook import DictStructOrderBook
 from monkq.base_strategy import BaseStrategy
 from monkq.exchange.base.websocket import ExchangeWebsocketBase
 from monkq.exchange.okex.auth import OKexAuth
+from yarl import URL
+
 from . import const as c
 
 T = TypeVar('T')
@@ -75,11 +74,13 @@ class OKexWebsocket(ExchangeWebsocketBase):
         if self.auth_instance is not None:
             await self.auth()
 
-    async def auth(self):
-        sign_dict = self.auth_instance.gen_http_headers("GET", URL(c.API_URL + "/users/self/verify"), '')
-        await self.ws_conn.send_json(
-            {"op": "login",
-             "args": [self.api_key, self.pass_phrase, sign_dict[c.OK_ACCESS_TIMESTAMP], sign_dict[c.OK_ACCESS_SIGN]]})
+    async def auth(self) -> None:
+        if self.auth_instance is not None:
+            sign_dict = self.auth_instance.gen_http_headers("GET", URL(c.API_URL + "/users/self/verify"), '')
+            await self.ws_conn.send_json(
+                {"op": "login",
+                 "args": [self.api_key, self.pass_phrase, sign_dict[c.OK_ACCESS_TIMESTAMP],
+                          sign_dict[c.OK_ACCESS_SIGN]]})
 
     async def subscribe(self, topic: str) -> None:
         await self.ws_conn.send_json({"op": 'subscribe', "args": [topic]})
@@ -87,7 +88,7 @@ class OKexWebsocket(ExchangeWebsocketBase):
     async def unsubscribe(self, topic: str) -> None:
         await self.ws_conn.send_json({"op": 'unsubscribe', "args": [topic]})
 
-    def decode_raw_data(self, data: Any) -> T:
+    def decode_raw_data(self, data: Any) -> dict:
         decompress = zlib.decompressobj(
             -zlib.MAX_WBITS  # see above
         )
@@ -95,18 +96,17 @@ class OKexWebsocket(ExchangeWebsocketBase):
         inflated += decompress.flush()
         return json.loads(inflated)
 
-
-    def checksum_value(self, instrument_id: str):
+    def checksum_value(self, instrument_id: str) -> int:
         best_bid25 = self._order_book[instrument_id].best_bid_n(25)
         best_ask25 = self._order_book[instrument_id].best_ask_n(25)
         check_string = ":".join(["{}:{}:{}:{}".format(bid.raw[0], bid.raw[1], ask.raw[0], ask.raw[1]) for bid, ask in
                                  zip(best_bid25, best_ask25)])
         return zlib.crc32(check_string.encode('utf8'))
 
-    def is_checksum_correct(self, instrument_id: str, checksum: int):
+    def is_checksum_correct(self, instrument_id: str, checksum: int) -> bool:
         return self.checksum_value(instrument_id) == checksum
 
-    def process_depth_table(self, message: dict):
+    def process_depth_table(self, message: dict) -> None:
         # with open("{}.json".format(self.i), 'w') as  f:
         #     json.dump(message, f)
         action = message['action']
@@ -147,7 +147,7 @@ class OKexWebsocket(ExchangeWebsocketBase):
             raise NotImplementedError()
         self._order_book_status[instrument_id] = True if self.is_checksum_correct(instrument_id, checksum) else False
 
-    def on_message(self, message: T) -> Any:
+    def on_message(self, message: dict) -> Any:
         event = message.get('event')
         if event == 'subscribe':
             self.logger.info("Successfully subscribe channel: {}".format(message.get('channel')))

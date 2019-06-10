@@ -25,10 +25,11 @@ import hashlib
 import hmac
 import time
 from typing import Optional
-from monkq.exchange.base.auth import AuthProtocol
 from urllib.parse import urlparse
 
+from monkq.exchange.base.auth import AuthProtocol
 from monkq.utils.timefunc import local_offset_seconds
+from yarl import URL
 
 _safe_nonce = 300
 
@@ -83,8 +84,8 @@ class BitmexAuth(AuthProtocol):
         stamp = time.time()
         return generate_expires(stamp, expire_ts)
 
-    def gen_http_headers(self, method: str, request_path: str, data: str) -> dict:
-        return gen_header_dict(self.api_key,self.api_secret, method, request_path, data)
+    def gen_http_headers(self, method: str, url: URL, data: str) -> dict:
+        return gen_header_dict(self.api_key, self.api_secret, method, str(url), data)
 
     def signature(self, method: str, request_path: str, body: str) -> str:
         return generate_signature(self.api_secret, method, request_path, self.get_timestamp(), body)

@@ -2,9 +2,7 @@ import asyncio
 import ssl
 from typing import Callable, Optional
 
-from aiohttp import (  # type:ignore
-    ClientResponse, ClientSession, TCPConnector,
-)
+from aiohttp import ClientResponse, ClientSession, TCPConnector  # type:ignore
 from monkq.exchange.base.http import HTTPInterfaceBase
 from monkq.exchange.okex.const import API_URL
 

@@ -22,21 +22,17 @@
 # SOFTWARE.
 #
 import asyncio
-import datetime
 import json
 import ssl
-import time
-from typing import Dict, List, Optional, Union, Callable
+from functools import partial
+from typing import Callable, Optional
 
 from aiohttp import (  # type:ignore
     ClientResponse, ClientSession, ClientTimeout, TCPConnector,
 )
 from aiohttp.helpers import sentinel
-from monkq.assets.account import APIKey
-from functools import partial
-from monkq.exception import MaxRetryError
-from monkq.exchange.bitmex.const import BITMEX_API_URL, BITMEX_TESTNET_API_URL
 from logbook import Logger
+from monkq.exception import MaxRetryError
 from monkq.exchange.base.auth import AuthProtocol
 from monkq.utils.i18n import _
 from yarl import URL
@@ -74,9 +70,8 @@ class HTTPInterfaceBase:
     async def abnormal_status_checking(self, resp: ClientResponse, retry_callback: Callable) -> None:
         raise NotImplementedError()
 
-
     async def curl(self, path: str, query: Optional[dict] = None, postdict: Optional[dict] = None,
-                   timeout: int = sentinel, method: str = None,
+                   timeout: int = sentinel, method: Optional[str] = None,
                    max_retry: int = 5, auth_instance: Optional[AuthProtocol] = None) -> ClientResponse:
         url = self.base_url + path
 
@@ -100,7 +95,7 @@ class HTTPInterfaceBase:
             data = ''
 
         if auth_instance:
-            headers.update(auth_instance.gen_http_headers(method, str(url_obj), data))
+            headers.update(auth_instance.gen_http_headers(method, url_obj, data))
 
         if timeout is not sentinel:
             cli_timeout = ClientTimeout(total=timeout)
@@ -131,19 +126,20 @@ class HTTPInterfaceBase:
                 content = await resp.text()
 
                 self.logger.warning(_("Request url:{}, method:{}, postdict:{}, "
-                                 "headers:{} abnormal ."
-                                 "Return with status code:{}, header {} ,"
-                                 "content: {}").format(resp.request_info.url,
-                                                       resp.request_info.method,
-                                                       postdict,
-                                                       resp.request_info.headers,
-                                                       resp.status, resp.headers, content))
+                                      "headers:{} abnormal ."
+                                      "Return with status code:{}, header {} ,"
+                                      "content: {}").format(resp.request_info.url,
+                                                            resp.request_info.method,
+                                                            postdict,
+                                                            resp.request_info.headers,
+                                                            resp.status, resp.headers, content))
 
                 await self.abnormal_status_checking(resp, partial(retry, max_retry))
+                return resp
         except asyncio.TimeoutError:
             # Timeout, re-run this request
             self.logger.warning(_("Timed out on request: path:{}, query:{}, "
-                             "postdict:{}, verb:{}, timeout:{}, retry:{}, "
-                             "retrying...").format(path, query, postdict,
-                                                   method, timeout, max_retry))
+                                  "postdict:{}, verb:{}, timeout:{}, retry:{}, "
+                                  "retrying...").format(path, query, postdict,
+                                                        method, timeout, max_retry))
             return await retry(max_retry)

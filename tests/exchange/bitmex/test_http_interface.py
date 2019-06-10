@@ -31,13 +31,12 @@ from unittest.mock import patch
 import pytest
 from aiohttp import ClientSession, TCPConnector, web  # type:ignore
 from aiohttp.test_utils import TestServer
-from monkq.assets.account import APIKey
 from monkq.exception import (
     HttpAuthError, HttpError, MarginNotEnoughError, MaxRetryError,
     NotFoundError, RateLimitError,
 )
-from monkq.exchange.bitmex.http import BitMexHTTPInterface
 from monkq.exchange.bitmex.auth import BitmexAuth
+from monkq.exchange.bitmex.http import BitMexHTTPInterface
 from tests.tools import get_resource_path
 
 TEST_API_KEY = "ae86vJ85yU8Mh5r6iSv68asb"
@@ -333,7 +332,8 @@ async def test_bitmex_http_interface(normal_bitmex_server: TestServer, loop: asy
 
         auth_instance = BitmexAuth(TEST_API_KEY, TEST_API_SECRET)
 
-        exchange = BitMexHTTPInterface({"IS_TEST": True, "API_KEY":TEST_API_KEY, "API_SECRET":TEST_API_SECRET}, connector, session, ssl_context, None, loop)
+        exchange = BitMexHTTPInterface({"IS_TEST": True, "API_KEY": TEST_API_KEY, "API_SECRET": TEST_API_SECRET},
+                                       connector, session, ssl_context, None, loop)
         symbol = "XBTUSD"
 
         await exchange.get_instrument_info(symbol)
